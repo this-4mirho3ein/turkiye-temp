@@ -1,0 +1,261 @@
+{
+  "validation": {
+    "required": "This field is required.",
+    "requireds": "Please fill in the required fields.",
+    "email": "Please enter a valid email address.",
+    "minLength": "Minimum length is {{min}} characters.",
+    "maxLength": "Maximum length is {{max}} characters.",
+    "pattern": "Invalid format.",
+    "numeric": "This field must be a number.",
+    "unique": "This value is already exists.",
+    "date": "Invalid date format.",
+    "time": "Invalid time format.",
+    "url": "Please enter a valid URL.",
+    "email_exist": "User with this email already exists",
+    "mobile_exist": "User with this mobile already exists",
+    "userName_exist": "User with this user name already exists",
+    "invalid_code": "Invalid code",
+    "invalid_email": "Invalid email",
+    "invalid-mobile": "Invalid mobile",
+    "invalid_email_mobile": "Mobile number or email are invalid",
+    "required_email_mobile": "Mobile number or email is required",
+    "required_category": "Category is required",
+    "required_blog": "Blog is required",
+    "required_user": "User is required",
+    "required_cover": "Cover is required",
+    "required_icon": "Icon is required",
+    "required_service": "Service is required",
+    "required_product": "Product is required",
+    "required_coin": "Coin is required",
+    "required_coinTransaction": "Coin transaction is required",
+    "required_discount": "Discount is required",
+    "required_payment": "Payment is required",
+    "required_notification": "Notification is required",
+    "invalid_sort_option": "Invalid sort option",
+    "invalid_limit": "Invalid limit",
+    "invalid_rate": "Invalid rate",
+    "already_rated": "You have already rated this product",
+    "required_fields": "Please fill in the required fields.",
+    "search_length": "Search length must be at least 3 characters.",
+    "required_comment": "Comment is required",
+    "required_title_lang": "Missing translations for required languages: {{#lang}}",
+    "invalid_old_password": "Invalid old password"
+  },
+  "joi": {
+    "string": {
+      "base": "must be a valid string.",
+      "min": "must be at least {{#limit}} characters long.",
+      "max": "must be at most {{#limit}} characters long.",
+      "length": "must be exactly {{#limit}} characters long.",
+      "alphanum": "must contain only letters and numbers.",
+      "pattern": "must match the required pattern.",
+      "empty": "cannot be empty.",
+      "email": "Please enter a valid email address.",
+      "pattern.base": "must match the required pattern."
+    },
+    "any": {
+      "required": "is required.",
+      "only": "must be one of the allowed values."
+    },
+    "number": {
+      "base": "must be a valid number.",
+      "min": "must be greater than or equal to {{#limit}}.",
+      "max": "must be less than or equal to {{#limit}}.",
+      "greater": "must be greater than {{#limit}}."
+    },
+    "array": {
+      "base": "must be an array.",
+      "min": "must contain at least {{#limit}} items.",
+      "max": "must contain at most {{#limit}} items."
+    },
+    "boolean": {
+      "base": "must be a boolean value."
+    },
+    "date": {
+      "base": "must be a valid date.",
+      "format": "must match the format '{{#format}}'.",
+      "min": "must be on or after '{{#limit}}'.",
+      "max": "must be on or before '{{#limit}}'.",
+      "greater": "must be later than {{#limit}}."
+    },
+    "object": {
+      "base": "must be an object.",
+      "unknown": "contains unknown fields.",
+      "missing": "must be provided."
+    }
+  },
+  "authentication": {
+    "accountInvalid": "User not found or this account has no permission to perform this action",
+    "loginFailed": "Login failed. Please check your credentials.",
+    "unauthorized": "You are not authorized to perform this action.",
+    "accountLocked": "Your account has been locked.",
+    "tokenExpired": "Your session has expired. Please log in again.",
+    "tokenInvalid": "Invalid authentication token.",
+    "authentication": "Please log in to your account."
+  },
+  "authorization": {
+    "forbidden": "You do not have permission to access this resource.",
+    "roleRequired": "A specific role is required to perform this action.",
+    "notAllowed": "This action is not allowed."
+  },
+  "server": {
+    "internalError": "An internal server error occurred.",
+    "serviceUnavailable": "The service is temporarily unavailable.",
+    "timeout": "The request timed out.",
+    "databaseError": "A database error occurred.",
+    "apiError": "An error occurred while communicating with the API."
+  },
+  "user": {
+    "not_found": "User not found.",
+    "alreadyExists": "User already exists.",
+    "emailNotVerified": "Your email address is not verified.",
+    "invalidPassword": "The password is incorrect.",
+    "passwordTooWeak": "The password is too weak.",
+    "password_changed": "Your password was changed at #{{date}}",
+    "password_changed_title": "Password changed"
+  },
+  "file": {
+    "fileTooLarge": "The file is too large.",
+    "unsupportedFormat": "Unsupported file format.",
+    "uploadFailed": "File upload failed.",
+    "downloadFailed": "File download failed.",
+    "LIMIT_FIELD_VALUE": "A maximum file size is 25 MB.",
+    "allowedExtensions": "Only files with extensions: jpg|jpeg|png|gif|jfif|mp4|avi|mov|mkv|mp3|wav|ogg|pdf|docx|doc are allowed."
+  },
+  "payment": {
+    "insufficientFunds": "Insufficient funds.",
+    "paymentDeclined": "Payment was declined.",
+    "invalidCard": "Invalid card information.",
+    "paymentTimeout": "Payment processing timed out."
+  },
+  "discount": {
+    "invalid_percent": "Value must be between 1 and 100",
+    "invalid_date_range": "Start date must be earlier than end date"
+  },
+  "string": {
+    "email": "Email",
+    "mobile": "Mobile number",
+    "countryCode": "Country code",
+    "name": "Name",
+    "username": "Username",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "address": "Address",
+    "city": "City",
+    "state": "State",
+    "zipCode": "Zip code",
+    "country": "Country",
+    "dob": "Date of birth",
+    "phone": "Phone",
+    "gender": "Gender",
+    "profilePicture": "Profile picture",
+    "bio": "Bio",
+    "title": "Title",
+    "description": "Description",
+    "message": "Message",
+    "code": "Code",
+    "confirmationCode": "Confirmation code",
+    "price": "Price",
+    "quantity": "Quantity",
+    "category": "Category",
+    "categories": "Categories",
+    "parentCategory": "Parent category",
+    "tag": "Tag",
+    "tags": "Tags",
+    "url": "URL",
+    "slug": "Slug",
+    "active": "Active status",
+    "rowNumber": "Row number",
+    "translations": "Title for each language",
+    "answer": "Answer",
+    "ticket": "Ticket",
+    "content": "Content",
+    "language": "Language",
+    "parentComment": "Parent comment",
+    "key": "Key",
+    "attribute": "Attribute",
+    "isRequired": "Is required",
+    "type": "Type",
+    "service": "Service",
+    "value": "value",
+    "action": "action",
+    "user": "user",
+    "coin": "coin",
+    "order": "order",
+    "product": "product",
+    "products": "products",
+    "validFrom": "Valid From",
+    "validUntil": "Valid Until",
+    "maxUses": "Max Uses Count",
+    "useCase": "Use Case",
+    "status": "Status",
+    "search": "Search text",
+    "page": "Page",
+    "rowsPerPage": "Rows per page",
+    "limit": "Limit",
+    "isRead": "Is Read",
+    "notification": "Notification",
+    "currency": "Currency",
+    "isConfirm": "Is confirm",
+    "actionUrl": "Action url",
+    "oldPassword": "Old password",
+    "newPassword": "New password"
+  },
+  "attribute": {
+    "not_found": "Attribute not found.",
+    "same_key": "This key is already exists.",
+    "required_attribute": "Attribute is required"
+  },
+  "category": {
+    "not_found": "Category not found."
+  },
+  "order": {
+    "not_active_product": "Purchase of this product is currently not active",
+    "added_to_cart": "Product added to cart",
+    "duplicate_discount": "This discount code is already in use",
+    "invalid_discount": "Discount code is invalid",
+    "max_use_discount": "This discount code cannot be use",
+    "not_usable_discount": "This discount code cannot be use",
+    "expired_discount": "This discount code has expired",
+    "insufficient_balance": "Your credit balance is insufficient."
+  },
+  "coin": {
+    "duplicate_action": "The value for this action is already set.",
+    "not_enough": "Your coins are not enough to be converted into credit",
+    "convert_coins": "Your #{{coins}} coins was converted to credit amount",
+    "convert_coins_title": "Convert Coins"
+  },
+  "ticket": {
+    "ticket_answered": "Your ticket #{{ticketId}} has been answered.",
+    "ticket_answered_title": "Ticket answered"
+  },
+  "blog": {
+    "not_found": "Blog not found.",
+    "confirm": "Blog has been confirmed.",
+    "reject": "Blog has been rejected.",
+    "confirm_title": "Blog status",
+    "reject_title": "Blog status"
+  },
+  "error": {
+    "catch": "There is a problem"
+  },
+  "message": {
+    "success": "Successfully completed.",
+    "not_found": "Not found"
+  },
+  "email": {
+    "email_verified_subject": "Email verified",
+    "email_verified_title": "Thank you for signing up!",
+    "email_verified_message": "Your email address has been verified. You can now log in to your account",
+    "email_verified_code_subject": "Email Confirmation Code",
+    "email_verified_code_title": "Thank you for signing up! Please use the confirmation code below to verify your email address",
+    "email_verified_code_message": "Your email confirmation code is",
+    "signup_subject": "Welcome to Our Platform!",
+    "signup_title": "Account Created Successfully",
+    "signup_message": "Thank you for signing up! Your account has been created successfully. Click below to log in.",
+    "actionButtonText": "Log In Now",
+    "password_reset_subject": "Password Reset Request",
+    "password_reset_title": "Password Reset",
+    "password_reset_message": "Your reset password confirmation code is"
+  }
+}
