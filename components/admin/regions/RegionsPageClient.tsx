@@ -256,9 +256,11 @@ function RegionsPageClientInner() {
           originalId: originalId, // Store original ID for API operations
         };
 
+        // Add English name for all region types if it exists
+        if (item.enName) region.enName = item.enName;
+
         // For countries, add additional fields if they exist
         if (type === "countries") {
-          if (item.enName) region.enName = item.enName;
           if (item.code) region.code = item.code;
           if (item.phoneCode) region.phoneCode = item.phoneCode;
         }

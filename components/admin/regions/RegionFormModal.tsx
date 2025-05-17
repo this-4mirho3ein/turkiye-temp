@@ -68,44 +68,36 @@ const RegionFormModal: React.FC<RegionFormModalProps> = ({
               required
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              اسلاگ <span className="text-red-500">*</span>
+              نام انگلیسی <span className="text-red-500">*</span>
             </label>
             <Input
-              name="slug"
-              placeholder="اسلاگ را وارد کنید"
-              value={formData.slug}
+              name="enName"
+              placeholder={`نام انگلیسی ${typeTitle} را وارد کنید`}
+              value={formData.enName}
               onChange={onInputChange}
-              aria-label="اسلاگ"
+              aria-label="نام انگلیسی"
               tabIndex={0}
               disabled={isLoading}
               required
             />
             <p className="text-xs text-gray-500 mt-1">
+              نام انگلیسی به حروف لاتین (مانند:{" "}
               {type === "countries"
-                ? "اسلاگ به صورت خودکار از نام انگلیسی ایجاد می‌شود اما قابل ویرایش است"
-                : "اسلاگ باید منحصر به فرد باشد و از حروف انگلیسی، اعداد و خط تیره تشکیل شده باشد"}
+                ? "Iran"
+                : type === "provinces"
+                ? "East Azerbaijan"
+                : type === "cities"
+                ? "Tehran"
+                : "Valiasr"}
+              )
             </p>
           </div>
 
           {type === "countries" && (
             <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  نام انگلیسی <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  name="enName"
-                  placeholder="نام انگلیسی کشور را وارد کنید"
-                  value={formData.enName}
-                  onChange={onInputChange}
-                  aria-label="نام انگلیسی"
-                  tabIndex={0}
-                  disabled={isLoading}
-                  required
-                />
-              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   کد تلفن (Phone Code) <span className="text-red-500">*</span>
@@ -124,37 +116,68 @@ const RegionFormModal: React.FC<RegionFormModalProps> = ({
                   کد تلفن کشور بدون + وارد شود (مثال: برای ایران 98)
                 </p>
               </div>
+              <div className="p-3 bg-gray-50 rounded-md border border-gray-200">
+                <p className="text-sm text-gray-600 mb-2">
+                  <span className="font-medium">توجه:</span> کد کشور به صورت
+                  خودکار تولید می‌شود و نیازی به وارد کردن آن نیست.
+                </p>
+                <p className="text-sm text-gray-600 mb-2">
+                  <span className="font-medium">اسلاگ:</span> اسلاگ نیز به صورت
+                  خودکار از روی نام انگلیسی تولید می‌شود.
+                </p>
+                {selectedRegion && selectedRegion.code && (
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">کد فعلی:</span>{" "}
+                    {selectedRegion.code}
+                  </p>
+                )}
+              </div>
             </>
           )}
 
           {type !== "countries" && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {type === "provinces"
-                  ? "کشور"
-                  : type === "cities"
-                  ? "استان"
-                  : "شهر"}{" "}
-                <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="parentId"
-                value={formData.parentId}
-                onChange={onInputChange}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border"
-                aria-label="انتخاب والد"
-                tabIndex={0}
-                disabled={isLoading}
-                required
-              >
-                <option value="">انتخاب کنید</option>
-                {parentRegions.map((parent) => (
-                  <option key={parent.id} value={parent.id}>
-                    {parent.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <>
+              <div className="p-3 bg-gray-50 rounded-md border border-gray-200">
+                <p className="text-sm text-gray-600 mb-2">
+                  <span className="font-medium">توجه:</span> کد {typeTitle} به
+                  صورت خودکار تولید می‌شود و نیازی به وارد کردن آن نیست.
+                </p>
+                <p className="text-sm text-gray-600 mb-2">
+                  <span className="font-medium">اسلاگ:</span> اسلاگ نیز به صورت
+                  خودکار از روی نام انگلیسی تولید می‌شود.
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {type === "provinces"
+                    ? "کشور"
+                    : type === "cities"
+                    ? "استان"
+                    : "شهر"}{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="parentId"
+                  value={formData.parentId}
+                  onChange={onInputChange}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border"
+                  aria-label="انتخاب والد"
+                  tabIndex={0}
+                  disabled={isLoading}
+                  required
+                >
+                  <option value="">انتخاب کنید</option>
+                  {parentRegions.map((parent) => (
+                    <option
+                      key={parent.id}
+                      value={parent.originalId || parent.id}
+                    >
+                      {parent.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
           )}
         </div>
       </ModalBody>

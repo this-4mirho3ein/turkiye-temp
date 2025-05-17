@@ -24,7 +24,7 @@ const RegionsTable: React.FC<RegionsTableProps> = ({
         <tr>
           <th className="px-6 py-3 text-center">#</th>
           <th className="px-6 py-3">نام</th>
-          <th className="px-6 py-3">اسلاگ</th>
+          <th className="px-6 py-3">نام انگلیسی</th>
           {type !== "countries" && <th className="px-6 py-3">والد</th>}
           <th className="px-6 py-3 text-center">عملیات</th>
         </tr>
@@ -41,10 +41,13 @@ const RegionsTable: React.FC<RegionsTableProps> = ({
           </tr>
         ) : regions.length > 0 ? (
           regions.map((region, index) => (
-            <tr key={region.id} className="bg-white border-b hover:bg-gray-50">
+            <tr
+              key={`${region.id}-${region.originalId || index}`}
+              className="bg-white border-b hover:bg-gray-50"
+            >
               <td className="px-6 py-4 font-medium text-center">{index + 1}</td>
               <td className="px-6 py-4 font-medium">{region.name}</td>
-              <td className="px-6 py-4">{region.slug}</td>
+              <td className="px-6 py-4">{region.enName || "-"}</td>
               {type !== "countries" && (
                 <td className="px-6 py-4">{region.parent?.name || "-"}</td>
               )}

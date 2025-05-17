@@ -177,9 +177,12 @@ export default function RegionsList({
     setFormData((prev) => {
       const newFormData = { ...prev, [name]: value };
 
-      // Auto-generate slug from English name for countries
-      if (type === "countries" && name === "enName" && value) {
+      // Auto-generate slug from English name for all types
+      if (name === "enName" && value) {
         newFormData.slug = generateSlugFromEnglishName(value);
+        console.log(
+          `Auto-generated slug from English name: ${newFormData.slug}`
+        );
       }
 
       return newFormData;
@@ -248,22 +251,35 @@ export default function RegionsList({
   };
 
   const handleSave = async () => {
-    // Validate required fields
-    if (!formData.name || !formData.slug) {
+    // Validate required fields for all types - name and enName are required, slug is auto-generated
+    if (!formData.name || !formData.enName) {
       addToast({
         title: "خطا",
-        description: "لطفاً تمام فیلدهای ضروری را پر کنید",
+        description: "لطفاً نام و نام انگلیسی را وارد کنید",
         color: "danger",
         icon: <FaExclamationTriangle />,
       });
       return;
     }
 
-    // For countries, check if phoneCode and enName are provided
-    if (type === "countries" && (!formData.phoneCode || !formData.enName)) {
+    // For countries, check if phoneCode is provided
+    if (type === "countries" && !formData.phoneCode) {
       addToast({
         title: "خطا",
-        description: "لطفاً نام انگلیسی و کد تلفن کشور را وارد کنید",
+        description: "لطفاً کد تلفن کشور را نیز وارد کنید",
+        color: "danger",
+        icon: <FaExclamationTriangle />,
+      });
+      return;
+    }
+
+    // For other region types, check if a parent is selected
+    if (type !== "countries" && !formData.parentId) {
+      addToast({
+        title: "خطا",
+        description: `لطفاً ${
+          type === "provinces" ? "کشور" : type === "cities" ? "استان" : "شهر"
+        } مربوطه را انتخاب کنید`,
         color: "danger",
         icon: <FaExclamationTriangle />,
       });
@@ -276,12 +292,15 @@ export default function RegionsList({
       let response;
 
       if (type === "countries") {
+        // Ensure slug is generated from English name
+        const slug = generateSlugFromEnglishName(formData.enName);
+
         // For countries, directly use the typed object for API
         const countryData = {
           name: formData.name,
-          slug: formData.slug,
+          slug: slug,
           enName: formData.enName || formData.name,
-          code: generateRandomCode(), // Auto-generate a random code
+          code: generateRandomCode(), // Always generate random code
           phoneCode: formData.phoneCode,
         };
 
@@ -291,6 +310,12 @@ export default function RegionsList({
           // Use originalId if available, otherwise use numeric ID converted to string
           const regionId =
             selectedRegion.originalId || selectedRegion.id.toString();
+
+          // For updates, use the existing code if available
+          if (selectedRegion.code) {
+            countryData.code = selectedRegion.code;
+          }
+
           console.log(
             `Updating country with ID:`,
             regionId,
@@ -300,7 +325,7 @@ export default function RegionsList({
           response = await updateAction(regionId, countryData);
           console.log("Update country response:", response);
         } else {
-          // Create country
+          // Create country - always generate a random code for new countries
           const createAction = apiActions.countries.create;
           console.log("Creating country with data:", countryData);
           response = await createAction(countryData);
@@ -308,18 +333,32 @@ export default function RegionsList({
         }
       } else {
         // For provinces, cities, and areas
-        const regionData: {
-          name: string;
-          slug: string;
-          parentId?: string;
-        } = {
+        // Generate a random code for the new entity
+        const code = generateRandomCode();
+
+        // Get the parent key name based on the type
+        const parentKey =
+          type === "provinces"
+            ? "country"
+            : type === "cities"
+            ? "province"
+            : "city";
+
+        // Ensure slug is generated from English name
+        const slug = generateSlugFromEnglishName(formData.enName);
+
+        // Create the data object with the proper parent field name
+        const regionData: Record<string, any> = {
           name: formData.name,
-          slug: formData.slug,
+          slug: slug,
+          enName: formData.enName || formData.name,
+          code: code,
         };
 
-        // Only add parentId if it exists and is not empty
+        // Add the parent ID with the correct key name
         if (formData.parentId) {
-          regionData.parentId = formData.parentId;
+          // Use the original ID when available as it's what the backend expects
+          regionData[parentKey] = formData.parentId;
         }
 
         if (selectedRegion) {
@@ -328,6 +367,12 @@ export default function RegionsList({
           // Use originalId if available, otherwise use numeric ID converted to string
           const regionId =
             selectedRegion.originalId || selectedRegion.id.toString();
+
+          // For updates, use the existing code if available
+          if (selectedRegion.code) {
+            regionData.code = selectedRegion.code;
+          }
+
           console.log(
             `Updating ${type} with ID:`,
             regionId,
@@ -355,32 +400,61 @@ export default function RegionsList({
           onDataChange();
         }
 
-        addToast({
-          title: selectedRegion ? "ویرایش موفقیت‌آمیز" : "ایجاد موفقیت‌آمیز",
-          description:
-            response.message ||
-            `${formData.name} با موفقیت ${
-              selectedRegion ? "ویرایش" : "اضافه"
-            } شد`,
-          color: "success",
-          icon: <FaCheck />,
-        });
+        // Show a success toast with the API message if available
+        if (type === "countries" && !selectedRegion && response.data) {
+          // For newly created countries, show the auto-generated code
+          addToast({
+            title: "ایجاد موفقیت‌آمیز",
+            description: `${formData.name} با موفقیت اضافه شد. (کد: ${response.data.code})`,
+            color: "success",
+            icon: <FaCheck />,
+          });
+        } else {
+          addToast({
+            title: selectedRegion ? "ویرایش موفقیت‌آمیز" : "ایجاد موفقیت‌آمیز",
+            description:
+              response.message ||
+              `${formData.name} با موفقیت ${
+                selectedRegion ? "ویرایش" : "اضافه"
+              } شد`,
+            color: "success",
+            icon: <FaCheck />,
+          });
+        }
+
+        // Close the modal after successful save
+        onFormModalClose();
+        setSelectedRegion(null);
 
         // If we have API response data, use it to update our local state
         if (response.data) {
           try {
             const apiData = response.data;
 
-            // Generate a numeric ID from the API string ID if needed
-            const numericId = apiData._id
-              ? parseInt(apiData._id) ||
-                Math.abs(
+            // Generate a unique numeric ID from the API string ID if needed
+            // Combine timestamp with hash of ID for uniqueness
+            const timestamp = Date.now();
+            let numericId: number;
+
+            if (apiData._id) {
+              // Try to parse as integer first
+              const parsedId = parseInt(apiData._id);
+              if (!isNaN(parsedId)) {
+                numericId = parsedId;
+              } else {
+                // Create a hash and combine with timestamp to ensure uniqueness
+                const hash = Math.abs(
                   apiData._id.split("").reduce((a: number, b: string) => {
                     a = (a << 5) - a + b.charCodeAt(0);
                     return a & a;
                   }, 0)
-                )
-              : Math.floor(Math.random() * 10000);
+                );
+                numericId = timestamp + hash;
+              }
+            } else {
+              // No _id provided, create a fully random ID
+              numericId = timestamp + Math.floor(Math.random() * 10000);
+            }
 
             if (selectedRegion) {
               // Update existing region
@@ -570,8 +644,10 @@ export default function RegionsList({
       );
     } else {
       // Add new item
-      // Generate id for the new region
-      const newId = Math.floor(Math.random() * 10000);
+      // Generate unique id for the new region - combine timestamp with random for uniqueness
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 10000);
+      const newId = timestamp + random;
 
       // Create new region object
       const newRegion: Region = {
