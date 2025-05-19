@@ -552,22 +552,40 @@ interface ApiResponse {
   success: boolean;
   message?: string;
   data?: any;
+  status?: number;
 }
 
 // --- Country ---
 export const getAdminCountries = async (
-  params: { page?: number; limit?: number; forceRefresh?: boolean } = {}
+  params: {
+    page?: number;
+    limit?: number;
+    forceRefresh?: boolean;
+    includeDeleted?: boolean;
+  } = {}
 ): Promise<any[]> => {
-  const { page = 1, limit = 100, forceRefresh = false } = params;
+  const {
+    page = 1,
+    limit = 100,
+    forceRefresh = false,
+    includeDeleted = true,
+  } = params;
 
   // Add cache-busting parameter if forceRefresh is true
   const cacheParam = forceRefresh ? `&_t=${Date.now()}` : "";
 
+  // Add parameter to include deleted items
+  const deletedParam = includeDeleted ? "&isDeleted=true" : "";
+
   try {
-    console.log(`🔍 Fetching countries (force refresh: ${forceRefresh})...`);
-    const response = await api.get(
-      `/api/country/get-countries?page=${page}&limit=${limit}${cacheParam}`
+    console.log(
+      `🔍 Fetching countries (force refresh: ${forceRefresh}, include deleted: ${includeDeleted})...`
     );
+    // Don't add isDeleted param, we want all countries (deleted and non-deleted)
+    const apiUrl = `/admin/country/get-countries?page=${page}&limit=${limit}${cacheParam}`;
+    console.log(`🔍 API URL: ${apiUrl}`);
+
+    const response = await api.get(apiUrl);
 
     console.log("🔍 Countries API response status:", response.status);
 
@@ -586,6 +604,26 @@ export const getAdminCountries = async (
         null,
         2
       )
+    );
+
+    // Log the raw response data to check for deleted items
+    console.log(
+      "🔍 COUNTRIES API RESPONSE DATA:",
+      JSON.stringify(response.data, null, 2)
+    );
+
+    // Specifically check for deleted items
+    const deletedItems = Array.isArray(response.data)
+      ? response.data.filter((item: any) => item.isDeleted)
+      : Array.isArray(response.data?.data)
+      ? response.data.data.filter((item: any) => item.isDeleted)
+      : Array.isArray(response.data?.data?.data)
+      ? response.data.data.data.filter((item: any) => item.isDeleted)
+      : [];
+
+    console.log(
+      `🔍 FOUND ${deletedItems.length} DELETED ITEMS:`,
+      JSON.stringify(deletedItems, null, 2)
     );
 
     // Log data summary
@@ -654,6 +692,29 @@ export const getAdminCountries = async (
       );
     }
 
+    // Add extra debug logging to check for deleted items
+    if (data.length > 0) {
+      const hasDeletedItems = data.some((item: any) => item.isDeleted === true);
+      console.log(
+        `🚨 DEBUG: HAS DELETED ITEMS: ${hasDeletedItems ? "YES" : "NO"}`
+      );
+
+      if (hasDeletedItems) {
+        const deletedItems = data.filter(
+          (item: any) => item.isDeleted === true
+        );
+        console.log(
+          `🚨 DEBUG: FOUND ${deletedItems.length} DELETED ITEMS OUT OF ${data.length}`
+        );
+        if (deletedItems.length > 0) {
+          console.log(
+            `🚨 DEBUG: FIRST DELETED ITEM:`,
+            JSON.stringify(deletedItems[0], null, 2)
+          );
+        }
+      }
+    }
+
     return data || [];
   } catch (err) {
     console.error("❌ Error fetching countries:", err);
@@ -662,7 +723,7 @@ export const getAdminCountries = async (
     try {
       console.log("⚙️ Attempting direct Axios fallback for countries...");
       const directResponse = await axios.get(
-        `${mainConfig.apiServer}/api/country/get-countries?page=${page}&limit=${limit}${cacheParam}`,
+        `${mainConfig.apiServer}/admin/country/get-countries?page=${page}&limit=${limit}${cacheParam}`,
         {
           withCredentials: false,
         }
@@ -902,7 +963,7 @@ export const getAdminProvinces = async (
 
   try {
     const response = await api.get(
-      `/api/province/get-provinces?page=${page}&limit=${limit}${cacheParam}`
+      `/admin/province/get-provinces?page=${page}&limit=${limit}${cacheParam}`
     );
 
     // Handle different possible response structures
@@ -921,7 +982,7 @@ export const getAdminProvinces = async (
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.get(
-        `${mainConfig.apiServer}/api/province/get-provinces?page=${page}&limit=${limit}${cacheParam}`,
+        `${mainConfig.apiServer}/admin/province/get-provinces?page=${page}&limit=${limit}${cacheParam}`,
         {
           withCredentials: false,
         }
@@ -1083,7 +1144,7 @@ export const getAdminCities = async (
 
   try {
     const response = await api.get(
-      `/api/city/get-cities?page=${page}&limit=${limit}${cacheParam}`
+      `/admin/city/get-cities?page=${page}&limit=${limit}${cacheParam}`
     );
 
     // Handle different possible response structures
@@ -1102,7 +1163,7 @@ export const getAdminCities = async (
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.get(
-        `${mainConfig.apiServer}/api/city/get-cities?page=${page}&limit=${limit}${cacheParam}`,
+        `${mainConfig.apiServer}/admin/city/get-cities?page=${page}&limit=${limit}${cacheParam}`,
         {
           withCredentials: false,
         }
@@ -1252,7 +1313,7 @@ export const getAdminAreas = async (
 
   try {
     const response = await api.get(
-      `/api/area/get-areas?page=${page}&limit=${limit}${cacheParam}`
+      `/admin/area/get-areas?page=${page}&limit=${limit}${cacheParam}`
     );
 
     // Handle different possible response structures
@@ -1271,7 +1332,7 @@ export const getAdminAreas = async (
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.get(
-        `${mainConfig.apiServer}/api/area/get-areas?page=${page}&limit=${limit}${cacheParam}`,
+        `${mainConfig.apiServer}/admin/area/get-areas?page=${page}&limit=${limit}${cacheParam}`,
         {
           withCredentials: false,
         }
@@ -1411,3 +1472,922 @@ export const deleteAdminArea = async (id: string): Promise<ApiResponse> => {
 };
 
 //#endregion
+
+//#region AdminUsers
+export const getAdminUsers = async (
+  params: { page?: number; limit?: number; forceRefresh?: boolean } = {}
+): Promise<any[]> => {
+  const { page = 1, limit = 100, forceRefresh = false } = params;
+
+  // Add cache-busting parameter if forceRefresh is true
+  const cacheParam = forceRefresh ? `&_t=${Date.now()}` : "";
+
+  try {
+    console.log(`🔍 Fetching admin users (force refresh: ${forceRefresh})...`);
+    const response = await api.get(
+      `/admin/user/get-users?page=${page}&limit=${limit}${cacheParam}`
+    );
+
+    console.log("🔍 Admin users API response status:", response.status);
+
+    // Log data summary
+    const dataStructureSummary = {
+      hasData: !!response.data,
+      isDataObject: response.data && typeof response.data === "object",
+      hasDataData: response.data?.data !== undefined,
+      isDataDataArray: response.data?.data && Array.isArray(response.data.data),
+      dataDataLength:
+        response.data?.data && Array.isArray(response.data.data)
+          ? response.data.data.length
+          : "N/A",
+    };
+    console.log("🔍 Data structure summary:", dataStructureSummary);
+
+    // Handle response structure
+    let data = [];
+    if (response.data?.data && Array.isArray(response.data.data)) {
+      data = response.data.data;
+      console.log(`🔍 Found ${data.length} users in response.data.data`);
+
+      // Log first item to see structure
+      if (data.length > 0) {
+        console.log("🔍 Sample user data:", JSON.stringify(data[0], null, 2));
+      }
+    } else if (Array.isArray(response.data)) {
+      data = response.data;
+      console.log(`🔍 Found ${data.length} users in response.data (array)`);
+    } else {
+      console.warn("⚠️ Unexpected users response structure:", response.data);
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error("❌ Error fetching users:", err);
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log("⚙️ Attempting direct Axios fallback for users...");
+      const directResponse = await axios.get(
+        `${mainConfig.apiServer}/admin/user/get-users?page=${page}&limit=${limit}${cacheParam}`,
+        {
+          withCredentials: false,
+        }
+      );
+
+      console.log("⚙️ Direct users request status:", directResponse.status);
+
+      // Handle different possible response structures
+      let directData = [];
+      if (
+        directResponse.data?.data &&
+        Array.isArray(directResponse.data.data)
+      ) {
+        directData = directResponse.data.data;
+        console.log(
+          `⚙️ Found ${directData.length} users in directResponse.data.data`
+        );
+
+        // Log first item to see structure
+        if (directData.length > 0) {
+          console.log(
+            "⚙️ Sample user data (direct):",
+            JSON.stringify(directData[0], null, 2)
+          );
+        }
+      } else if (Array.isArray(directResponse.data)) {
+        directData = directResponse.data;
+        console.log(
+          `⚙️ Found ${directData.length} users in directResponse.data (array)`
+        );
+      } else {
+        console.warn(
+          "⚠️ Unexpected direct users response structure:",
+          directResponse.data
+        );
+      }
+
+      return directData || [];
+    } catch (fallbackErr) {
+      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
+      return [];
+    }
+  }
+};
+
+export const createAdminUser = async (
+  data: Record<string, any>
+): Promise<ApiResponse> => {
+  try {
+    const response = await api.post(`/admin/user/create`, data);
+    return {
+      success: response.status >= 200 && response.status < 300,
+      message: response.data?.message || "کاربر با موفقیت ایجاد شد",
+      data: response.data?.data,
+    };
+  } catch (err: any) {
+    console.error("Error creating user:", err);
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      const directResponse = await axios.post(
+        `${mainConfig.apiServer}/admin/user/create`,
+        data,
+        {
+          withCredentials: false,
+        }
+      );
+
+      return {
+        success: directResponse.status >= 200 && directResponse.status < 300,
+        message: directResponse.data?.message || "کاربر با موفقیت ایجاد شد",
+        data: directResponse.data?.data,
+      };
+    } catch (fallbackErr: any) {
+      console.error("Direct user creation fallback also failed:", fallbackErr);
+      return {
+        success: false,
+        message: err.response?.data?.message || "ایجاد کاربر با خطا مواجه شد",
+      };
+    }
+  }
+};
+
+export const updateAdminUser = async (
+  id: string,
+  data: Record<string, any>
+): Promise<ApiResponse> => {
+  try {
+    console.log(`🔄 Updating user with data:`, JSON.stringify(data, null, 2));
+    // The endpoint doesn't need the ID as part of the URL - it's in the request body
+    const response = await api.put(`/admin/user/update-user`, data);
+    console.log(`🔄 Update response:`, response.status, response.data);
+    return {
+      success: response.status >= 200 && response.status < 300,
+      message: response.data?.message || "کاربر با موفقیت به‌روزرسانی شد",
+      data: response.data?.data,
+    };
+  } catch (err: any) {
+    console.error(`Error updating user:`, err);
+    if (err.response) {
+      console.error(`Error response status:`, err.response.status);
+      console.error(`Error response data:`, err.response.data);
+    }
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log(`⚙️ Attempting direct Axios fallback for updating user...`);
+
+      // Get the auth token for the fallback request
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+
+      const directResponse = await axios.put(
+        `${mainConfig.apiServer}/admin/user/update-user`,
+        data,
+        {
+          withCredentials: false,
+          headers: {
+            "Content-Type": "application/json",
+            "x-access-token": token || "",
+          },
+        }
+      );
+      console.log(
+        `⚙️ Direct update response:`,
+        directResponse.status,
+        directResponse.data
+      );
+
+      return {
+        success: directResponse.status >= 200 && directResponse.status < 300,
+        message:
+          directResponse.data?.message || "کاربر با موفقیت به‌روزرسانی شد",
+        data: directResponse.data?.data,
+      };
+    } catch (fallbackErr: any) {
+      console.error("Direct user update fallback also failed:", fallbackErr);
+      if (fallbackErr.response) {
+        console.error(
+          `Fallback error response status:`,
+          fallbackErr.response.status
+        );
+        console.error(
+          `Fallback error response data:`,
+          fallbackErr.response.data
+        );
+      }
+      return {
+        success: false,
+        message:
+          err.response?.data?.message || "به‌روزرسانی کاربر با خطا مواجه شد",
+      };
+    }
+  }
+};
+
+export const deleteAdminUser = async (id: string): Promise<ApiResponse> => {
+  try {
+    console.log(`🗑️ Deleting user with ID: ${id}`);
+    const response = await api.delete(`/admin/user/delete-user/${id}`);
+    console.log(`🗑️ Delete response status: ${response.status}`);
+    console.log(`🗑️ Delete response data:`, response.data);
+
+    return {
+      success: response.status >= 200 && response.status < 300,
+      message: response.data?.message || "کاربر با موفقیت حذف شد",
+      data: response.data?.data,
+    };
+  } catch (err: any) {
+    console.error(`❌ Error deleting user ${id}:`, err);
+    if (err.response) {
+      console.error(`Error response status:`, err.response.status);
+      console.error(`Error response data:`, err.response.data);
+    }
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log(
+        `⚙️ Attempting direct Axios fallback for deleting user ${id}...`
+      );
+      const directResponse = await axios.delete(
+        `${mainConfig.apiServer}/admin/user/delete-user/${id}`,
+        {
+          withCredentials: false,
+        }
+      );
+      console.log(`⚙️ Direct delete response status: ${directResponse.status}`);
+      console.log(`⚙️ Direct delete response data:`, directResponse.data);
+
+      return {
+        success: directResponse.status >= 200 && directResponse.status < 300,
+        message: directResponse.data?.message || "کاربر با موفقیت حذف شد",
+        data: directResponse.data?.data,
+      };
+    } catch (fallbackErr: any) {
+      console.error(
+        "❌ Direct user deletion fallback also failed:",
+        fallbackErr
+      );
+      if (fallbackErr.response) {
+        console.error(
+          `Fallback error response status:`,
+          fallbackErr.response.status
+        );
+        console.error(
+          `Fallback error response data:`,
+          fallbackErr.response.data
+        );
+      }
+      return {
+        success: false,
+        message: err.response?.data?.message || "حذف کاربر با خطا مواجه شد",
+      };
+    }
+  }
+};
+
+export const restoreAdminUser = async (id: string): Promise<ApiResponse> => {
+  try {
+    console.log(`🔄 Restoring user with ID: ${id}`);
+    const response = await api.put(`/admin/user/restore-user/${id}`);
+    console.log(`🔄 Restore response status: ${response.status}`);
+    console.log(`🔄 Restore response data:`, response.data);
+
+    return {
+      success: response.status >= 200 && response.status < 300,
+      message: response.data?.message || "کاربر با موفقیت بازیابی شد",
+      data: response.data?.data,
+    };
+  } catch (err: any) {
+    console.error(`❌ Error restoring user ${id}:`, err);
+    if (err.response) {
+      console.error(`Error response status:`, err.response.status);
+      console.error(`Error response data:`, err.response.data);
+    }
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log(
+        `⚙️ Attempting direct Axios fallback for restoring user ${id}...`
+      );
+
+      // Get the auth token for the fallback request
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+
+      const directResponse = await axios.put(
+        `${mainConfig.apiServer}/admin/user/restore-user/${id}`,
+        {},
+        {
+          withCredentials: false,
+          headers: {
+            "Content-Type": "application/json",
+            "x-access-token": token || "",
+          },
+        }
+      );
+      console.log(
+        `⚙️ Direct restore response status: ${directResponse.status}`
+      );
+      console.log(`⚙️ Direct restore response data:`, directResponse.data);
+
+      return {
+        success: directResponse.status >= 200 && directResponse.status < 300,
+        message: directResponse.data?.message || "کاربر با موفقیت بازیابی شد",
+        data: directResponse.data?.data,
+      };
+    } catch (fallbackErr: any) {
+      console.error(
+        "❌ Direct user restoration fallback also failed:",
+        fallbackErr
+      );
+      if (fallbackErr.response) {
+        console.error(
+          `Fallback error response status:`,
+          fallbackErr.response.status
+        );
+        console.error(
+          `Fallback error response data:`,
+          fallbackErr.response.data
+        );
+      }
+      return {
+        success: false,
+        message: err.response?.data?.message || "بازیابی کاربر با خطا مواجه شد",
+      };
+    }
+  }
+};
+
+// Get a specific admin user by ID
+export const getAdminUserById = async (id: string): Promise<ApiResponse> => {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+
+    if (!token) {
+      return {
+        success: false,
+        message: "توکن احراز هویت یافت نشد",
+      };
+    }
+
+    console.log(`🔍 Fetching user details for ID: ${id}`);
+
+    // Try with the standard endpoint format first
+    try {
+      const response = await api.get(`/admin/user/get-user/${id}`, {
+        headers: {
+          "x-access-token": token,
+        },
+      });
+
+      console.log(`🔍 User details response:`, response.status, response.data);
+
+      return {
+        success: true,
+        data: response.data.data || response.data,
+        message: response.data.message || "اطلاعات کاربر با موفقیت دریافت شد",
+      };
+    } catch (endpointError: any) {
+      console.log(
+        `⚠️ First endpoint attempt failed, trying alternative format...`
+      );
+
+      // If the first endpoint fails, try a direct Axios call with different format
+      const directResponse = await axios.get(
+        `${mainConfig.apiServer}/admin/user/get-user/${id}`,
+        {
+          headers: {
+            "x-access-token": token,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      console.log(
+        `🔍 Direct user details response:`,
+        directResponse.status,
+        directResponse.data
+      );
+
+      return {
+        success: true,
+        data: directResponse.data.data || directResponse.data,
+        message:
+          directResponse.data.message || "اطلاعات کاربر با موفقیت دریافت شد",
+      };
+    }
+  } catch (error: any) {
+    console.error("Error fetching admin user details:", error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+      console.error("Request URL:", error.config?.url);
+      console.error("Request headers:", error.config?.headers);
+    } else if (error.request) {
+      console.error("No response received. Request details:", error.request);
+    } else {
+      console.error("Error message:", error.message);
+    }
+
+    // Return structured error response
+    return {
+      success: false,
+      message: error.response?.data?.message || "خطا در دریافت اطلاعات کاربر",
+      status: error.response?.status,
+    };
+  }
+};
+//#endregion
+
+//#region AdminPropertyTypes
+export const getAdminPropertyTypes = async (
+  params: { page?: number; limit?: number; forceRefresh?: boolean } = {}
+): Promise<any[]> => {
+  const { page = 1, limit = 10, forceRefresh = false } = params;
+
+  // Add cache-busting parameter if forceRefresh is true
+  const cacheParam = forceRefresh ? `&_t=${Date.now()}` : "";
+
+  try {
+    console.log(
+      `🔍 Fetching property types (force refresh: ${forceRefresh})...`
+    );
+    const response = await api.get(
+      `/admin/property-type/get-property-types?page=${page}&limit=${limit}${cacheParam}`
+    );
+
+    console.log("🔍 Property types API response status:", response.status);
+
+    // Log data summary
+    const dataStructureSummary = {
+      hasData: !!response.data,
+      isDataObject: response.data && typeof response.data === "object",
+      hasDataData: response.data?.data !== undefined,
+      isDataDataObject:
+        response.data?.data && typeof response.data.data === "object",
+      hasDataDataData: response.data?.data?.data !== undefined,
+      isDataDataDataArray:
+        response.data?.data?.data && Array.isArray(response.data.data.data),
+    };
+    console.log("🔍 Data structure summary:", dataStructureSummary);
+
+    // Handle different possible response structures
+    let data = [];
+    if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
+      data = response.data.data.data;
+      console.log(
+        `🔍 Found ${data.length} property types in response.data.data.data`
+      );
+    } else if (response.data?.data && Array.isArray(response.data.data)) {
+      data = response.data.data;
+      console.log(
+        `🔍 Found ${data.length} property types in response.data.data`
+      );
+    } else if (Array.isArray(response.data)) {
+      data = response.data;
+      console.log(
+        `🔍 Found ${data.length} property types in response.data (array)`
+      );
+    } else {
+      console.warn(
+        "⚠️ Unexpected property types response structure:",
+        response.data
+      );
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error("❌ Error fetching property types:", err);
+    return [];
+  }
+};
+
+export const createAdminPropertyType = async (
+  data: Record<string, any>
+): Promise<ApiResponse> => {
+  try {
+    const response = await api.post(`/admin/property-type/create`, data);
+    return {
+      success: response.status >= 200 && response.status < 300,
+      message: response.data?.message || "نوع کاربری با موفقیت ایجاد شد",
+      data: response.data?.data,
+    };
+  } catch (err: any) {
+    console.error("Error creating property type:", err);
+    return {
+      success: false,
+      message:
+        err.response?.data?.message || "ایجاد نوع کاربری با خطا مواجه شد",
+    };
+  }
+};
+
+export const updateAdminPropertyType = async (
+  id: string,
+  data: Record<string, any>
+): Promise<ApiResponse> => {
+  try {
+    const response = await api.put(`/admin/property-type/update/${id}`, data);
+    return {
+      success: response.status >= 200 && response.status < 300,
+      message: response.data?.message || "نوع کاربری با موفقیت به‌روزرسانی شد",
+      data: response.data?.data,
+    };
+  } catch (err: any) {
+    console.error(`Error updating property type ${id}:`, err);
+    return {
+      success: false,
+      message:
+        err.response?.data?.message || "به‌روزرسانی نوع کاربری با خطا مواجه شد",
+    };
+  }
+};
+
+export const deleteAdminPropertyType = async (
+  id: string
+): Promise<ApiResponse> => {
+  try {
+    const response = await api.delete(`/admin/property-type/delete/${id}`);
+    return {
+      success: response.status >= 200 && response.status < 300,
+      message: response.data?.message || "نوع کاربری با موفقیت حذف شد",
+    };
+  } catch (err: any) {
+    console.error(`Error deleting property type ${id}:`, err);
+    return {
+      success: false,
+      message: err.response?.data?.message || "حذف نوع کاربری با خطا مواجه شد",
+    };
+  }
+};
+
+//#endregion
+
+//#region AdminCategories
+export const getAdminCategories = async (
+  params: { page?: number; limit?: number; forceRefresh?: boolean } = {}
+): Promise<any[]> => {
+  const { page = 1, limit = 10, forceRefresh = false } = params;
+
+  // Add cache-busting parameter if forceRefresh is true
+  const cacheParam = forceRefresh ? `&_t=${Date.now()}` : "";
+
+  try {
+    console.log(`🔍 Fetching categories (force refresh: ${forceRefresh})...`);
+    const response = await api.get(
+      `/admin/category/get-categories?page=${page}&limit=${limit}${cacheParam}`
+    );
+
+    console.log("🔍 Categories API response status:", response.status);
+
+    // Handle different possible response structures
+    let data = [];
+    if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
+      data = response.data.data.data;
+      console.log(
+        `🔍 Found ${data.length} categories in response.data.data.data`
+      );
+    } else if (response.data?.data && Array.isArray(response.data.data)) {
+      data = response.data.data;
+      console.log(`🔍 Found ${data.length} categories in response.data.data`);
+    } else if (Array.isArray(response.data)) {
+      data = response.data;
+      console.log(
+        `🔍 Found ${data.length} categories in response.data (array)`
+      );
+    } else {
+      console.warn(
+        "⚠️ Unexpected categories response structure:",
+        response.data
+      );
+    }
+
+    // Log sample data to check for isDeleted property
+    if (data.length > 0) {
+      console.log("🔍 Sample category:", JSON.stringify(data[0], null, 2));
+      const deletedCategories = data.filter(
+        (cat: any) => cat.isDeleted === true
+      );
+      console.log(
+        `🔍 Found ${deletedCategories.length} deleted categories out of ${data.length}`
+      );
+      if (deletedCategories.length > 0) {
+        console.log(
+          "🔍 First deleted category:",
+          JSON.stringify(deletedCategories[0], null, 2)
+        );
+      }
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error("❌ Error fetching categories:", err);
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log("⚙️ Attempting direct Axios fallback for categories...");
+      const directResponse = await axios.get(
+        `${mainConfig.apiServer}/admin/category/get-categories?page=${page}&limit=${limit}${cacheParam}`,
+        {
+          withCredentials: false,
+        }
+      );
+
+      // Handle different possible response structures
+      let directData = [];
+      if (
+        directResponse.data?.data?.data &&
+        Array.isArray(directResponse.data.data.data)
+      ) {
+        directData = directResponse.data.data.data;
+      } else if (
+        directResponse.data?.data &&
+        Array.isArray(directResponse.data.data)
+      ) {
+        directData = directResponse.data.data;
+      } else if (Array.isArray(directResponse.data)) {
+        directData = directResponse.data;
+      }
+      return directData || [];
+    } catch (fallbackErr) {
+      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
+      return [];
+    }
+  }
+};
+
+// Get a specific category by ID
+export const getAdminCategoryById = async (id: string): Promise<any> => {
+  try {
+    console.log(`🔍 Fetching category details for ID: ${id}`);
+
+    // Get token from localStorage if in browser environment
+    let token = "";
+    if (typeof window !== "undefined") {
+      token = localStorage.getItem("accessToken") || "";
+    }
+
+    // Create headers with authentication token
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    console.log(`🔍 Using authentication token: ${token ? "Yes" : "No"}`);
+
+    // Make the API request
+    const response = await api.get(`/admin/category/get-category/${id}`, {
+      headers,
+    });
+
+    console.log(`🔍 Category details response status: ${response.status}`);
+    console.log(`🔍 Category details data:`, response.data);
+
+    return {
+      success: true,
+      data: response.data.data || response.data,
+      message: response.data.message || "اطلاعات دسته‌بندی با موفقیت دریافت شد",
+      status: response.status,
+    };
+  } catch (err: any) {
+    console.error(`❌ Error fetching category details for ID ${id}:`, err);
+
+    // Log additional error details
+    if (err.response) {
+      console.error("Error response status:", err.response.status);
+      console.error("Error response data:", err.response.data);
+    }
+
+    // Try direct axios fallback
+    try {
+      console.log(
+        "⚙️ Attempting direct Axios fallback for category details..."
+      );
+
+      // Get token from localStorage if in browser environment
+      let token = "";
+      if (typeof window !== "undefined") {
+        token = localStorage.getItem("accessToken") || "";
+      }
+
+      // Create headers with authentication token
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const directResponse = await axios.get(
+        `${mainConfig.apiServer}/admin/category/get-category/${id}`,
+        { headers }
+      );
+
+      console.log(
+        `⚙️ Direct fallback response status: ${directResponse.status}`
+      );
+      console.log(`⚙️ Direct fallback data:`, directResponse.data);
+
+      return {
+        success: true,
+        data: directResponse.data.data || directResponse.data,
+        message:
+          directResponse.data.message ||
+          "اطلاعات دسته‌بندی با موفقیت دریافت شد",
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
+
+      // Return structured error response
+      return {
+        success: false,
+        message:
+          err.response?.data?.message || "خطا در دریافت اطلاعات دسته‌بندی",
+        status: err.response?.status,
+      };
+    }
+  }
+};
+
+export const createAdminCategory = async (
+  data: Record<string, any>
+): Promise<ApiResponse> => {
+  try {
+    const response = await api.post(`/admin/category/create`, data);
+    return {
+      success: response.status >= 200 && response.status < 300,
+      message: response.data?.message || "دسته‌بندی با موفقیت ایجاد شد",
+      data: response.data?.data,
+    };
+  } catch (err: any) {
+    console.error("Error creating category:", err);
+    return {
+      success: false,
+      message: err.response?.data?.message || "ایجاد دسته‌بندی با خطا مواجه شد",
+    };
+  }
+};
+
+export const updateAdminCategory = async (
+  id: string,
+  data: Record<string, any>
+): Promise<ApiResponse> => {
+  try {
+    const response = await api.put(`/admin/category/update/${id}`, data);
+    return {
+      success: response.status >= 200 && response.status < 300,
+      message: response.data?.message || "دسته‌بندی با موفقیت به‌روزرسانی شد",
+      data: response.data?.data,
+    };
+  } catch (err: any) {
+    console.error(`Error updating category ${id}:`, err);
+    return {
+      success: false,
+      message:
+        err.response?.data?.message || "به‌روزرسانی دسته‌بندی با خطا مواجه شد",
+    };
+  }
+};
+
+export const deleteAdminCategory = async (id: string): Promise<ApiResponse> => {
+  try {
+    const response = await api.delete(`/admin/category/delete/${id}`);
+    return {
+      success: response.status >= 200 && response.status < 300,
+      message: response.data?.message || "دسته‌بندی با موفقیت حذف شد",
+    };
+  } catch (err: any) {
+    console.error(`Error deleting category ${id}:`, err);
+    return {
+      success: false,
+      message: err.response?.data?.message || "حذف دسته‌بندی با خطا مواجه شد",
+    };
+  }
+};
+
+export const restoreAdminCategory = async (
+  id: string
+): Promise<ApiResponse> => {
+  try {
+    const response = await api.put(`/admin/category/restore/${id}`);
+    return {
+      success: response.status >= 200 && response.status < 300,
+      message: response.data?.message || "دسته‌بندی با موفقیت بازیابی شد",
+    };
+  } catch (err: any) {
+    console.error(`Error restoring category ${id}:`, err);
+    return {
+      success: false,
+      message:
+        err.response?.data?.message || "بازیابی دسته‌بندی با خطا مواجه شد",
+    };
+  }
+};
+//#endregion
+
+// Get a specific property type by ID
+export const getAdminPropertyType = async (id: string): Promise<any> => {
+  try {
+    console.log(`🔍 Fetching property type details for ID: ${id}`);
+
+    // Get token from localStorage if in browser environment
+    let token = "";
+    if (typeof window !== "undefined") {
+      token = localStorage.getItem("accessToken") || "";
+    }
+
+    // Create headers with authentication token
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    // Make the API request
+    const response = await api.get(
+      `/admin/property-type/get-property-type/${id}`,
+      {
+        headers,
+      }
+    );
+
+    console.log(`🔍 Property type details response status: ${response.status}`);
+
+    return {
+      success: true,
+      data: response.data.data || response.data,
+      message:
+        response.data.message || "اطلاعات نوع کاربری با موفقیت دریافت شد",
+      status: response.status,
+    };
+  } catch (error: any) {
+    console.error(
+      `❌ Error fetching property type details for ID ${id}:`,
+      error
+    );
+
+    // Log additional error details
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+    }
+
+    // Try direct axios fallback
+    try {
+      console.log(
+        "⚙️ Attempting direct Axios fallback for property type details..."
+      );
+
+      // Get token from localStorage if in browser environment
+      let token = "";
+      if (typeof window !== "undefined") {
+        token = localStorage.getItem("accessToken") || "";
+      }
+
+      // Create headers with authentication token
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const directResponse = await axios.get(
+        `${mainConfig.apiServer}/admin/property-type/get-property-type/${id}`,
+        { headers }
+      );
+
+      return {
+        success: true,
+        data: directResponse.data.data || directResponse.data,
+        message:
+          directResponse.data.message ||
+          "اطلاعات نوع کاربری با موفقیت دریافت شد",
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
+
+      // Return structured error response
+      return {
+        success: false,
+        message:
+          error.response?.data?.message || "خطا در دریافت اطلاعات نوع کاربری",
+        status: error.response?.status,
+      };
+    }
+  }
+};

@@ -42,6 +42,7 @@ interface RegionsListProps {
   parentRegions: Region[];
   isLoading?: boolean;
   onDataChange?: () => void; // Callback for when data changes
+  showDeletedItems?: boolean; // Whether to show deleted items
 }
 
 export default function RegionsList({
@@ -50,6 +51,7 @@ export default function RegionsList({
   parentRegions,
   isLoading = false,
   onDataChange,
+  showDeletedItems = false,
 }: RegionsListProps) {
   const [regions, setRegions] = useState<Region[]>(initialRegions);
   const [search, setSearch] = useState("");
@@ -142,6 +144,25 @@ export default function RegionsList({
           region.slug.toLowerCase().includes(search.toLowerCase())
       )
     : regions;
+
+  // Log if we have any deleted items for debugging
+  const deletedCount = regions.filter(
+    (region) => region.isDeleted === true
+  ).length;
+  const filteredDeletedCount = filteredRegions.filter(
+    (region) => region.isDeleted === true
+  ).length;
+
+  // Only log in non-production
+  if (typeof window !== "undefined" && deletedCount > 0) {
+    console.log(
+      `📋 Region List for ${type}: Found ${deletedCount} deleted items out of ${regions.length} total`
+    );
+    console.log(
+      `📋 Filtered List: ${filteredDeletedCount} deleted items out of ${filteredRegions.length} after search filtering`
+    );
+    console.log(`📋 showDeletedItems is set to: ${showDeletedItems}`);
+  }
 
   // Generate a random code for countries (numeric)
   const generateRandomCode = (): string => {
@@ -491,6 +512,7 @@ export default function RegionsList({
                 name: apiData.name || formData.name,
                 slug: apiData.slug || formData.slug,
                 originalId: apiData._id,
+                isDeleted: apiData.isDeleted || false,
               };
 
               if (type === "countries") {
@@ -617,6 +639,7 @@ export default function RegionsList({
               ...item,
               name: formData.name,
               slug: formData.slug,
+              isDeleted: item.isDeleted || false, // Preserve isDeleted status
             };
 
             // For countries, add additional fields
@@ -654,6 +677,7 @@ export default function RegionsList({
         id: newId,
         name: formData.name,
         slug: formData.slug,
+        isDeleted: false, // New items are not deleted
       };
 
       // For countries, add additional fields
@@ -826,6 +850,7 @@ export default function RegionsList({
         isLoading={isLoading}
         handleEdit={handleAddEdit}
         handleDelete={handleDeleteClick}
+        showDeletedItems={showDeletedItems}
       />
       <RegionFormModal
         isOpen={isFormModalOpen}

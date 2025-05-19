@@ -7,6 +7,8 @@ import {
   FaChartBar,
   FaComments,
   FaMapMarkerAlt,
+  FaTag,
+  FaLayerGroup,
 } from "react-icons/fa";
 
 export interface MenuItem {
@@ -17,13 +19,14 @@ export interface MenuItem {
 
 const mainMenuItems: MenuItem[] = [
   { name: "داشبورد", href: "/admin", icon: FaHome },
-  { name: "املاک", href: "/admin/properties", icon: FaBuilding },
+  // { name: "املاک", href: "/admin/properties", icon: FaBuilding },
   { name: "کاربران", href: "/admin/users", icon: FaUsers },
   { name: "آژانس‌ها", href: "/admin/agencies", icon: FaUserTie },
+  { name: "نوع کاربری", href: "/admin/fields_type", icon: FaTag },
+  { name: "دسته‌بندی‌ها", href: "/admin/categories", icon: FaLayerGroup },
   { name: "مناطق", href: "/admin/regions", icon: FaMapMarkerAlt },
-  { name: "آمار و گزارشات", href: "/admin/reports", icon: FaChartBar },
-  { name: "پیام‌ها", href: "/admin/messages", icon: FaComments },
-  { name: "تنظیمات", href: "/admin/settings", icon: FaCog },
+  // { name: "آمار و گزارشات", href: "/admin/reports", icon: FaChartBar },
+  // { name: "پیام‌ها", href: "/admin/messages", icon: FaComments },
 ];
 
 export default mainMenuItems;

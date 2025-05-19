@@ -9,6 +9,8 @@ import adminAuthService from "../services/authService";
 import { useAuth } from "@/contexts/AuthContext";
 import { FaHeadset, FaArrowRight } from "react-icons/fa";
 import { motion } from "framer-motion";
+import axios from "axios";
+import Cookies from "js-cookie";
 
 const VerificationContainer = () => {
   const router = useRouter();
@@ -54,20 +56,34 @@ const VerificationContainer = () => {
 
       console.log("Login API response:", response);
 
-      if (response.success) {
+      if (response.success && response.data && response.data.accessToken) {
         // Set authenticating state to true to show loading screen
         setIsAuthenticating(true);
 
         // Set a flag in sessionStorage to prevent redirect loops during authentication
         sessionStorage.setItem("isAuthenticating", "true");
 
+        // Extract token from response
+        const { accessToken } = response.data;
+
+        // Store the token in cookie for middleware detection
+        Cookies.set("accessToken", accessToken, {
+          expires: 1, // 1 day
+          path: "/",
+          secure: window.location.protocol === "https:",
+          sameSite: "Lax",
+        });
+
+        // Set the x-access-token header for future API requests
+        axios.defaults.headers.common["x-access-token"] = accessToken;
+
         // Also update the AuthContext state to avoid authentication conflicts
         // This ensures both auth systems are in sync
         if (response.data) {
-          const { accessToken, userId, roles } = response.data;
+          const { userId, roles } = response.data;
           const userData = {
-            id: userId,
-            roles: roles,
+            id: userId || "",
+            roles: roles || [],
           };
 
           // Call the AuthContext login to sync both auth systems

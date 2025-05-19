@@ -1,5 +1,6 @@
 import axios from "axios";
 import config from "@/configs/mainConfig";
+import Cookies from "js-cookie";
 
 // Create an axios instance with the base URL from config
 const apiClient = axios.create({
@@ -14,7 +15,9 @@ apiClient.interceptors.request.use(
   (config) => {
     // Check if the request URL includes /admin
     if (config.url?.includes("/admin") || config.url?.includes("/api")) {
-      const token = localStorage.getItem("accessToken");
+      // Try to get token from cookies first, then localStorage as fallback
+      const token =
+        Cookies.get("accessToken") || localStorage.getItem("accessToken");
       if (token) {
         config.headers["x-access-token"] = token;
       }
@@ -121,7 +124,20 @@ const adminAuthService = {
         localStorage.setItem("sessionId", sessionId);
         localStorage.setItem("roles", JSON.stringify(roles));
 
-        console.log("Login successful. Tokens stored.");
+        // Also store the accessToken in cookies for middleware detection
+        Cookies.set("accessToken", accessToken, {
+          expires: 1, // 1 day
+          path: "/",
+          secure: window.location.protocol === "https:",
+          sameSite: "Lax",
+        });
+
+        // Also set for axios client globally
+        axios.defaults.headers.common["x-access-token"] = accessToken;
+
+        console.log(
+          "Login successful. Tokens stored in localStorage and cookies."
+        );
       }
 
       return response.data;
@@ -141,14 +157,16 @@ const adminAuthService = {
    * Check if admin is authenticated
    */
   isAuthenticated: (): boolean => {
-    return !!localStorage.getItem("accessToken");
+    return !!(
+      Cookies.get("accessToken") || localStorage.getItem("accessToken")
+    );
   },
 
   /**
    * Get the current auth token
    */
   getAuthToken: (): string | null => {
-    return localStorage.getItem("accessToken");
+    return Cookies.get("accessToken") || localStorage.getItem("accessToken");
   },
 
   /**
@@ -163,11 +181,18 @@ const adminAuthService = {
    * Logout admin
    */
   logout: (): void => {
+    // Clear localStorage items
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userId");
     localStorage.removeItem("sessionId");
     localStorage.removeItem("roles");
+
+    // Clear cookies
+    Cookies.remove("accessToken", { path: "/" });
+
+    // Clear axios headers
+    delete axios.defaults.headers.common["x-access-token"];
   },
 };
 

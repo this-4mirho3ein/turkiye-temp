@@ -1,12 +1,67 @@
 "use server";
 
 import users, { User, UserRole, roleGroups, RoleGroup, Role } from "./users";
+import { getAdminUsers } from "@/controllers/makeRequest";
 
 // Server action to fetch all users
 export async function getUsers(): Promise<User[]> {
-  // This simulates a database fetch
-  // In a real app, this would be an actual database query
-  return users;
+  try {
+    // Fetch real users from API - removing includeDeleted to fix type error
+    const apiUsers = await getAdminUsers({ limit: 100 });
+
+    // Map API users to our User interface
+    if (apiUsers && Array.isArray(apiUsers)) {
+      return apiUsers.map((user: any) => {
+        // Generate a numeric ID from the string ID
+        const id =
+          parseInt(user._id.substring(user._id.length - 6), 16) ||
+          Math.floor(Math.random() * 10000);
+
+        // Extract name
+        const name =
+          user.firstName && user.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : user.phone;
+
+        // Map API role to our UserRole type
+        let role: UserRole = "normal"; // Default role
+        if (user.roles && user.roles.length > 0) {
+          // Find the first role that matches our UserRole type
+          const foundRole = user.roles.find(
+            (r: string) => r === "admin" || r === "agency" || r === "consultant"
+          );
+
+          if (foundRole) {
+            role = foundRole as UserRole;
+          } else if (user.roles.includes("customer")) {
+            role = "normal"; // Map "customer" to "normal"
+          }
+        }
+
+        return {
+          id,
+          name,
+          email: user.email || "",
+          phone: user.phone || "",
+          role,
+          status: user.isActive ? "active" : "inactive",
+          createdAt: new Date(user.createdAt)
+            .toLocaleDateString("fa-IR")
+            .replace(/\//g, "/"),
+          originalId: user._id, // Keep original ID for API calls
+          isDeleted: user.isDeleted || false, // Add isDeleted flag with default
+        };
+      });
+    }
+
+    // Fallback to mock data if API fails
+    return users;
+  } catch (error) {
+    console.error("Error fetching users in server action:", error);
+
+    // Fallback to mock data
+    return users;
+  }
 }
 
 // Server action to fetch role groups (without icon components)

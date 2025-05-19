@@ -9,10 +9,14 @@ import {
   FaCheck,
   FaUserPlus,
   FaFilter,
+  FaTrashRestore,
+  FaTimes,
+  FaUsers,
 } from "react-icons/fa";
 import Button from "@/components/admin/ui/Button";
 import Input from "@/components/admin/ui/Input";
 import Avatar from "@/components/admin/ui/Avatar";
+import Link from "next/link";
 import {
   Modal,
   ModalContent,
@@ -32,15 +36,23 @@ import UserRoleBadge from "./UserRoleBadge";
 import { User, UserRole } from "../data/users";
 import UserEditForm from "./UserEditForm";
 import { filterUsers, addUser, updateUser, deleteUser } from "../data/actions";
+import { deleteAdminUser, restoreAdminUser } from "@/controllers/makeRequest";
+import { motion } from "framer-motion";
 
 interface UsersListProps {
   filterRole?: UserRole | "all";
   initialUsers: User[];
+  isLoading?: boolean;
+  refetchUsers?: () => Promise<any>;
+  showEmptyState?: boolean;
 }
 
 export default function UsersList({
   filterRole = "all",
   initialUsers,
+  isLoading: apiLoading = false,
+  refetchUsers,
+  showEmptyState = false,
 }: UsersListProps) {
   const [displayUsers, setDisplayUsers] = useState<User[]>(initialUsers);
   const [search, setSearch] = useState("");
@@ -66,16 +78,62 @@ export default function UsersList({
 
   // Load users using server action
   const loadUsers = async () => {
+    // Don't load if we're already fetching from API
+    if (apiLoading) return;
+
     setIsLoading(true);
     try {
+      // First try using server action
       const data = await filterUsers(search, currentFilter);
-      setDisplayUsers(data);
+
+      if (data && data.length > 0) {
+        setDisplayUsers(data);
+      } else {
+        // If server action returns empty data but we have initialUsers,
+        // filter them based on search and currentFilter
+        const filteredUsers = initialUsers.filter((user) => {
+          // Filter by search term
+          const matchesSearch = search
+            ? user.name.toLowerCase().includes(search.toLowerCase()) ||
+              user.email.toLowerCase().includes(search.toLowerCase()) ||
+              user.phone.includes(search)
+            : true;
+
+          // Filter by role
+          const matchesRole =
+            currentFilter === "all" ? true : user.role === currentFilter;
+
+          return matchesSearch && matchesRole;
+        });
+
+        setDisplayUsers(filteredUsers);
+      }
     } catch (error) {
       console.error("Failed to load users:", error);
+
+      // Fallback to filtering initialUsers client-side
+      const filteredUsers = initialUsers.filter((user) => {
+        // Filter by search term
+        const matchesSearch = search
+          ? user.name.toLowerCase().includes(search.toLowerCase()) ||
+            user.email.toLowerCase().includes(search.toLowerCase()) ||
+            user.phone.includes(search)
+          : true;
+
+        // Filter by role
+        const matchesRole =
+          currentFilter === "all" ? true : user.role === currentFilter;
+
+        return matchesSearch && matchesRole;
+      });
+
+      setDisplayUsers(filteredUsers);
+
       addToast({
-        title: "خطا",
-        description: "بارگذاری کاربران با مشکل مواجه شد",
-        color: "danger",
+        title: "هشدار",
+        description:
+          "بارگیری اطلاعات سرور با مشکل مواجه شد. نمایش اطلاعات محلی.",
+        color: "warning",
         icon: <FaExclamationTriangle />,
       });
     } finally {
@@ -87,6 +145,22 @@ export default function UsersList({
   useEffect(() => {
     loadUsers();
   }, [search, currentFilter]);
+
+  // Update displayUsers when initialUsers changes, but keep any filtering applied
+  useEffect(() => {
+    // Re-apply current filters instead of just setting to initialUsers
+    if (search || currentFilter !== "all") {
+      loadUsers();
+    } else {
+      setDisplayUsers(initialUsers);
+    }
+
+    // Log for debugging
+    console.log(
+      "Received updated initialUsers list. Length:",
+      initialUsers.length
+    );
+  }, [initialUsers]);
 
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
@@ -105,28 +179,67 @@ export default function UsersList({
 
   const confirmDelete = async () => {
     if (userToDelete) {
+      setIsLoading(true);
       try {
-        const success = await deleteUser(userToDelete.id);
+        // Check if we have an originalId (API ID) to use
+        if (userToDelete.originalId) {
+          // Use the API function for deletion
+          const response = await deleteAdminUser(userToDelete.originalId);
 
-        if (success) {
-          // Show success toast notification for delete
-          addToast({
-            title: "حذف موفقیت‌آمیز",
-            description: `کاربر ${userToDelete.name} با موفقیت حذف شد`,
-            color: "danger",
-            icon: <FaTrash />,
-          });
+          if (response.success) {
+            // Show success toast notification for delete
+            addToast({
+              title: "حذف موفقیت‌آمیز",
+              description:
+                response.message ||
+                `کاربر ${userToDelete.name} با موفقیت حذف شد`,
+              color: "danger",
+              icon: <FaTrash />,
+            });
 
-          // Refresh the user list
-          loadUsers();
+            // Refresh the user list from API
+            if (refetchUsers) {
+              await refetchUsers();
+            } else {
+              await loadUsers();
+            }
+          } else {
+            // Show error toast
+            addToast({
+              title: "خطا",
+              description: response.message || "حذف کاربر با مشکل مواجه شد",
+              color: "danger",
+              icon: <FaExclamationTriangle />,
+            });
+          }
         } else {
-          // Show error toast
-          addToast({
-            title: "خطا",
-            description: "حذف کاربر با مشکل مواجه شد",
-            color: "danger",
-            icon: <FaExclamationTriangle />,
-          });
+          // Fallback to server action for local users
+          const success = await deleteUser(userToDelete.id);
+
+          if (success) {
+            // Show success toast notification for delete
+            addToast({
+              title: "حذف موفقیت‌آمیز",
+              description: `کاربر ${userToDelete.name} با موفقیت حذف شد`,
+              color: "danger",
+              icon: <FaTrash />,
+            });
+
+            // Refresh the user list from API
+            if (refetchUsers) {
+              await refetchUsers();
+            } else {
+              await loadUsers();
+            }
+          } else {
+            // Show error toast
+            addToast({
+              title: "خطا",
+              description: "حذف کاربر با مشکل مواجه شد",
+              color: "danger",
+              icon: <FaExclamationTriangle />,
+            });
+          }
         }
       } catch (error) {
         console.error("Error deleting user:", error);
@@ -136,25 +249,100 @@ export default function UsersList({
           color: "danger",
           icon: <FaExclamationTriangle />,
         });
+      } finally {
+        setIsLoading(false);
+        onDeleteModalClose();
+        setUserToDelete(null);
       }
+    }
+  };
 
-      onDeleteModalClose();
-      setUserToDelete(null);
+  const handleRestoreUser = async (user: User) => {
+    if (!user.originalId) {
+      addToast({
+        title: "خطا",
+        description: "شناسه کاربر برای بازیابی یافت نشد",
+        color: "danger",
+        icon: <FaExclamationTriangle />,
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await restoreAdminUser(user.originalId);
+
+      if (response.success) {
+        addToast({
+          title: "بازیابی موفقیت‌آمیز",
+          description: `کاربر ${user.name} با موفقیت بازیابی شد`,
+          color: "success",
+          icon: <FaCheck />,
+        });
+
+        // Refresh the user list from API
+        if (refetchUsers) {
+          await refetchUsers();
+        } else {
+          await loadUsers();
+        }
+      } else {
+        addToast({
+          title: "خطا",
+          description: response.message || "بازیابی کاربر با مشکل مواجه شد",
+          color: "danger",
+          icon: <FaExclamationTriangle />,
+        });
+      }
+    } catch (error) {
+      console.error("Error restoring user:", error);
+      addToast({
+        title: "خطا",
+        description: "بازیابی کاربر با مشکل مواجه شد",
+        color: "danger",
+        icon: <FaExclamationTriangle />,
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleUserSave = async (userData: User) => {
     try {
       if (selectedUser) {
-        // Update existing user
-        await updateUser(userData);
+        // If the user has an originalId, it was loaded from the API and should be updated there
+        if (selectedUser.originalId) {
+          // API was already called in UserEditForm, just refresh the list
+          if (refetchUsers) {
+            await refetchUsers();
+          } else {
+            await loadUsers();
+          }
 
-        addToast({
-          title: "ویرایش موفقیت‌آمیز",
-          description: `اطلاعات کاربر ${userData.name} با موفقیت بروزرسانی شد`,
-          color: "success",
-          icon: <FaCheck />,
-        });
+          addToast({
+            title: "ویرایش موفقیت‌آمیز",
+            description: `اطلاعات کاربر ${userData.name} با موفقیت بروزرسانی شد`,
+            color: "success",
+            icon: <FaCheck />,
+          });
+        } else {
+          // Update existing local user
+          await updateUser(userData);
+
+          addToast({
+            title: "ویرایش موفقیت‌آمیز",
+            description: `اطلاعات کاربر ${userData.name} با موفقیت بروزرسانی شد`,
+            color: "success",
+            icon: <FaCheck />,
+          });
+
+          // Refresh the user list
+          if (refetchUsers) {
+            await refetchUsers();
+          } else {
+            await loadUsers();
+          }
+        }
       } else {
         // Add new user
         const { id, createdAt, ...userDataWithoutId } = userData;
@@ -166,10 +354,14 @@ export default function UsersList({
           color: "success",
           icon: <FaCheck />,
         });
-      }
 
-      // Refresh the user list
-      loadUsers();
+        // Refresh the user list
+        if (refetchUsers) {
+          await refetchUsers();
+        } else {
+          await loadUsers();
+        }
+      }
     } catch (error) {
       console.error("Error saving user:", error);
       addToast({
@@ -194,6 +386,10 @@ export default function UsersList({
     setSearch("");
     setCurrentFilter("all");
   };
+
+  // Check if we should show the loading state or empty state
+  const isTableLoading = isLoading || apiLoading;
+  const isTableEmpty = !isTableLoading && displayUsers.length === 0;
 
   return (
     <div className="space-y-6">
@@ -221,22 +417,27 @@ export default function UsersList({
                     </span>
                   ) : undefined
                 }
+                className="border-primary text-primary hover:bg-primary/10 transition-colors"
               >
                 فیلتر
               </Button>
             </DropdownTrigger>
             <DropdownMenu
               aria-label="فیلتر کاربران"
-              className="p-3 min-w-[200px]"
+              className="p-4 min-w-[240px] bg-white rounded-lg shadow-lg border border-gray-200"
             >
-              <DropdownItem key="role-filter" textValue="نقش کاربری">
-                <p className="font-semibold mb-2">نقش کاربری</p>
-                <div className="flex flex-col gap-2">
+              <DropdownItem
+                key="role-filter"
+                textValue="نقش کاربری"
+                className="p-0"
+              >
+                <p className="font-semibold mb-3 text-gray-700">نقش کاربری</p>
+                <div className="flex flex-col gap-2 bg-gray-50 p-3 rounded-lg">
                   <Button
                     size="sm"
                     variant={currentFilter === "all" ? "solid" : "light"}
                     color={currentFilter === "all" ? "primary" : "secondary"}
-                    className="justify-start"
+                    className="justify-start rounded-full"
                     onPress={() => setCurrentFilter("all")}
                   >
                     همه کاربران
@@ -245,7 +446,7 @@ export default function UsersList({
                     size="sm"
                     variant={currentFilter === "admin" ? "solid" : "light"}
                     color={currentFilter === "admin" ? "primary" : "secondary"}
-                    className="justify-start"
+                    className="justify-start rounded-full"
                     onPress={() => setCurrentFilter("admin")}
                   >
                     مدیران
@@ -254,7 +455,7 @@ export default function UsersList({
                     size="sm"
                     variant={currentFilter === "agency" ? "solid" : "light"}
                     color={currentFilter === "agency" ? "primary" : "secondary"}
-                    className="justify-start"
+                    className="justify-start rounded-full"
                     onPress={() => setCurrentFilter("agency")}
                   >
                     آژانس‌ها
@@ -265,7 +466,7 @@ export default function UsersList({
                     color={
                       currentFilter === "consultant" ? "primary" : "secondary"
                     }
-                    className="justify-start"
+                    className="justify-start rounded-full"
                     onPress={() => setCurrentFilter("consultant")}
                   >
                     مشاوران
@@ -274,16 +475,17 @@ export default function UsersList({
                     size="sm"
                     variant={currentFilter === "normal" ? "solid" : "light"}
                     color={currentFilter === "normal" ? "primary" : "secondary"}
-                    className="justify-start"
+                    className="justify-start rounded-full"
                     onPress={() => setCurrentFilter("normal")}
                   >
                     کاربران عادی
                   </Button>
                 </div>
               </DropdownItem>
+              <Divider className="my-3" />
               <DropdownItem
                 key="clear-filters"
-                className="mt-3 justify-center text-danger"
+                className="justify-center text-danger bg-danger/5 rounded-lg hover:bg-danger/10 mt-2 p-2"
                 onPress={clearFilters}
               >
                 حذف فیلترها
@@ -313,23 +515,44 @@ export default function UsersList({
               <th className="px-6 py-3">نقش</th>
               <th className="px-6 py-3">وضعیت</th>
               <th className="px-6 py-3">تاریخ ثبت نام</th>
+              <th className="px-6 py-3">وضعیت حذف</th>
               <th className="px-6 py-3 text-center">عملیات</th>
             </tr>
           </thead>
           <tbody>
-            {isLoading ? (
+            {isTableLoading && (
               <tr className="bg-white border-b">
                 <td
-                  colSpan={8}
+                  colSpan={9}
                   className="px-6 py-10 text-center text-gray-500"
                 >
                   در حال بارگذاری...
                 </td>
               </tr>
-            ) : displayUsers.length > 0 ? (
+            )}
+            {isTableEmpty && (
+              <tr className="bg-white border-b">
+                <td
+                  colSpan={9}
+                  className="px-6 py-10 text-center text-gray-500"
+                >
+                  {showEmptyState
+                    ? "کاربری یافت نشد"
+                    : "در حال دریافت اطلاعات کاربران..."}
+                </td>
+              </tr>
+            )}
+            {displayUsers.length > 0 &&
               displayUsers.map((user, index) => (
-                <tr
+                <motion.tr
                   key={user.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.3,
+                    delay: index * 0.05,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
                   className="bg-white border-b hover:bg-gray-50"
                 >
                   <td className="px-6 py-4 text-center">{index + 1}</td>
@@ -341,7 +564,12 @@ export default function UsersList({
                         size="sm"
                         className="flex-shrink-0"
                       />
-                      <span className="font-medium">{user.name}</span>
+                      <Link
+                        href={`/admin/users/${user.originalId || user.id}`}
+                        className="font-medium text-primary hover:text-primary-dark hover:underline transition-colors"
+                      >
+                        {user.name}
+                      </Link>
                     </div>
                   </td>
                   <td className="px-6 py-4">{user.email}</td>
@@ -355,43 +583,82 @@ export default function UsersList({
                     <UserStatusBadge status={user.status} />
                   </td>
                   <td className="px-6 py-4">{user.createdAt}</td>
+                  <td className="px-6 py-4">
+                    {user.isDeleted ? (
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                        حذف شده
+                      </span>
+                    ) : (
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        فعال
+                      </span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 text-center">
-                    <div className="flex justify-center space-x-2 space-x-reverse">
+                    <div className="flex justify-center items-center gap-3">
                       <Button
-                        variant="light"
+                        variant="solid"
                         size="sm"
                         color="primary"
-                        isIconOnly
                         onPress={() => handleEditUser(user)}
+                        className="gap-1.5 bg-blue-500 hover:bg-blue-600 text-white"
+                        aria-label="ویرایش"
+                        tabIndex={0}
                       >
-                        <FaEdit />
+                        <FaEdit /> ویرایش
                       </Button>
-                      <Button
-                        variant="light"
-                        size="sm"
-                        color="danger"
-                        isIconOnly
-                        onPress={() => handleDeleteClick(user)}
-                      >
-                        <FaTrash />
-                      </Button>
+                      {user.isDeleted ? (
+                        <Button
+                          variant="solid"
+                          size="sm"
+                          color="success"
+                          onPress={() => handleRestoreUser(user)}
+                          className="gap-1.5 bg-green-500 hover:bg-green-600 text-white"
+                          aria-label="بازیابی"
+                          tabIndex={0}
+                        >
+                          <FaTrashRestore /> بازیابی
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="solid"
+                          size="sm"
+                          color="danger"
+                          onPress={() => handleDeleteClick(user)}
+                          className="gap-1.5 bg-red-500 hover:bg-red-600 text-white"
+                          aria-label="حذف"
+                          tabIndex={0}
+                        >
+                          <FaTrash /> حذف
+                        </Button>
+                      )}
                     </div>
                   </td>
-                </tr>
-              ))
-            ) : (
-              <tr className="bg-white border-b">
-                <td
-                  colSpan={8}
-                  className="px-6 py-10 text-center text-gray-500"
-                >
-                  کاربری یافت نشد
-                </td>
-              </tr>
-            )}
+                </motion.tr>
+              ))}
           </tbody>
         </table>
       </div>
+
+      {/* Edit Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={onEditModalClose}
+        size="3xl"
+        className="rtl"
+      >
+        <ModalContent className="max-w-4xl p-0">
+          <ModalHeader className="bg-gradient-to-r from-primary-50 to-indigo-50 text-xl">
+            {selectedUser ? "ویرایش کاربر" : "افزودن کاربر جدید"}
+          </ModalHeader>
+          <Divider />
+          <UserEditForm
+            user={selectedUser}
+            onSave={handleUserSave}
+            onCancel={onEditModalClose}
+          />
+        </ModalContent>
+      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal isOpen={isDeleteModalOpen} onClose={onDeleteModalClose} size="sm">
@@ -414,30 +681,23 @@ export default function UsersList({
           <ModalFooter>
             <Button
               color="primary"
-              variant="light"
+              variant="solid"
               onPress={onDeleteModalClose}
+              className="bg-blue-500 hover:bg-blue-600 text-white gap-1.5"
+              isDisabled={isLoading}
             >
-              انصراف
+              <FaTimes /> انصراف
             </Button>
-            <Button color="danger" onPress={confirmDelete}>
-              تأیید حذف
+            <Button
+              color="danger"
+              variant="solid"
+              onPress={confirmDelete}
+              className="bg-red-500 hover:bg-red-600 text-white gap-1.5"
+              isDisabled={isLoading}
+            >
+              <FaTrash /> {isLoading ? "در حال حذف..." : "تأیید حذف"}
             </Button>
           </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Edit User Modal */}
-      <Modal isOpen={isEditModalOpen} onClose={onEditModalClose} size="xl">
-        <ModalContent>
-          <ModalHeader>
-            {selectedUser ? "ویرایش کاربر" : "افزودن کاربر جدید"}
-          </ModalHeader>
-          <Divider />
-          <UserEditForm
-            user={selectedUser}
-            onSave={handleUserSave}
-            onCancel={onEditModalClose}
-          />
         </ModalContent>
       </Modal>
     </div>

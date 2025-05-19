@@ -82,10 +82,45 @@ api.interceptors.response.use(
   (error) => {
     if (!error.response) {
       console.error("Network error or no response from server", error);
-      return Promise.reject({ status: 500, message: "Network error" });
+
+      // Log more details about the request that failed
+      if (error.config) {
+        console.error("Failed request URL:", error.config.url);
+        console.error("Failed request method:", error.config.method);
+        console.error("Failed request headers:", error.config.headers);
+
+        // Log a portion of the request data if available
+        if (error.config.data) {
+          try {
+            const data =
+              typeof error.config.data === "string"
+                ? JSON.parse(error.config.data)
+                : error.config.data;
+            console.error("Failed request data:", data);
+          } catch (e) {
+            console.error(
+              "Failed request data (unparseable):",
+              error.config.data
+            );
+          }
+        }
+      }
+
+      return Promise.reject({
+        status: 500,
+        message: "Network error",
+        originalError: error,
+      });
     }
 
     const status = error.response.status;
+    const isAdminApiCall = error.config.url?.includes("/admin/");
+
+    // Enhanced error logging
+    console.error(
+      `API Error [${status}] for ${error.config.url}:`,
+      error.response.data || "No response data"
+    );
 
     switch (status) {
       case 400:
@@ -93,21 +128,23 @@ api.interceptors.response.use(
         validateMessage(error.response.data.message); // Show toast
         break;
       case 401:
-        if (typeof window !== "undefined") {
+        console.error("Unauthorized: Authentication required");
+        if (typeof window !== "undefined" && !isAdminApiCall) {
           // window.location.href = "/auth/login"; // Redirect on Unauthorized
         }
         break;
       case 403:
         console.error("Forbidden: You do not have access.");
-        if (typeof window !== "undefined") {
+        if (typeof window !== "undefined" && !isAdminApiCall) {
           window.location.href = "/403"; // Redirect to custom 403 page
         }
         break;
       case 404:
-        if (typeof window !== "undefined") {
-          window.location.href = "/not-found"; // Redirect on Unauthorized
-        }
         console.error("Not Found:", error.response.data);
+        // Only redirect for non-admin API page requests
+        if (typeof window !== "undefined" && !isAdminApiCall) {
+          window.location.href = "/not-found"; // Redirect for 404
+        }
         break;
       case 500:
         console.error("Server Error:", error.response.data);

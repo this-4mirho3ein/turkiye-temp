@@ -8,6 +8,12 @@ import { Metadata } from "next";
 // };
 
 export default function User() {
-    return <ProfileComponent />;
+  return (
+    <ProfileComponent>
+      <div className="p-6">
+        <h1 className="text-xl font-bold mb-4">حساب کاربری</h1>
+        <p className="text-gray-600">اطلاعات حساب کاربری شما</p>
+      </div>
+    </ProfileComponent>
+  );
 }
-

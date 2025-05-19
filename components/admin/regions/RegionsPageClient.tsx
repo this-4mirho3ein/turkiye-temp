@@ -1,9 +1,16 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Tabs, Tab } from "@heroui/react";
+import { Tabs, Tab, Checkbox, addToast } from "@heroui/react";
 import Card, { CardBody } from "@/components/admin/ui/Card";
-import { FaGlobe, FaMapMarkedAlt, FaCity, FaMapPin } from "react-icons/fa";
+import {
+  FaGlobe,
+  FaMapMarkedAlt,
+  FaCity,
+  FaMapPin,
+  FaFilter,
+  FaSync,
+} from "react-icons/fa";
 import RegionsList from "./RegionsList";
 import { Region } from "@/components/admin/data/regions";
 import { useApi } from "@/hooks/useApi";
@@ -75,6 +82,7 @@ function RegionsPageClientInner() {
   const [selectedTab, setSelectedTab] = useState("countries");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const queryClient = useQueryClient();
+  const [showDeletedItems, setShowDeletedItems] = useState(false);
 
   // Function to force refresh all data
   const refreshAllData = useCallback(async () => {
@@ -201,121 +209,83 @@ function RegionsPageClientInner() {
 
   // Convert API response to match Region interface
   const mapToRegions = (items: ApiRegion[] = [], type?: string): Region[] => {
-    // Make sure items is actually an array
-    if (!items || !Array.isArray(items)) {
-      console.warn(`Invalid data for ${type}, expected array but got:`, items);
-      return [];
+    // Log any deleted items for debugging
+    const deletedItems = items.filter((item) => item.isDeleted === true);
+    if (deletedItems.length > 0) {
+      console.log(
+        `🔄 Found ${deletedItems.length} deleted items in ${type} mapping:`,
+        deletedItems
+      );
     }
 
+    // Log total count for debugging
     console.log(
-      `Mapping ${items.length} ${type || "items"} to Region interface...`
+      `🔄 Mapping ${items.length} total ${type} (including ${deletedItems.length} deleted items)`
     );
 
     return items.map((item) => {
-      try {
-        if (!item || typeof item !== "object") {
-          console.warn(`Invalid item in ${type} data:`, item);
-          return {
-            id: Math.floor(Math.random() * 10000),
-            name: "Unknown",
-            slug: "unknown",
+      // Check and log if this individual item is deleted
+      if (item.isDeleted === true) {
+        console.log(`🔄 Mapping deleted ${type} item:`, item);
+      }
+
+      const result: Region = {
+        id: createNumericId(item._id), // Create stable numeric ID
+        name: item.name,
+        slug: item.slug,
+        originalId: item._id, // Store original string ID
+        isDeleted: !!item.isDeleted, // Ensure boolean conversion with double negation
+      };
+
+      // Add parent info if available
+      if (item.parent) {
+        const parentId = item.parent.id || item.parent._id;
+        if (parentId) {
+          result.parent = {
+            id: createNumericId(parentId.toString()),
+            name: item.parent.name,
+            originalId: parentId.toString(),
           };
         }
-
-        // Log a sample item to see its structure
-        if (items.indexOf(item) === 0) {
-          console.log(`Sample ${type} item structure:`, item);
-        }
-
-        // Try to extract ID - handle both string IDs and numeric IDs
-        let id: number;
-
-        // Store the original string ID for reference
-        const originalId = item._id || item.id || "";
-
-        if (item._id) {
-          // For MongoDB ObjectIDs or other string IDs
-          id = createNumericId(item._id);
-          // Log ID conversion for debugging
-          if (items.indexOf(item) === 0) {
-            console.log(`ID conversion: "${item._id}" -> ${id}`);
-          }
-        } else if (item.id) {
-          // For existing numeric IDs
-          id = typeof item.id === "string" ? createNumericId(item.id) : item.id;
-        } else {
-          // Fallback to random ID
-          id = Math.floor(Math.random() * 10000);
-        }
-
-        // Create base region object
-        const region: Region = {
-          id,
-          name: item.name || "",
-          slug: item.slug || "",
-          originalId: originalId, // Store original ID for API operations
-        };
-
-        // Add English name for all region types if it exists
-        if (item.enName) region.enName = item.enName;
-
-        // For countries, add additional fields if they exist
-        if (type === "countries") {
-          if (item.code) region.code = item.code;
-          if (item.phoneCode) region.phoneCode = item.phoneCode;
-        }
-
-        // Add parent if exists in API response
-        if (item.parent) {
-          let parentId: number;
-
-          if (typeof item.parent === "object") {
-            const parentOriginalId =
-              item.parent._id || (item.parent as any).id || "";
-
-            if (item.parent._id) {
-              parentId = createNumericId(item.parent._id);
-            } else if ("id" in item.parent && (item.parent as any).id) {
-              parentId =
-                typeof (item.parent as any).id === "string"
-                  ? createNumericId((item.parent as any).id)
-                  : (item.parent as any).id;
-            } else {
-              parentId = 0;
-            }
-
-            region.parent = {
-              id: parentId,
-              name: item.parent.name || "",
-              originalId: parentOriginalId,
-            };
-          } else if (typeof item.parent === "string") {
-            parentId = createNumericId(item.parent);
-            region.parent = {
-              id: parentId,
-              name: "", // We don't have the name from a string reference
-              originalId: item.parent,
-            };
-          }
-        }
-
-        return region;
-      } catch (error) {
-        console.error(`Error mapping ${type} item:`, error, item);
-        // Return a default region to avoid breaking the UI
-        return {
-          id: Math.floor(Math.random() * 10000),
-          name: item?.name || "Unknown",
-          slug: item?.slug || "unknown",
-        };
       }
+
+      // Add type-specific properties
+      if (type === "countries" || !type) {
+        result.enName = item.enName || "";
+        result.code = item.code || "";
+        result.phoneCode = item.phoneCode || "";
+      }
+
+      return result;
     });
   };
 
   // Calculate the final data to use
   const mappedCountries = useMemo(() => {
     if (countriesData && countriesData.length > 0) {
-      return mapToRegions(countriesData, "countries");
+      console.log("💾 Raw countries data to map:", countriesData);
+
+      // Find any deleted items
+      const rawDeletedItems = countriesData.filter(
+        (item) => item.isDeleted === true
+      );
+      console.log(
+        `💾 Found ${rawDeletedItems.length} raw deleted countries:`,
+        rawDeletedItems
+      );
+
+      const mapped = mapToRegions(countriesData, "countries");
+
+      // Check if deleted items are preserved in mapped data
+      const mappedDeletedItems = mapped.filter(
+        (item) => item.isDeleted === true
+      );
+      console.log(
+        `💾 Found ${mappedDeletedItems.length} mapped deleted countries:`,
+        mappedDeletedItems
+      );
+
+      return mapped;
     }
     return [];
   }, [countriesData]);
@@ -363,19 +333,134 @@ function RegionsPageClientInner() {
     refetchAreas,
   ]);
 
+  // For countries
+  const totalCountriesCount = countriesData.length;
+  const activeCountriesCount = countriesData.filter(
+    (item) => !item.isDeleted
+  ).length;
+  const deletedCountriesCount = countriesData.filter(
+    (item) => item.isDeleted
+  ).length;
+
+  // For provinces
+  const totalProvincesCount = provincesData.length;
+  const activeProvincesCount = provincesData.filter(
+    (item) => !item.isDeleted
+  ).length;
+  const deletedProvincesCount = provincesData.filter(
+    (item) => item.isDeleted
+  ).length;
+
+  // For cities
+  const totalCitiesCount = citiesData.length;
+  const activeCitiesCount = citiesData.filter((item) => !item.isDeleted).length;
+  const deletedCitiesCount = citiesData.filter((item) => item.isDeleted).length;
+
+  // For areas
+  const totalAreasCount = areasData.length;
+  const activeAreasCount = areasData.filter((item) => !item.isDeleted).length;
+  const deletedAreasCount = areasData.filter((item) => item.isDeleted).length;
+
+  // Get the current tab stats
+  const getCurrentTabStats = () => {
+    switch (selectedTab) {
+      case "countries":
+        return {
+          total: totalCountriesCount,
+          active: activeCountriesCount,
+          deleted: deletedCountriesCount,
+        };
+      case "provinces":
+        return {
+          total: totalProvincesCount,
+          active: activeProvincesCount,
+          deleted: deletedProvincesCount,
+        };
+      case "cities":
+        return {
+          total: totalCitiesCount,
+          active: activeCitiesCount,
+          deleted: deletedCitiesCount,
+        };
+      case "areas":
+        return {
+          total: totalAreasCount,
+          active: activeAreasCount,
+          deleted: deletedAreasCount,
+        };
+      default:
+        return { total: 0, active: 0, deleted: 0 };
+    }
+  };
+
+  const currentStats = getCurrentTabStats();
+
   return (
-    <Card>
-      <CardBody className="p-0">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4">
+        {/* Header with title and refresh button */}
+        <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+          <div className="flex items-center">
+            <FaMapMarkedAlt className="text-primary ml-3 text-xl" />
+            <h1 className="text-xl md:text-2xl font-bold">مدیریت مناطق</h1>
+          </div>
+          <button
+            onClick={refreshAllData}
+            className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition-colors"
+          >
+            <FaSync className="text-primary" />
+            <span className="hidden md:inline">به‌روزرسانی</span>
+          </button>
+        </div>
+
+        {/* Stats cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* آمار */}
+          <div className="col-span-1 md:col-span-3 grid grid-cols-3 gap-4">
+            <div className="bg-white p-4 rounded-lg shadow-sm border-t-4 border-blue-500">
+              <div className="text-sm text-gray-500">کل</div>
+              <div className="text-2xl font-bold mt-1">
+                {currentStats.total}
+              </div>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-sm border-t-4 border-green-500">
+              <div className="text-sm text-gray-500">فعال</div>
+              <div className="text-2xl font-bold text-green-600 mt-1">
+                {currentStats.active}
+              </div>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-sm border-t-4 border-red-500">
+              <div className="text-sm text-gray-500">حذف شده</div>
+              <div className="text-2xl font-bold text-red-600 mt-1">
+                {currentStats.deleted}
+              </div>
+            </div>
+          </div>
+
+          {/* فیلترها */}
+          <div className="col-span-1 bg-white p-4 rounded-lg shadow-sm border-t-4 border-purple-500">
+            <div className="font-bold text-gray-700 mb-3 flex items-center">
+              <FaFilter className="ml-2 text-purple-500" />
+              فیلترها
+            </div>
+            <div className="flex items-center">
+              <Checkbox
+                checked={showDeletedItems}
+                onChange={(e) => setShowDeletedItems(e.target.checked)}
+                className="ml-2 text-purple-500"
+              />
+              <label className="mb-0 text-sm cursor-pointer">
+                نمایش موارد حذف شده
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
         <Tabs
           selectedKey={selectedTab}
           onSelectionChange={(key) => setSelectedTab(key as string)}
-          color="primary"
-          variant="bordered"
-          classNames={{
-            base: "w-full",
-            tabList: "p-0 bg-gray-50 border-b border-gray-200 rounded-t-lg",
-            tab: "py-3 px-6",
-          }}
+          className="bg-white rounded-lg shadow-sm p-4"
         >
           <Tab
             key="countries"
@@ -383,21 +468,26 @@ function RegionsPageClientInner() {
               <div className="flex items-center gap-2">
                 <FaGlobe />
                 <span>کشورها</span>
+                {deletedCountriesCount > 0 && showDeletedItems && (
+                  <span className="bg-red-100 text-red-800 text-xs px-1.5 py-0.5 rounded-full">
+                    {deletedCountriesCount}
+                  </span>
+                )}
               </div>
             }
           >
-            <div className="p-6">
-              <RegionsList
-                type="countries"
-                initialRegions={mappedCountries}
-                parentRegions={[]}
-                isLoading={isCountriesLoading}
-                onDataChange={refreshAllData}
-              />
-              {!isCountriesLoading && mappedCountries.length === 0 && (
-                <div className="text-center text-gray-500 mt-4"></div>
-              )}
-            </div>
+            <Card shadow="sm" className="mt-4">
+              <CardBody>
+                <RegionsList
+                  type="countries"
+                  initialRegions={mappedCountries}
+                  parentRegions={[]}
+                  isLoading={isCountriesLoading}
+                  onDataChange={refreshAllData}
+                  showDeletedItems={showDeletedItems}
+                />
+              </CardBody>
+            </Card>
           </Tab>
           <Tab
             key="provinces"
@@ -405,21 +495,26 @@ function RegionsPageClientInner() {
               <div className="flex items-center gap-2">
                 <FaMapMarkedAlt />
                 <span>استان‌ها</span>
+                {deletedProvincesCount > 0 && showDeletedItems && (
+                  <span className="bg-red-100 text-red-800 text-xs px-1.5 py-0.5 rounded-full">
+                    {deletedProvincesCount}
+                  </span>
+                )}
               </div>
             }
           >
-            <div className="p-6">
-              <RegionsList
-                type="provinces"
-                initialRegions={mappedProvinces}
-                parentRegions={mappedCountries}
-                isLoading={isProvincesLoading}
-                onDataChange={refreshAllData}
-              />
-              {!isProvincesLoading && mappedProvinces.length === 0 && (
-                <div className="text-center text-gray-500 mt-4"></div>
-              )}
-            </div>
+            <Card shadow="sm" className="mt-4">
+              <CardBody>
+                <RegionsList
+                  type="provinces"
+                  initialRegions={mappedProvinces}
+                  parentRegions={mappedCountries}
+                  isLoading={isProvincesLoading}
+                  onDataChange={refreshAllData}
+                  showDeletedItems={showDeletedItems}
+                />
+              </CardBody>
+            </Card>
           </Tab>
           <Tab
             key="cities"
@@ -427,21 +522,26 @@ function RegionsPageClientInner() {
               <div className="flex items-center gap-2">
                 <FaCity />
                 <span>شهرها</span>
+                {deletedCitiesCount > 0 && showDeletedItems && (
+                  <span className="bg-red-100 text-red-800 text-xs px-1.5 py-0.5 rounded-full">
+                    {deletedCitiesCount}
+                  </span>
+                )}
               </div>
             }
           >
-            <div className="p-6">
-              <RegionsList
-                type="cities"
-                initialRegions={mappedCities}
-                parentRegions={mappedProvinces}
-                isLoading={isCitiesLoading}
-                onDataChange={refreshAllData}
-              />
-              {!isCitiesLoading && mappedCities.length === 0 && (
-                <div className="text-center text-gray-500 mt-4"></div>
-              )}
-            </div>
+            <Card shadow="sm" className="mt-4">
+              <CardBody>
+                <RegionsList
+                  type="cities"
+                  initialRegions={mappedCities}
+                  parentRegions={mappedProvinces}
+                  isLoading={isCitiesLoading}
+                  onDataChange={refreshAllData}
+                  showDeletedItems={showDeletedItems}
+                />
+              </CardBody>
+            </Card>
           </Tab>
           <Tab
             key="areas"
@@ -449,25 +549,30 @@ function RegionsPageClientInner() {
               <div className="flex items-center gap-2">
                 <FaMapPin />
                 <span>محله‌ها</span>
+                {deletedAreasCount > 0 && showDeletedItems && (
+                  <span className="bg-red-100 text-red-800 text-xs px-1.5 py-0.5 rounded-full">
+                    {deletedAreasCount}
+                  </span>
+                )}
               </div>
             }
           >
-            <div className="p-6">
-              <RegionsList
-                type="areas"
-                initialRegions={mappedAreas}
-                parentRegions={mappedCities}
-                isLoading={isAreasLoading}
-                onDataChange={refreshAllData}
-              />
-              {!isAreasLoading && mappedAreas.length === 0 && (
-                <div className="text-center text-gray-500 mt-4"></div>
-              )}
-            </div>
+            <Card shadow="sm" className="mt-4">
+              <CardBody>
+                <RegionsList
+                  type="areas"
+                  initialRegions={mappedAreas}
+                  parentRegions={mappedCities}
+                  isLoading={isAreasLoading}
+                  onDataChange={refreshAllData}
+                  showDeletedItems={showDeletedItems}
+                />
+              </CardBody>
+            </Card>
           </Tab>
         </Tabs>
-      </CardBody>
-    </Card>
+      </div>
+    </div>
   );
 }
 

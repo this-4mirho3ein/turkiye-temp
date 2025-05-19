@@ -11,4 +11,5 @@ export interface Region {
   code?: string; // Country code
   phoneCode?: string; // Country phone code
   originalId?: string; // Original string ID from API
+  isDeleted: boolean; // Whether the region is deleted
 }
