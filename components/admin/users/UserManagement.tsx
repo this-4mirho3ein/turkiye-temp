@@ -14,7 +14,6 @@ import {
   FaExclamationTriangle,
 } from "react-icons/fa";
 import Button from "../ui/Button";
-import UserStats from "./UserStats";
 import Card, { CardBody } from "../ui/Card";
 
 // Create a query client
@@ -174,18 +173,16 @@ function UserManagementInner({ initialUsers }: UserManagementProps) {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-800">مدیریت کاربران</h1>
         <Button
-          variant="outlined"
+          variant="solid"
           color="primary"
           startContent={<FaSync className={isLoading ? "animate-spin" : ""} />}
           onPress={refreshAllData}
           isDisabled={isLoading}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
         >
           {isLoading ? "در حال بروزرسانی..." : "بروزرسانی"}
         </Button>
       </div>
-
-      {/* User Statistics */}
-      <UserStats users={allUsers} />
 
       {/* Filters */}
       <Card shadow="sm">

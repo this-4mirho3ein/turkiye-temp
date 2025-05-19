@@ -54,9 +54,17 @@ export const PhoneInput = ({
   const handleInputChange = (value: string) => {
     // Remove any non-digit characters
     const digitsOnly = value.replace(/\D/g, "");
+    
+    // Check if the first character is '0' and remove it (only when the user is typing)
+    let formattedValue = digitsOnly;
+    
+    // Only apply the leading zero removal when the length of input is 1 (first character entered)
+    if (formattedValue.length === 1 && formattedValue === "0") {
+      formattedValue = "";
+    }
 
     // Limit to 11 digits max (0 + 10 digits)
-    const limitedValue = digitsOnly.substring(0, 11);
+    const limitedValue = formattedValue.substring(0, 11);
 
     setPhoneNumber(limitedValue);
     validatePhone(limitedValue);

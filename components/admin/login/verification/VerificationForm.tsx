@@ -104,7 +104,12 @@ const VerificationForm = ({
         }
       }
 
-      validateCode(newCode);
+      const isNewCodeValid = validateCode(newCode);
+      
+      // Auto-submit if all 6 digits are filled and the code is valid
+      if (isNewCodeValid && newCode.length === 6 && !isLoading) {
+        onSubmit(newCode);
+      }
     }
   };
 
@@ -116,7 +121,12 @@ const VerificationForm = ({
       .replace(/\D/g, "")
       .substring(0, 6);
     setVerificationCode(pasteData);
-    validateCode(pasteData);
+    const isValid = validateCode(pasteData);
+    
+    // Auto-submit if all 6 digits are pasted and the code is valid
+    if (isValid && pasteData.length === 6 && !isLoading) {
+      onSubmit(pasteData);
+    }
   };
 
   // Handle key press for backspace navigation

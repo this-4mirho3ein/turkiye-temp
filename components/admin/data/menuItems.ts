@@ -25,7 +25,7 @@ const mainMenuItems: MenuItem[] = [
   { name: "نوع کاربری", href: "/admin/fields_type", icon: FaTag },
   { name: "دسته‌بندی‌ها", href: "/admin/categories", icon: FaLayerGroup },
   { name: "مناطق", href: "/admin/regions", icon: FaMapMarkerAlt },
-  // { name: "آمار و گزارشات", href: "/admin/reports", icon: FaChartBar },
+  { name: "آمار و گزارشات", href: "/admin/reports", icon: FaChartBar },
   // { name: "پیام‌ها", href: "/admin/messages", icon: FaComments },
 ];
 

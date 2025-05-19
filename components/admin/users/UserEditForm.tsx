@@ -19,8 +19,9 @@ import { ModalBody, ModalFooter, Divider, addToast } from "@heroui/react";
 import { User, UserRole } from "../data/users";
 import { getRoleGroups } from "../data/actions";
 import { roleGroupsWithIcons } from "../data/roles-client";
-import { updateAdminUser } from "@/controllers/makeRequest";
+import { updateAdminUser, getAdminUserById } from "@/controllers/makeRequest";
 import { motion } from "framer-motion";
+import mainConfig from "@/configs/mainConfig";
 
 interface UserEditFormProps {
   user: User | null;
@@ -89,6 +90,7 @@ export default function UserEditForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverRoleGroups, setServerRoleGroups] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Load role groups data from server action (for role names and descriptions)
   useEffect(() => {
@@ -104,49 +106,101 @@ export default function UserEditForm({
     loadRoleGroups();
   }, []);
 
+  // Load user data from API when editing
   useEffect(() => {
-    if (user) {
-      console.log("Initializing form with user:", user);
+    const fetchUserData = async () => {
+      if (user?.originalId) {
+        setIsLoading(true);
+        try {
+          const response = await getAdminUserById(user.originalId);
+          if (response.success && response.data) {
+            const userData = response.data;
+            console.log("Loaded user data from API:", userData);
 
-      // Parse name into firstName and lastName
-      const nameParts = user.name.split(" ");
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.slice(1).join(" ") || "";
+            // Update form with API data
+            setFormData({
+              name: user.name,
+              email: userData.email || user.email,
+              phone: userData.phone || user.phone,
+              avatar: user.avatar,
+              role: user.role,
+              status: user.status,
+              lastLogin: user.lastLogin,
+              firstName: userData.firstName || "",
+              lastName: userData.lastName || "",
+              countryCode: userData.countryCode || "+98",
+              nationalCode: userData.nationalCode || "",
+              gender: userData.gender || "male",
+              birthDate: userData.birthDate || "",
+              isActive:
+                userData.isActive !== undefined
+                  ? userData.isActive
+                  : user.status === "active",
+              isBanned:
+                userData.isBanned !== undefined
+                  ? userData.isBanned
+                  : user.status === "banned",
+            });
+          } else {
+            initializeFromLocalUser();
+          }
+        } catch (error) {
+          console.error("Error fetching user details:", error);
+          initializeFromLocalUser();
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        initializeFromLocalUser();
+      }
+    };
 
-      setFormData({
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        avatar: user.avatar,
-        role: user.role,
-        status: user.status,
-        lastLogin: user.lastLogin,
-        firstName,
-        lastName,
-        countryCode: "+98", // Default country code
-        nationalCode: "",
-        gender: "male",
-        birthDate: "",
-        isActive: user.status === "active",
-        isBanned: user.status === "banned",
-      });
-    } else {
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        role: "normal",
-        status: "active",
-        firstName: "",
-        lastName: "",
-        countryCode: "+98",
-        nationalCode: "",
-        gender: "male",
-        birthDate: "",
-        isActive: true,
-        isBanned: false,
-      });
-    }
+    const initializeFromLocalUser = () => {
+      if (user) {
+        console.log("Initializing form with local user data:", user);
+
+        // Parse name into firstName and lastName
+        const nameParts = user.name.split(" ");
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ") || "";
+
+        setFormData({
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          avatar: user.avatar,
+          role: user.role,
+          status: user.status,
+          lastLogin: user.lastLogin,
+          firstName,
+          lastName,
+          countryCode: "+98", // Default country code
+          nationalCode: "",
+          gender: "male",
+          birthDate: "",
+          isActive: user.status === "active",
+          isBanned: user.status === "banned",
+        });
+      } else {
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          role: "normal",
+          status: "active",
+          firstName: "",
+          lastName: "",
+          countryCode: "+98",
+          nationalCode: "",
+          gender: "male",
+          birthDate: "",
+          isActive: true,
+          isBanned: false,
+        });
+      }
+    };
+
+    fetchUserData();
   }, [user]);
 
   const handleInputChange = (
@@ -287,13 +341,8 @@ export default function UserEditForm({
         const response = await updateAdminUser("", apiData);
 
         if (response.success) {
-          addToast({
-            title: "موفقیت",
-            description: "اطلاعات کاربر با موفقیت بروزرسانی شد",
-            color: "success",
-          });
-
-          // Pass updated user to parent component
+          // Pass updated user to parent component without showing a toast here
+          // (parent component will handle the toast)
           onSave({
             ...formData,
             id: user.id,
@@ -322,6 +371,18 @@ export default function UserEditForm({
       setIsSaving(false);
     }
   };
+
+  // Display loading state while fetching user data
+  if (isLoading) {
+    return (
+      <ModalBody className="rtl">
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-600">در حال بارگذاری اطلاعات کاربر...</p>
+        </div>
+      </ModalBody>
+    );
+  }
 
   return (
     <>
@@ -380,6 +441,103 @@ export default function UserEditForm({
                   required
                   startContent={<FaUser className="text-gray-400" />}
                   className="w-full"
+                />
+              </motion.div>
+
+              <motion.div variants={itemVariants}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  جنسیت
+                </label>
+                <div className="flex justify-start gap-3">
+                  {" "}
+                  <div className="flex justify-center">
+                    {" "}
+                    <label
+                      className={`flex flex-col items-center justify-center p-1.5 rounded-lg cursor-pointer border transition-all w-16 h-16 ${
+                        formData.gender === "male"
+                          ? "border-blue-500 bg-blue-50 shadow-sm"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      {" "}
+                      <input
+                        type="radio"
+                        name="gender"
+                        value="male"
+                        checked={formData.gender === "male"}
+                        onChange={handleInputChange}
+                        className="sr-only"
+                      />{" "}
+                      <FaVenusMars
+                        className={`text-base mb-1 ${
+                          formData.gender === "male"
+                            ? "text-blue-500"
+                            : "text-gray-400"
+                        }`}
+                      />{" "}
+                      <span
+                        className={`text-xs font-medium ${
+                          formData.gender === "male"
+                            ? "text-blue-500"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        {" "}
+                        مرد{" "}
+                      </span>{" "}
+                    </label>{" "}
+                  </div>{" "}
+                  <div className="flex justify-center">
+                    {" "}
+                    <label
+                      className={`flex flex-col items-center justify-center p-1.5 rounded-lg cursor-pointer border transition-all w-16 h-16 ${
+                        formData.gender === "female"
+                          ? "border-pink-500 bg-pink-50 shadow-sm"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      {" "}
+                      <input
+                        type="radio"
+                        name="gender"
+                        value="female"
+                        checked={formData.gender === "female"}
+                        onChange={handleInputChange}
+                        className="sr-only"
+                      />{" "}
+                      <FaVenusMars
+                        className={`text-base mb-1 ${
+                          formData.gender === "female"
+                            ? "text-pink-500"
+                            : "text-gray-400"
+                        }`}
+                      />{" "}
+                      <span
+                        className={`text-xs font-medium ${
+                          formData.gender === "female"
+                            ? "text-pink-500"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        {" "}
+                        زن{" "}
+                      </span>{" "}
+                    </label>{" "}
+                  </div>{" "}
+                </div>
+              </motion.div>
+
+              <motion.div variants={itemVariants}>
+                <Input
+                  name="birthDate"
+                  label="تاریخ تولد"
+                  placeholder="YYYY-MM-DD"
+                  value={formData.birthDate}
+                  onChange={handleInputChange}
+                  error={errors.birthDate}
+                  startContent={<FaBirthdayCake className="text-gray-400" />}
+                  className="w-full"
+                  type="date"
                 />
               </motion.div>
             </div>
@@ -445,23 +603,26 @@ export default function UserEditForm({
               اطلاعات دسترسی
             </motion.h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex justify-between gap-3">
               <motion.div variants={itemVariants}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   نقش کاربر
                 </label>
-                <div className="flex items-center space-x-4 rtl:space-x-reverse">
-                  {/* Map through the role groups and display each role */}
-                  {roleGroupsWithIcons.flatMap(group => 
-                    group.roles.map(role => (
-                      <div key={role.id} className="flex-1">
+                <div className="grid grid-cols-4 gap-2">
+                  {" "}
+                  {/* Make all role options the same size in a 4-column grid */}{" "}
+                  {roleGroupsWithIcons.flatMap((group) =>
+                    group.roles.map((role) => (
+                      <div key={role.id} className="flex justify-center">
+                        {" "}
                         <label
-                          className={`flex flex-col items-center justify-center p-4 rounded-lg cursor-pointer border transition-all ${
+                          className={`flex flex-col items-center justify-center p-1.5 rounded-lg cursor-pointer border transition-all w-16 h-16 ${
                             formData.role === role.id
                               ? "border-primary bg-primary-50 shadow-sm"
                               : "border-gray-200 hover:border-gray-300"
                           }`}
                         >
+                          {" "}
                           <input
                             type="radio"
                             name="role"
@@ -469,124 +630,143 @@ export default function UserEditForm({
                             checked={formData.role === role.id}
                             onChange={handleInputChange}
                             className="sr-only"
-                          />
+                          />{" "}
                           <role.icon
-                            className={`text-2xl mb-2 ${
+                            className={`text-base mb-1 ${
                               formData.role === role.id
                                 ? "text-primary"
                                 : "text-gray-400"
                             }`}
-                          />
+                          />{" "}
                           <span
-                            className={`text-sm font-medium ${
+                            className={`text-xs font-medium ${
                               formData.role === role.id
                                 ? "text-primary"
                                 : "text-gray-600"
                             }`}
                           >
-                            {role.name}
-                          </span>
-                        </label>
+                            {" "}
+                            {role.name}{" "}
+                          </span>{" "}
+                        </label>{" "}
                       </div>
                     ))
-                  )}
+                  )}{" "}
                 </div>
               </motion.div>
-
-              <motion.div variants={itemVariants}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  وضعیت کاربر
-                </label>
-                <div className="space-y-2">
-                  <label className="flex items-center p-3 rounded-lg border border-gray-200 hover:border-gray-300 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="isActive"
-                      checked={formData.isActive}
-                      onChange={(e) =>
-                        handleInputChange({
-                          target: {
-                            name: "isActive",
-                            value: e.target.checked ? "true" : "false",
-                          },
-                        } as any)
-                      }
-                      className="ml-2 form-checkbox h-5 w-5 text-primary rounded-sm border-gray-300 focus:ring-0"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-700">فعال</div>
-                      <p className="text-gray-500 text-xs">
-                        کاربر می‌تواند وارد سیستم شود
-                      </p>
-                    </div>
-                    {formData.isActive ? (
-                      <div className="bg-green-100 text-green-800 text-xs rounded-full px-2 pt-0.5 pb-px">
+              <section className="flex flex-col">
+                <motion.div variants={itemVariants}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    وضعیت کاربر
+                  </label>
+                  <div className="flex flex-wrap gap-4">
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="isActive-true"
+                        name="isActive"
+                        value="true"
+                        checked={formData.isActive}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                      />
+                      <label
+                        htmlFor="isActive-true"
+                        className="mr-2 block text-sm text-gray-700"
+                      >
                         فعال
-                      </div>
-                    ) : (
-                      <div className="bg-gray-100 text-gray-800 text-xs rounded-full px-2 pt-0.5 pb-px">
-                        غیرفعال
-                      </div>
-                    )}
-                  </label>
-
-                  <label className="flex items-center p-3 rounded-lg border border-gray-200 hover:border-gray-300 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="isBanned"
-                      checked={formData.isBanned}
-                      onChange={(e) =>
-                        handleInputChange({
-                          target: {
-                            name: "isBanned",
-                            value: e.target.checked ? "true" : "false",
-                          },
-                        } as any)
-                      }
-                      className="ml-2 form-checkbox h-5 w-5 text-red-500 rounded-sm border-gray-300 focus:ring-0"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-700">مسدود شده</div>
-                      <p className="text-gray-500 text-xs">
-                        کاربر از استفاده از سیستم منع شده است
-                      </p>
+                      </label>
                     </div>
-                    {formData.isBanned ? (
-                      <div className="bg-red-100 text-red-800 text-xs rounded-full px-2 pt-0.5 pb-px">
-                        مسدود
-                      </div>
-                    ) : (
-                      <div className="bg-gray-100 text-gray-800 text-xs rounded-full px-2 pt-0.5 pb-px">
-                        آزاد
-                      </div>
-                    )}
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="isActive-false"
+                        name="isActive"
+                        value="false"
+                        checked={!formData.isActive}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                      />
+                      <label
+                        htmlFor="isActive-false"
+                        className="mr-2 block text-sm text-gray-700"
+                      >
+                        غیرفعال
+                      </label>
+                    </div>
+                  </div>
+                </motion.div>
+              </section>
+              <section className="flex flex-col">
+                <motion.div variants={itemVariants}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    وضعیت تعلیق
                   </label>
-                </div>
-              </motion.div>
+                  <div className="flex flex-wrap gap-4">
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="isBanned-true"
+                        name="isBanned"
+                        value="true"
+                        checked={formData.isBanned}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                      />
+                      <label
+                        htmlFor="isBanned-true"
+                        className="mr-2 block text-sm text-gray-700"
+                      >
+                        معلق شده
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="isBanned-false"
+                        name="isBanned"
+                        value="false"
+                        checked={!formData.isBanned}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                      />
+                      <label
+                        htmlFor="isBanned-false"
+                        className="mr-2 block text-sm text-gray-700"
+                      >
+                        فعال
+                      </label>
+                    </div>
+                  </div>
+                </motion.div>
+              </section>
             </div>
           </div>
         </motion.div>
       </ModalBody>
 
+      <Divider />
+
       <ModalFooter>
-        <div className="flex flex-col md:flex-row gap-2 w-full rtl">
+        <div className="flex gap-2 w-full justify-between">
+          <Button
+            color="danger"
+            variant="light"
+            onPress={onCancel}
+            className="bg-red-50 text-red-600 hover:bg-red-100 gap-1.5"
+            isDisabled={isSaving}
+          >
+            <FaTimes /> انصراف
+          </Button>
           <Button
             color="primary"
             variant="solid"
-            onClick={handleSubmit}
-            isLoading={isSaving}
-            className="flex-1 order-2 md:order-1 py-2 bg-blue-500 hover:bg-blue-600 text-white gap-1.5"
-          >
-            <FaCheck /> {user ? "بروزرسانی اطلاعات" : "ثبت کاربر جدید"}
-          </Button>
+            onPress={handleSubmit}تعداد ورودها
 
-          <Button
-            color="danger"
-            variant="solid"
-            onPress={onCancel}
-            className="order-1 md:order-2 py-2 bg-red-500 hover:bg-red-600 text-white gap-1.5"
+            className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
+            isDisabled={isSaving}
           >
-            <FaTimes /> انصراف
+            <FaCheck /> {isSaving ? "در حال ذخیره..." : "ذخیره تغییرات"}
           </Button>
         </div>
       </ModalFooter>

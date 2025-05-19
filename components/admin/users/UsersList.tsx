@@ -346,14 +346,10 @@ export default function UsersList({
       } else {
         // Add new user
         const { id, createdAt, ...userDataWithoutId } = userData;
-        await addUser(userDataWithoutId);
 
-        addToast({
-          title: "افزودن موفقیت‌آمیز",
-          description: `کاربر ${userData.name} با موفقیت افزوده شد`,
-          color: "success",
-          icon: <FaCheck />,
-        });
+        // The API call and toast notification are handled in the UserEditForm
+        // Here we only need to refresh the user list
+        await addUser(userDataWithoutId);
 
         // Refresh the user list
         if (refetchUsers) {
@@ -426,11 +422,7 @@ export default function UsersList({
               aria-label="فیلتر کاربران"
               className="p-4 min-w-[240px] bg-white rounded-lg shadow-lg border border-gray-200"
             >
-              <DropdownItem
-                key="role-filter"
-                textValue="نقش کاربری"
-                className="p-0"
-              >
+              <div key="role-filter" className="p-0">
                 <p className="font-semibold mb-3 text-gray-700">نقش کاربری</p>
                 <div className="flex flex-col gap-2 bg-gray-50 p-3 rounded-lg">
                   <Button
@@ -481,15 +473,15 @@ export default function UsersList({
                     کاربران عادی
                   </Button>
                 </div>
-              </DropdownItem>
+              </div>
               <Divider className="my-3" />
-              <DropdownItem
+              <div
                 key="clear-filters"
                 className="justify-center text-danger bg-danger/5 rounded-lg hover:bg-danger/10 mt-2 p-2"
-                onPress={clearFilters}
+                onClick={clearFilters}
               >
                 حذف فیلترها
-              </DropdownItem>
+              </div>
             </DropdownMenu>
           </Dropdown>
         </div>

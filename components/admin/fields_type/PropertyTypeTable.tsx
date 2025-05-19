@@ -10,7 +10,6 @@ import {
   FaInfoCircle,
 } from "react-icons/fa";
 import { Button } from "@heroui/react";
-import Link from "next/link";
 
 export interface PropertyType {
   _id: string;
@@ -99,12 +98,6 @@ const PropertyTypeTable: React.FC<PropertyTypeTableProps> = ({
             </th>
             <th
               scope="col"
-              className="px-6 py-3.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Slug
-            </th>
-            <th
-              scope="col"
               className="px-6 py-3.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24"
             >
               وضعیت
@@ -130,7 +123,7 @@ const PropertyTypeTable: React.FC<PropertyTypeTableProps> = ({
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {filteredPropertyTypes.map((propertyType) => (
+          {filteredPropertyTypes.map((propertyType, index) => (
             <tr
               key={propertyType._id}
               className={`hover:bg-gray-50 transition-colors ${
@@ -138,7 +131,7 @@ const PropertyTypeTable: React.FC<PropertyTypeTableProps> = ({
               }`}
             >
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                {propertyType.row}
+                {index + 1}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
                 {propertyType.type}
@@ -150,9 +143,6 @@ const PropertyTypeTable: React.FC<PropertyTypeTableProps> = ({
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono text-right">
                 {propertyType.enName}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono text-right">
-                {propertyType.slug}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-center">
                 {propertyType.isActive ? (
@@ -177,16 +167,6 @@ const PropertyTypeTable: React.FC<PropertyTypeTableProps> = ({
                 <div className="flex justify-center items-center gap-2">
                   {!propertyType.isDeleted ? (
                     <>
-                      <Link href={`/admin/fields_type/${propertyType._id}`}>
-                        <Button
-                          size="sm"
-                          variant="solid"
-                          color="success"
-                          className="gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white"
-                        >
-                          <FaInfoCircle /> جزئیات
-                        </Button>
-                      </Link>
                       <Button
                         size="sm"
                         variant="solid"
@@ -208,16 +188,6 @@ const PropertyTypeTable: React.FC<PropertyTypeTableProps> = ({
                     </>
                   ) : (
                     <>
-                      <Link href={`/admin/fields_type/${propertyType._id}`}>
-                        <Button
-                          size="sm"
-                          variant="solid"
-                          color="success"
-                          className="gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white"
-                        >
-                          <FaInfoCircle /> جزئیات
-                        </Button>
-                      </Link>
                       <Button
                         size="sm"
                         variant="flat"

@@ -413,46 +413,21 @@ function RegionsPageClientInner() {
           </button>
         </div>
 
-        {/* Stats cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* آمار */}
-          <div className="col-span-1 md:col-span-3 grid grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-lg shadow-sm border-t-4 border-blue-500">
-              <div className="text-sm text-gray-500">کل</div>
-              <div className="text-2xl font-bold mt-1">
-                {currentStats.total}
-              </div>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-sm border-t-4 border-green-500">
-              <div className="text-sm text-gray-500">فعال</div>
-              <div className="text-2xl font-bold text-green-600 mt-1">
-                {currentStats.active}
-              </div>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-sm border-t-4 border-red-500">
-              <div className="text-sm text-gray-500">حذف شده</div>
-              <div className="text-2xl font-bold text-red-600 mt-1">
-                {currentStats.deleted}
-              </div>
-            </div>
+        {/* فیلترها */}
+        <div className="bg-white p-4 rounded-lg shadow-sm border-t-4 border-purple-500">
+          <div className="font-bold text-gray-700 mb-3 flex items-center">
+            <FaFilter className="ml-2 text-purple-500" />
+            فیلترها
           </div>
-
-          {/* فیلترها */}
-          <div className="col-span-1 bg-white p-4 rounded-lg shadow-sm border-t-4 border-purple-500">
-            <div className="font-bold text-gray-700 mb-3 flex items-center">
-              <FaFilter className="ml-2 text-purple-500" />
-              فیلترها
-            </div>
-            <div className="flex items-center">
-              <Checkbox
-                checked={showDeletedItems}
-                onChange={(e) => setShowDeletedItems(e.target.checked)}
-                className="ml-2 text-purple-500"
-              />
-              <label className="mb-0 text-sm cursor-pointer">
-                نمایش موارد حذف شده
-              </label>
-            </div>
+          <div className="flex items-center">
+            <Checkbox
+              checked={showDeletedItems}
+              onChange={(e) => setShowDeletedItems(e.target.checked)}
+              className="ml-2 text-purple-500"
+            />
+            <label className="mb-0 text-sm cursor-pointer">
+              نمایش موارد حذف شده
+            </label>
           </div>
         </div>
 

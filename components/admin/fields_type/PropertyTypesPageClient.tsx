@@ -61,6 +61,9 @@ function PropertyTypesPageClientInner() {
     true
   );
 
+  // Sort property types by row in ascending order
+  const sortedPropertyTypes = [...propertyTypes].sort((a, b) => a.row - b.row);
+
   // Log any errors
   useEffect(() => {
     if (error) {
@@ -88,12 +91,6 @@ function PropertyTypesPageClientInner() {
 
     // Increment refresh trigger to cause re-render
     setRefreshTrigger((prev) => prev + 1);
-
-    // Show success toast
-    addToast({
-      title: "به‌روزرسانی موفق",
-      description: "اطلاعات انواع کاربری با موفقیت به‌روزرسانی شد",
-    });
 
     console.log("🔄 Refresh complete!");
   }, [queryClient]);
@@ -127,20 +124,21 @@ function PropertyTypesPageClientInner() {
         );
 
         if (response.success) {
-          addToast({
-            title: "به‌روزرسانی موفق",
-            description: "نوع کاربری با موفقیت به‌روزرسانی شد",
-          });
-
           // Close modal and refresh data
           setIsFormModalOpen(false);
           await refreshData();
+
+          // Return the response
+          return response;
         } else {
           addToast({
             title: "خطا",
             description:
               response.message || "به‌روزرسانی نوع کاربری با خطا مواجه شد",
           });
+
+          // Return the error response
+          return response;
         }
       } else {
         // Create new property type
@@ -152,19 +150,20 @@ function PropertyTypesPageClientInner() {
         });
 
         if (response.success) {
-          addToast({
-            title: "ایجاد موفق",
-            description: "نوع کاربری جدید با موفقیت ایجاد شد",
-          });
-
           // Close modal and refresh data
           setIsFormModalOpen(false);
           await refreshData();
+
+          // Return the response
+          return response;
         } else {
           addToast({
             title: "خطا",
             description: response.message || "ایجاد نوع کاربری با خطا مواجه شد",
           });
+
+          // Return the error response
+          return response;
         }
       }
     } catch (error) {
@@ -173,6 +172,9 @@ function PropertyTypesPageClientInner() {
         title: "خطا",
         description: "عملیات با خطا مواجه شد. لطفاً مجدداً تلاش کنید",
       });
+
+      // Return an error object
+      return { success: false, message: "خطای سیستمی در انجام عملیات" };
     } finally {
       setIsSubmitting(false);
     }
@@ -188,8 +190,8 @@ function PropertyTypesPageClientInner() {
 
       if (response.success) {
         addToast({
-          title: "حذف موفق",
-          description: "نوع کاربری با موفقیت حذف شد",
+          title: "عملیات موفق",
+          description: response.message || "نوع کاربری با موفقیت حذف شد",
         });
 
         // Close modal and refresh data
@@ -246,51 +248,28 @@ function PropertyTypesPageClientInner() {
         </div>
       </div>
 
-      {/* کارت آمار و فیلترها */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* آمار */}
-        <div className="col-span-1 md:col-span-3 grid grid-cols-3 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow-sm border-t-4 border-blue-500">
-            <div className="text-sm text-gray-500">کل انواع کاربری</div>
-            <div className="text-2xl font-bold mt-1">{totalCount}</div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border-t-4 border-green-500">
-            <div className="text-sm text-gray-500">موارد فعال</div>
-            <div className="text-2xl font-bold text-green-600 mt-1">
-              {activeCount}
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border-t-4 border-red-500">
-            <div className="text-sm text-gray-500">موارد حذف شده</div>
-            <div className="text-2xl font-bold text-red-600 mt-1">
-              {deletedCount}
-            </div>
-          </div>
+      {/* فیلترها */}
+      <div className="bg-white p-4 rounded-lg shadow-sm border-t-4 border-purple-500">
+        <div className="font-bold text-gray-700 mb-3 flex items-center">
+          <FaFilter className="ml-2 text-purple-500" />
+          فیلترها
         </div>
-
-        {/* فیلترها */}
-        <div className="col-span-1 bg-white p-4 rounded-lg shadow-sm border-t-4 border-purple-500">
-          <div className="font-bold text-gray-700 mb-3 flex items-center">
-            <FaFilter className="ml-2 text-purple-500" />
-            فیلترها
-          </div>
-          <div className="flex items-center">
-            <Checkbox
-              checked={showDeletedItems}
-              onChange={(e) => setShowDeletedItems(e.target.checked)}
-              className="ml-2 text-purple-500"
-            />
-            <label className="mb-0 text-sm cursor-pointer">
-              نمایش موارد حذف شده
-            </label>
-          </div>
+        <div className="flex items-center">
+          <Checkbox
+            checked={showDeletedItems}
+            onChange={(e) => setShowDeletedItems(e.target.checked)}
+            className="ml-2 text-purple-500"
+          />
+          <label className="mb-0 text-sm cursor-pointer">
+            نمایش موارد حذف شده
+          </label>
         </div>
       </div>
 
       <Card shadow="sm">
         <CardBody>
           <PropertyTypeTable
-            propertyTypes={propertyTypes}
+            propertyTypes={sortedPropertyTypes}
             onEdit={handleAddEdit}
             onDelete={handleDelete}
             isLoading={isLoading}

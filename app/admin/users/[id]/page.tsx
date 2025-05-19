@@ -467,7 +467,7 @@ export default function UserDetailsPage() {
                       </h3>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-4" dir="rtl">
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -477,11 +477,11 @@ export default function UserDetailsPage() {
                         <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center ml-3 group-hover:bg-indigo-100 transition-colors">
                           <Phone className="h-4 w-4 text-indigo-500" />
                         </div>
-                        <div>
+                        <div className="text-right">
                           <div className="text-xs text-gray-500 mb-1">
                             شماره تلفن
                           </div>
-                          <div className="text-sm font-medium" dir="ltr">
+                          <div className="text-sm font-medium">
                             {userData.countryCode} {userData.phone}
                           </div>
                         </div>
@@ -497,11 +497,11 @@ export default function UserDetailsPage() {
                           <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center ml-3 group-hover:bg-blue-100 transition-colors">
                             <Mail className="h-4 w-4 text-blue-500" />
                           </div>
-                          <div>
+                          <div className="text-right">
                             <div className="text-xs text-gray-500 mb-1">
                               ایمیل
                             </div>
-                            <div className="text-sm font-medium" dir="ltr">
+                            <div className="text-sm font-medium">
                               {userData.email}
                             </div>
                           </div>
@@ -518,7 +518,7 @@ export default function UserDetailsPage() {
                           <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center ml-3 group-hover:bg-green-100 transition-colors">
                             <Calendar className="h-4 w-4 text-green-500" />
                           </div>
-                          <div>
+                          <div className="text-right">
                             <div className="text-xs text-gray-500 mb-1">
                               تاریخ تولد
                             </div>
@@ -541,7 +541,7 @@ export default function UserDetailsPage() {
                           <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center ml-3 group-hover:bg-purple-100 transition-colors">
                             <User className="h-4 w-4 text-purple-500" />
                           </div>
-                          <div>
+                          <div className="text-right">
                             <div className="text-xs text-gray-500 mb-1">
                               جنسیت
                             </div>
@@ -563,7 +563,7 @@ export default function UserDetailsPage() {
                       </h3>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-4" dir="rtl">
                       {userData.nationalCode && (
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
@@ -574,7 +574,7 @@ export default function UserDetailsPage() {
                           <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center ml-3 group-hover:bg-amber-100 transition-colors">
                             <MapPin className="h-4 w-4 text-amber-500" />
                           </div>
-                          <div>
+                          <div className="text-right">
                             <div className="text-xs text-gray-500 mb-1">
                               کد ملی
                             </div>
@@ -594,7 +594,7 @@ export default function UserDetailsPage() {
                         <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center ml-3 group-hover:bg-red-100 transition-colors">
                           <Eye className="h-4 w-4 text-red-500" />
                         </div>
-                        <div>
+                        <div className="text-right">
                           <div className="text-xs text-gray-500 mb-1">
                             تعداد دستگاه‌های فعال
                           </div>
@@ -613,7 +613,7 @@ export default function UserDetailsPage() {
                         <div className="w-8 h-8 bg-teal-50 rounded-lg flex items-center justify-center ml-3 group-hover:bg-teal-100 transition-colors">
                           <History className="h-4 w-4 text-teal-500" />
                         </div>
-                        <div>
+                        <div className="text-right">
                           <div className="text-xs text-gray-500 mb-1">
                             تعداد ورودها
                           </div>
@@ -632,7 +632,7 @@ export default function UserDetailsPage() {
                         <div className="w-8 h-8 bg-cyan-50 rounded-lg flex items-center justify-center ml-3 group-hover:bg-cyan-100 transition-colors">
                           <Zap className="h-4 w-4 text-cyan-500" />
                         </div>
-                        <div>
+                        <div className="text-right">
                           <div className="text-xs text-gray-500 mb-1">
                             سهمیه تبلیغات
                           </div>
@@ -646,6 +646,133 @@ export default function UserDetailsPage() {
                 </div>
               </div>
             </div>
+          </CardBody>
+        </Card>
+      </motion.div>
+
+      {/* Active Devices List */}
+      <motion.div variants={itemVariants}>
+        <Card
+          shadow="sm"
+          className="border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300"
+        >
+          <div className="bg-gradient-to-l from-red-50 via-orange-50 to-amber-50 py-3 px-6">
+            <h2 className="text-lg font-bold text-gray-700 flex items-center">
+              <Smartphone className="ml-2 text-red-500" size={18} />
+              دستگاه‌های فعال
+            </h2>
+          </div>
+
+          <CardBody>
+            {userData.activeSessions.length === 0 ? (
+              <div className="text-center py-6 text-gray-500">
+                هیچ دستگاه فعالی یافت نشد
+              </div>
+            ) : (
+              <div className="space-y-4 p-2">
+                {userData.activeSessions.map((session) => (
+                  <motion.div
+                    key={session._id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="flex items-center justify-between border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                    dir="rtl"
+                  >
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center ml-4">
+                        <Smartphone className="h-5 w-5 text-red-500" />
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium">
+                          {session.device}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {session.ip}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-left">
+                      <div className="text-xs text-gray-500">زمان ورود</div>
+                      <div className="text-sm">
+                        {new Date(session.loginTime).toLocaleDateString(
+                          "fa-IR",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </CardBody>
+        </Card>
+      </motion.div>
+
+      {/* Login History List */}
+      <motion.div variants={itemVariants}>
+        <Card
+          shadow="sm"
+          className="border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300"
+        >
+          <div className="bg-gradient-to-l from-teal-50 via-cyan-50 to-blue-50 py-3 px-6">
+            <h2 className="text-lg font-bold text-gray-700 flex items-center">
+              <History className="ml-2 text-teal-500" size={18} />
+              تاریخچه ورود
+            </h2>
+          </div>
+
+          <CardBody>
+            {userData.loginHistory.length === 0 ? (
+              <div className="text-center py-6 text-gray-500">
+                هیچ سابقه ورودی یافت نشد
+              </div>
+            ) : (
+              <div className="space-y-4 p-2">
+                {userData.loginHistory.map((login, index) => (
+                  <motion.div
+                    key={login._id || index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="flex items-center justify-between border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                    dir="rtl"
+                  >
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center ml-4">
+                        <LogIn className="h-5 w-5 text-teal-500" />
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium">
+                          {login.device}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {login.ip}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-left">
+                      <div className="text-xs text-gray-500">تاریخ ورود</div>
+                      <div className="text-sm">
+                        {new Date(login.lastLogin).toLocaleDateString("fa-IR", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </CardBody>
         </Card>
       </motion.div>
