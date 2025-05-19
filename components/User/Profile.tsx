@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import React,{ useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { getUser, updateUser } from "@/controllers/makeRequest";
 import { catchMessage, successMessage } from "@/utils/showMessages";
 import { setLoading, setLogOut, useAuth } from "@/context/AuthContext";
@@ -101,7 +101,12 @@ const menuCategories = [
   },
 ];
 
-export default function ProfileComponent({ children }: { children: React.ReactNode }) {  const { state, dispatch } = useAuth();
+export default function ProfileComponent({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { state, dispatch } = useAuth();
   const pathname = usePathname();
 
   const [mobileNumber, setMobileNumber] = useState("");

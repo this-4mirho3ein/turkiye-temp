@@ -49,15 +49,6 @@ export function middleware(request: NextRequest) {
 
 // Define which routes this middleware should run on
 export const config = {
-  // Apply to all routes except assets and API routes
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    "/((?!_next/static|_next/image|favicon.ico|public).*)",
-  ],
+  // Only apply to admin routes
+  matcher: ["/admin", "/admin/:path*"],
 };
