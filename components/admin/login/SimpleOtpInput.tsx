@@ -205,7 +205,8 @@ export default function SimpleOtpInput({
         <Button
           type="button"
           className="flex-1 flex items-center justify-center gap-1"
-          color="ghost"
+          color="secondary"
+          variant="ghost"
           onClick={onBack}
           disabled={isLoading}
         >

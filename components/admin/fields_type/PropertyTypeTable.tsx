@@ -80,43 +80,43 @@ const PropertyTypeTable: React.FC<PropertyTypeTableProps> = ({
           <tr>
             <th
               scope="col"
-              className="px-6 py-3.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16"
+              className="px-6 py-3.5 text-center text-xs font-semibold text-black uppercase tracking-wider w-16"
             >
               ردیف
             </th>
             <th
               scope="col"
-              className="px-6 py-3.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3.5 text-right text-xs font-semibold text-black uppercase tracking-wider"
             >
               عنوان
             </th>
             <th
               scope="col"
-              className="px-6 py-3.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3.5 text-right text-xs font-semibold text-black uppercase tracking-wider"
             >
               نام انگلیسی
             </th>
             <th
               scope="col"
-              className="px-6 py-3.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24"
+              className="px-6 py-3.5 text-center text-xs font-semibold text-black uppercase tracking-wider w-24"
             >
               وضعیت
             </th>
             <th
               scope="col"
-              className="px-6 py-3.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3.5 text-right text-xs font-semibold text-black uppercase tracking-wider"
             >
               تاریخ ایجاد
             </th>
             <th
               scope="col"
-              className="px-6 py-3.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24"
+              className="px-6 py-3.5 text-center text-xs font-semibold text-black uppercase tracking-wider w-24"
             >
               تعداد
             </th>
             <th
               scope="col"
-              className="px-6 py-3.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-auto"
+              className="px-6 py-3.5 text-center text-xs font-semibold text-black uppercase tracking-wider w-auto"
             >
               عملیات
             </th>

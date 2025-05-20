@@ -165,25 +165,25 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
       <table className="w-full text-right min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-6 py-3.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3.5 text-right text-xs font-semibold text-black uppercase tracking-wider">
               ردیف
             </th>
-            <th className="px-6 py-3.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3.5 text-right text-xs font-semibold text-black uppercase tracking-wider">
               نام
             </th>
-            <th className="px-6 py-3.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3.5 text-right text-xs font-semibold text-black uppercase tracking-wider">
               نام انگلیسی
             </th>
-            <th className="px-6 py-3.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3.5 text-right text-xs font-semibold text-black uppercase tracking-wider">
               نوع کاربری
             </th>
-            <th className="px-6 py-3.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3.5 text-right text-xs font-semibold text-black uppercase tracking-wider">
               وضعیت
             </th>
-            <th className="px-6 py-3.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3.5 text-right text-xs font-semibold text-black uppercase tracking-wider">
               تاریخ ایجاد
             </th>
-            <th className="px-6 py-3.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3.5 text-center text-xs font-semibold text-black uppercase tracking-wider">
               عملیات
             </th>
           </tr>

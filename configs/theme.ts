@@ -1,0 +1,126 @@
+/**
+ * Theme configuration file for the application
+ * Contains color palette and other theme-related settings
+ */
+
+export const colors = {
+  primary: {
+    50: '#e6f1ff',
+    100: '#cce3ff',
+    200: '#99c7ff',
+    300: '#66abff',
+    400: '#338fff',
+    500: '#0073ff',
+    600: '#005ccc',
+    700: '#004599',
+    800: '#002e66',
+    900: '#001733',
+  },
+  secondary: {
+    50: '#f5e9ff',
+    100: '#ead3ff',
+    200: '#d5a7ff',
+    300: '#c07bff',
+    400: '#ab4fff',
+    500: '#9623ff',
+    600: '#781ccc',
+    700: '#5a1599',
+    800: '#3c0e66',
+    900: '#1e0733',
+  },
+  success: {
+    50: '#e6f9ed',
+    100: '#ccf3db',
+    200: '#99e7b7',
+    300: '#66db93',
+    400: '#33cf6f',
+    500: '#00c34b',
+    600: '#009c3c',
+    700: '#00752d',
+    800: '#004e1e',
+    900: '#00270f',
+  },
+  warning: {
+    50: '#fff8e6',
+    100: '#fff1cc',
+    200: '#ffe399',
+    300: '#ffd566',
+    400: '#ffc733',
+    500: '#ffb900',
+    600: '#cc9400',
+    700: '#996f00',
+    800: '#664a00',
+    900: '#332500',
+  },
+  danger: {
+    50: '#fce9e9',
+    100: '#f9d3d3',
+    200: '#f3a7a7',
+    300: '#ed7b7b',
+    400: '#e74f4f',
+    500: '#e12323',
+    600: '#b41c1c',
+    700: '#871515',
+    800: '#5a0e0e',
+    900: '#2d0707',
+  },
+  info: {
+    50: '#e6f7ff',
+    100: '#ccefff',
+    200: '#99dfff',
+    300: '#66cfff',
+    400: '#33bfff',
+    500: '#00afff',
+    600: '#008ccc',
+    700: '#006999',
+    800: '#004666',
+    900: '#002333',
+  },
+  dark: {
+    50: '#e6e6e6',
+    100: '#cccccc',
+    200: '#999999',
+    300: '#666666',
+    400: '#333333',
+    500: '#000000',
+    600: '#000000',
+    700: '#000000',
+    800: '#000000',
+    900: '#000000',
+  },
+  gray: {
+    50: '#f9fafb',
+    100: '#f3f4f6',
+    200: '#e5e7eb',
+    300: '#d1d5db',
+    400: '#9ca3af',
+    500: '#6b7280',
+    600: '#4b5563',
+    700: '#374151',
+    800: '#1f2937',
+    900: '#111827',
+  },
+};
+
+export const buttonVariants = {
+  solid: 'shadow-sm font-medium transition-all duration-200 ease-in-out',
+  bordered: 'border-2 font-medium transition-all duration-200 ease-in-out',
+  light: 'font-medium transition-all duration-200 ease-in-out',
+  ghost: 'font-medium transition-all duration-200 ease-in-out',
+  flat: 'font-medium transition-all duration-200 ease-in-out',
+  faded: 'font-medium transition-all duration-200 ease-in-out opacity-80 hover:opacity-100',
+  shadow: 'shadow-md hover:shadow-lg font-medium transition-all duration-200 ease-in-out',
+};
+
+export const buttonSizes = {
+  sm: 'text-xs px-3 py-1.5 rounded',
+  md: 'text-sm px-4 py-2 rounded-md',
+  lg: 'text-base px-5 py-2.5 rounded-lg',
+  xl: 'text-lg px-6 py-3 rounded-lg',
+};
+
+export default {
+  colors,
+  buttonVariants,
+  buttonSizes,
+};

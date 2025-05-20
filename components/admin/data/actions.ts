@@ -2,12 +2,46 @@
 
 import users, { User, UserRole, roleGroups, RoleGroup, Role } from "./users";
 import { getAdminUsers } from "@/controllers/makeRequest";
+import { cookies } from "next/headers";
+import axios from "axios";
+import mainConfig from "@/configs/mainConfig";
 
 // Server action to fetch all users
 export async function getUsers(): Promise<User[]> {
   try {
-    // Fetch real users from API - removing includeDeleted to fix type error
-    const apiUsers = await getAdminUsers({ limit: 100 });
+    // For server component, we might not have access to localStorage
+    // So either use cookies or directly make the API call
+    const cookieStore = await cookies();
+    const token = cookieStore.get("accessToken")?.value;
+
+    let apiUsers = [];
+
+    if (token) {
+      // Option 1: Call getAdminUsers with token parameter
+      // This would require modifying the function to accept a token parameter
+
+      // Option 2: Make a direct API call with the token
+      const response = await axios.get(
+        `${mainConfig.apiServer}/admin/user/get-users?limit=100`,
+        {
+          headers: {
+            "x-access-token": token,
+          },
+        }
+      );
+
+      if (response.data?.data && Array.isArray(response.data.data)) {
+        apiUsers = response.data.data;
+      } else if (Array.isArray(response.data)) {
+        apiUsers = response.data;
+      }
+    } else {
+      console.warn(
+        "No authentication token found in cookies for server action"
+      );
+      // Fallback to getAdminUsers, but it likely won't have token on server
+      apiUsers = await getAdminUsers({ limit: 100 });
+    }
 
     // Map API users to our User interface
     if (apiUsers && Array.isArray(apiUsers)) {

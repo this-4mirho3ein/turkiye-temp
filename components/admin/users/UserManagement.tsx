@@ -6,12 +6,13 @@ import { User, UserRole } from "../data/users";
 import { getAdminUsers } from "@/controllers/makeRequest";
 import { useApi } from "@/hooks/useApi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Checkbox } from "@heroui/react";
+import { Checkbox, addToast } from "@heroui/react";
 import {
   FaSync,
   FaFilter,
   FaUsers,
   FaExclamationTriangle,
+  FaCheck,
 } from "react-icons/fa";
 import Button from "../ui/Button";
 import Card, { CardBody } from "../ui/Card";
@@ -51,6 +52,24 @@ interface ApiUser {
   // Add other fields as needed
 }
 
+// API response structure
+interface ApiResponse {
+  status?: number;
+  data?: ApiUser[] | any;
+  message?: string;
+  success?: boolean;
+}
+
+// API error type
+interface ApiError extends Error {
+  response?: {
+    status: number;
+    statusText: string;
+    data: any;
+    headers: any;
+  };
+}
+
 // Inner component that uses the API
 function UserManagementInner({ initialUsers }: UserManagementProps) {
   const [users, setUsers] = useState<User[]>(initialUsers);
@@ -66,17 +85,21 @@ function UserManagementInner({ initialUsers }: UserManagementProps) {
   };
 
   // Setup API fetchers
-  const fetchers = {
-    "admin-users": getAdminUsers,
+  interface Fetchers {
+    [key: string]: (params?: any) => Promise<any>;
+  }
+
+  const fetchers: Fetchers = {
+    "admin-users": getAdminUsers as (params?: any) => Promise<ApiResponse>,
   };
 
   // Fetch users with React Query
   const {
-    data: apiUsers = [],
+    data: apiUsers,
     isLoading,
     error,
     refetch: refetchUsers,
-  } = useApi<ApiUser[]>(
+  } = useApi<ApiResponse>(
     "admin-users",
     fetchers,
     {
@@ -140,9 +163,54 @@ function UserManagementInner({ initialUsers }: UserManagementProps) {
 
   // Update users when API data changes
   useEffect(() => {
-    if (apiUsers && apiUsers.length > 0) {
-      const mappedUsers = mapToUsers(apiUsers);
-      setUsers(mappedUsers);
+    if (apiUsers) {
+      console.log("Raw API response:", apiUsers);
+
+      // Check for new response structure
+      let usersList: ApiUser[] = [];
+
+      // Handle different possible response structures
+      if (apiUsers.data && Array.isArray(apiUsers.data)) {
+        // The data is directly in apiUsers.data array
+        usersList = apiUsers.data;
+        console.log("Found users in apiUsers.data array:", usersList.length);
+      } else if (
+        apiUsers.data &&
+        typeof apiUsers.data === "object" &&
+        apiUsers.data.data &&
+        Array.isArray(apiUsers.data.data)
+      ) {
+        // The data is nested in apiUsers.data.data array
+        usersList = apiUsers.data.data;
+        console.log(
+          "Found users in apiUsers.data.data array:",
+          usersList.length
+        );
+      } else if (Array.isArray(apiUsers)) {
+        // The data is directly in apiUsers array
+        usersList = apiUsers as unknown as ApiUser[];
+        console.log("Found users in apiUsers array:", usersList.length);
+      } else {
+        console.warn("Unexpected users response structure:", apiUsers);
+      }
+
+      if (usersList && usersList.length > 0) {
+        const mappedUsers = mapToUsers(usersList);
+        setUsers(mappedUsers);
+
+        // Show success toast for testing purposes
+        addToast({
+          title: "بارگذاری موفق",
+          description: `${mappedUsers.length} کاربر با موفقیت بارگذاری شد`,
+          color: "success",
+          icon: <FaCheck />,
+          timeout: 3000,
+        });
+
+        console.log(
+          `✅ Successfully loaded ${mappedUsers.length} users from API`
+        );
+      }
     }
   }, [apiUsers]);
 
@@ -151,6 +219,30 @@ function UserManagementInner({ initialUsers }: UserManagementProps) {
     if (error) {
       console.error("Error fetching users:", error);
       setHasErrorOccurred(true);
+
+      // Check for authentication error (401)
+      const apiError = error as ApiError;
+      const isAuthError = apiError.response?.status === 401;
+
+      addToast({
+        title: isAuthError ? "خطای احراز هویت" : "خطا در بارگذاری",
+        description: isAuthError
+          ? "عدم دسترسی به API. لطفاً مجدداً وارد سیستم شوید."
+          : "خطا در بارگذاری اطلاعات کاربران. لطفاً مجدداً تلاش کنید.",
+        color: "danger",
+        icon: <FaExclamationTriangle />,
+        timeout: 5000,
+      });
+
+      // Log detailed error information for debugging
+      if (apiError.response) {
+        console.error("API Error Response:", {
+          status: apiError.response.status,
+          statusText: apiError.response.statusText,
+          data: apiError.response.data,
+          headers: apiError.response.headers,
+        });
+      }
     }
   }, [error]);
 
@@ -170,42 +262,43 @@ function UserManagementInner({ initialUsers }: UserManagementProps) {
   return (
     <div className="space-y-6">
       {/* Header with title and refresh button */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 className="text-2xl font-bold text-gray-800">مدیریت کاربران</h1>
-        <Button
-          variant="solid"
-          color="primary"
-          startContent={<FaSync className={isLoading ? "animate-spin" : ""} />}
-          onPress={refreshAllData}
-          isDisabled={isLoading}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+      <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+        <div className="flex items-center">
+          <FaUsers className="text-primary ml-3 text-xl" />
+          <h1 className="text-xl md:text-2xl font-bold">مدیریت کاربران</h1>
+        </div>
+        <button
+          onClick={refreshAllData}
+          className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition-colors"
+          disabled={isLoading}
         >
-          {isLoading ? "در حال بروزرسانی..." : "بروزرسانی"}
-        </Button>
+          <FaSync
+            className={`text-primary ${isLoading ? "animate-spin" : ""}`}
+          />
+          <span className="hidden md:inline">
+            {isLoading ? "در حال بروزرسانی..." : "به‌روزرسانی"}
+          </span>
+        </button>
       </div>
 
-      {/* Filters */}
-      <Card shadow="sm">
-        <CardBody className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <FaFilter className="text-gray-500" />
-            <span className="font-medium text-gray-700">فیلترها</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="show-deleted"
-              checked={showDeletedItems}
-              onChange={(e) => setShowDeletedItems(e.target.checked)}
-            />
-            <label
-              htmlFor="show-deleted"
-              className="text-sm font-medium cursor-pointer"
-            >
-              نمایش کاربران حذف شده
-            </label>
-          </div>
-        </CardBody>
-      </Card>
+      {/* فیلترها */}
+      <div className="bg-white p-4 rounded-lg shadow-sm border-t-4 border-purple-500">
+        <div className="font-bold text-gray-700 mb-3 flex items-center">
+          <FaFilter className="ml-2 text-purple-500" />
+          فیلترها
+        </div>
+        <div className="flex items-center">
+          <Checkbox
+            id="show-deleted"
+            checked={showDeletedItems}
+            onChange={(e) => setShowDeletedItems(e.target.checked)}
+            className="ml-2 text-purple-500"
+          />
+          <label htmlFor="show-deleted" className="mb-0 text-sm cursor-pointer">
+            نمایش کاربران حذف شده
+          </label>
+        </div>
+      </div>
 
       {/* Users List */}
       <Card shadow="sm">

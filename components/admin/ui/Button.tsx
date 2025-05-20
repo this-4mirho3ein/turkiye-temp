@@ -2,10 +2,11 @@
 
 import { Button as HeroButton } from "@heroui/react";
 import { ReactNode } from "react";
+import { twMerge } from "tailwind-merge";
 
 export interface ButtonProps {
   children: ReactNode;
-  color?: "primary" | "secondary" | "success" | "warning" | "danger";
+  color?: "primary" | "secondary" | "success" | "warning" | "danger" | "info" | "dark";
   variant?:
     | "solid"
     | "bordered"
@@ -14,7 +15,7 @@ export interface ButtonProps {
     | "faded"
     | "shadow"
     | "ghost";
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   radius?: "none" | "sm" | "md" | "lg" | "full";
   fullWidth?: boolean;
   isLoading?: boolean;
@@ -26,12 +27,88 @@ export interface ButtonProps {
   [key: string]: any;
 }
 
+// Generate color styles using Tailwind classes based on the project's color scheme
+const generateColorStyles = () => {
+  return {
+    primary: {
+      solid: "bg-primary hover:bg-primary/90 text-white shadow-md hover:shadow-lg",
+      bordered: "border-primary text-primary hover:bg-primary/10",
+      light: "bg-primary/20 text-primary hover:bg-primary/30",
+      ghost: "text-primary hover:bg-primary/10",
+    },
+    secondary: {
+      solid: "bg-secondary hover:bg-secondary/90 text-white shadow-md hover:shadow-lg",
+      bordered: "border-secondary text-secondary hover:bg-secondary/10",
+      light: "bg-secondary/20 text-secondary-bronze hover:bg-secondary/30",
+      ghost: "text-secondary hover:bg-secondary/10",
+    },
+    success: {
+      solid: "bg-button hover:bg-button/90 text-white shadow-md hover:shadow-lg",
+      bordered: "border-button text-button hover:bg-button/10",
+      light: "bg-button/20 text-button hover:bg-button/30",
+      ghost: "text-button hover:bg-button/10",
+    },
+    warning: {
+      solid: "bg-secondary-bronze hover:bg-secondary-bronze/90 text-white shadow-md hover:shadow-lg",
+      bordered: "border-secondary-bronze text-secondary-bronze hover:bg-secondary-bronze/10",
+      light: "bg-secondary-bronze/20 text-secondary-bronze hover:bg-secondary-bronze/30",
+      ghost: "text-secondary-bronze hover:bg-secondary-bronze/10",
+    },
+    danger: {
+      solid: "bg-error hover:bg-error/90 text-white shadow-md hover:shadow-lg",
+      bordered: "border-error text-error hover:bg-error/10",
+      light: "bg-error/20 text-error hover:bg-error/30",
+      ghost: "text-error hover:bg-error/10",
+    },
+    info: {
+      solid: "bg-primary-light hover:bg-primary-light/90 text-white shadow-md hover:shadow-lg",
+      bordered: "border-primary-light text-primary-light hover:bg-primary-light/10",
+      light: "bg-primary-light/20 text-primary-light hover:bg-primary-light/30",
+      ghost: "text-primary-light hover:bg-primary-light/10",
+    },
+    dark: {
+      solid: "bg-dark hover:bg-dark/90 text-white shadow-md hover:shadow-lg",
+      bordered: "border-dark text-dark hover:bg-muted",
+      light: "bg-muted text-dark hover:bg-muted/80",
+      ghost: "text-dark hover:bg-muted",
+    },
+  };
+};
+
+// Tailwind classes for button variants with improved transitions
+const variantClasses = {
+  solid: "transition-all duration-200 ease-in-out font-medium",
+  bordered: "border-2 transition-all duration-200 ease-in-out font-medium",
+  light: "transition-all duration-200 ease-in-out font-medium",
+  ghost: "transition-all duration-200 ease-in-out font-medium",
+  flat: "transition-all duration-200 ease-in-out font-medium",
+  faded: "opacity-80 hover:opacity-100 transition-all duration-200 ease-in-out font-medium",
+  shadow: "shadow-md hover:shadow-lg transition-all duration-200 ease-in-out font-medium",
+};
+
+// Tailwind classes for button sizes with improved spacing
+const sizeClasses = {
+  sm: "text-xs px-3 py-1.5 rounded space-x-1",
+  md: "text-sm px-4 py-2 rounded-md space-x-1.5",
+  lg: "text-base px-5 py-2.5 rounded-lg space-x-2",
+  xl: "text-lg px-6 py-3 rounded-xl space-x-2.5",
+};
+
+// Tailwind classes for button radius
+const radiusClasses = {
+  none: "rounded-none",
+  sm: "rounded-sm",
+  md: "rounded-md",
+  lg: "rounded-lg",
+  full: "rounded-full",
+};
+
 export default function Button({
   children,
   color = "primary",
   variant = "solid",
   size = "md",
-  radius,
+  radius = "md",
   fullWidth,
   isLoading,
   isDisabled,
@@ -41,6 +118,21 @@ export default function Button({
   className,
   ...props
 }: ButtonProps) {
+  // Get variant class
+  const variantClass = variantClasses[variant] || "";
+  
+  // Get size class
+  const sizeClass = sizeClasses[size] || "";
+  
+  // Get radius class
+  const radiusClass = radiusClasses[radius] || "";
+  
+  // Get color styles from theme
+  const colorStyles = generateColorStyles();
+  const colorClass = variant !== "faded" && variant !== "flat" && variant !== "shadow" 
+    ? colorStyles[color]?.[variant] || ""
+    : "";
+  
   return (
     <HeroButton
       color={color}
@@ -53,7 +145,16 @@ export default function Button({
       startContent={startContent}
       endContent={endContent}
       onPress={onPress}
-      className={className}
+      className={twMerge(
+        variantClass,
+        sizeClass,
+        radiusClass,
+        colorClass,
+        fullWidth && "w-full",
+        isDisabled && "opacity-60 cursor-not-allowed",
+        isLoading && "cursor-wait",
+        className
+      )}
       {...props}
     >
       {children}

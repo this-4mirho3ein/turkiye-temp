@@ -28,13 +28,17 @@ const RegionsTable: React.FC<RegionsTableProps> = ({
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
       <table className="w-full text-sm text-right">
-        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+        <thead className="text-xs text-black uppercase bg-gray-50">
           <tr>
-            <th className="px-6 py-3.5 text-center">#</th>
-            <th className="px-6 py-3.5">نام</th>
-            <th className="px-6 py-3.5">نام انگلیسی</th>
-            {type !== "countries" && <th className="px-6 py-3.5">والد</th>}
-            <th className="px-6 py-3.5 text-center w-48">عملیات</th>
+            <th className="px-6 py-3.5 text-center font-semibold">#</th>
+            <th className="px-6 py-3.5 font-semibold">نام</th>
+            <th className="px-6 py-3.5 font-semibold">نام انگلیسی</th>
+            {type !== "countries" && (
+              <th className="px-6 py-3.5 font-semibold">والد</th>
+            )}
+            <th className="px-6 py-3.5 text-center w-48 font-semibold">
+              عملیات
+            </th>
           </tr>
         </thead>
         <tbody>

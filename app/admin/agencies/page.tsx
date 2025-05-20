@@ -1,11 +1,15 @@
-import React from 'react'
+import { getAdminAgencies } from '@/controllers/makeRequest';
+import AgenciesPageClient from '@/components/admin/agencies/AgenciesPageClient';
 
-const page = () => {
+async function AgenciesPage() {
+  // Fetch agencies data server-side to have immediate data on page load
+  const agenciesData = await getAdminAgencies();
+  
   return (
-    <div>
-      
+    <div className="p-6 font-iranyekanx" dir="rtl">
+      <AgenciesPageClient initialData={agenciesData} />
     </div>
-  )
+  );
 }
 
-export default page
+export default AgenciesPage;

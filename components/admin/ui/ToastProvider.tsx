@@ -17,6 +17,7 @@ interface Toast {
   message: string;
   type: ToastType;
   title?: string;
+  duration?: number; // Duration in milliseconds
 }
 
 interface ToastContextType {
@@ -131,10 +132,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
     const id = Date.now();
     setToasts((prevToasts) => [...prevToasts, { ...toast, id }]);
 
-    // Auto-hide toast after 5 seconds
+    // Auto-hide toast after the specified duration or default 5000ms
     setTimeout(() => {
       hideToast(id);
-    }, 5000);
+    }, toast.duration || 5000);
   }, []);
 
   const hideToast = useCallback((id: number) => {

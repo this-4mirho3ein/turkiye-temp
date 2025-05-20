@@ -1,8 +1,0 @@
-export default function PishkhanComponent() {
-  return (
-    <div className="col-span-12 lg:col-span-9">
-    <div className="rounded-lg bg-muted p-5 shadow-base">about component aaaaaaaaaaaaaaaaaaa
-    </div>
-  </div>
-  );
-}

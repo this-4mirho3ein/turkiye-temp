@@ -77,43 +77,61 @@ export default function ReportDataFetcher({
     refetchOnMount: false,
   };
 
+  // Define proper interfaces for our API responses
+  interface ApiResponseData {
+    data?: any[] | { data?: any[] };
+    [key: string]: any;
+  }
+
   // Fetch all data using React Query with proper caching
-  const { data: users = [], isLoading: usersLoading } = useQuery({
+  const { data: users = [], isLoading: usersLoading } = useQuery<
+    any[] | ApiResponseData
+  >({
     queryKey: ["admin-users"],
     queryFn: () =>
       fetchers["admin-users"]({ page: 1, limit: 100, forceRefresh }),
     ...commonQueryOptions,
   });
 
-  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery<
+    any[] | ApiResponseData
+  >({
     queryKey: ["admin-categories"],
     queryFn: () =>
       fetchers["admin-categories"]({ page: 1, limit: 100, forceRefresh }),
     ...commonQueryOptions,
   });
 
-  const { data: countries = [], isLoading: countriesLoading } = useQuery({
+  const { data: countries = [], isLoading: countriesLoading } = useQuery<
+    any[] | ApiResponseData
+  >({
     queryKey: ["admin-countries"],
     queryFn: () =>
       fetchers["admin-countries"]({ page: 1, limit: 100, forceRefresh }),
     ...commonQueryOptions,
   });
 
-  const { data: provinces = [], isLoading: provincesLoading } = useQuery({
+  const { data: provinces = [], isLoading: provincesLoading } = useQuery<
+    any[] | ApiResponseData
+  >({
     queryKey: ["admin-provinces"],
     queryFn: () =>
       fetchers["admin-provinces"]({ page: 1, limit: 100, forceRefresh }),
     ...commonQueryOptions,
   });
 
-  const { data: cities = [], isLoading: citiesLoading } = useQuery({
+  const { data: cities = [], isLoading: citiesLoading } = useQuery<
+    any[] | ApiResponseData
+  >({
     queryKey: ["admin-cities"],
     queryFn: () =>
       fetchers["admin-cities"]({ page: 1, limit: 100, forceRefresh }),
     ...commonQueryOptions,
   });
 
-  const { data: areas = [], isLoading: areasLoading } = useQuery({
+  const { data: areas = [], isLoading: areasLoading } = useQuery<
+    any[] | ApiResponseData
+  >({
     queryKey: ["admin-areas"],
     queryFn: () =>
       fetchers["admin-areas"]({ page: 1, limit: 100, forceRefresh }),
@@ -121,7 +139,7 @@ export default function ReportDataFetcher({
   });
 
   const { data: propertyTypes = [], isLoading: propertyTypesLoading } =
-    useQuery({
+    useQuery<any[] | ApiResponseData>({
       queryKey: ["admin-property-types"],
       queryFn: () =>
         fetchers["admin-property-types"]({ page: 1, limit: 100, forceRefresh }),
@@ -141,22 +159,65 @@ export default function ReportDataFetcher({
   useEffect(() => {
     if (isLoading) return;
 
+    // Helper function to safely extract array data from potentially nested responses
+    const extractArray = (data: any): any[] => {
+      if (Array.isArray(data)) {
+        return data;
+      }
+
+      if (data && typeof data === "object") {
+        if (data.data && Array.isArray(data.data)) {
+          return data.data;
+        }
+
+        if (
+          data.data &&
+          typeof data.data === "object" &&
+          data.data.data &&
+          Array.isArray(data.data.data)
+        ) {
+          return data.data.data;
+        }
+      }
+
+      console.warn("Unexpected data structure:", data);
+      return [];
+    };
+
+    // Extract arrays using the helper function
+    const usersArray = extractArray(users);
+    const categoriesArray = extractArray(categories);
+    const countriesArray = extractArray(countries);
+    const provincesArray = extractArray(provinces);
+    const citiesArray = extractArray(cities);
+    const areasArray = extractArray(areas);
+    const propertyTypesArray = extractArray(propertyTypes);
+
     // Process users data
-    const totalUsers = users.length;
-    const activeUsers = users.filter((user: any) => !user.isDeleted).length;
-    const deletedUsers = users.filter((user: any) => user.isDeleted).length;
+    const totalUsers = usersArray.length;
+    const activeUsers = usersArray.filter(
+      (user: any) => !user.isDeleted
+    ).length;
+    const deletedUsers = usersArray.filter(
+      (user: any) => user.isDeleted
+    ).length;
 
     // Process categories data
-    const totalCategories = categories.length;
-    const activeCategories = categories.filter(
+    const totalCategories = categoriesArray.length;
+    const activeCategories = categoriesArray.filter(
       (cat: any) => !cat.isDeleted
     ).length;
-    const deletedCategories = categories.filter(
+    const deletedCategories = categoriesArray.filter(
       (cat: any) => cat.isDeleted
     ).length;
 
     // Process regions data (combine countries, provinces, cities, areas)
-    const allRegions = [...countries, ...provinces, ...cities, ...areas];
+    const allRegions = [
+      ...countriesArray,
+      ...provincesArray,
+      ...citiesArray,
+      ...areasArray,
+    ];
     const totalRegions = allRegions.length;
     const activeRegions = allRegions.filter(
       (region: any) => !region.isDeleted
@@ -166,11 +227,11 @@ export default function ReportDataFetcher({
     ).length;
 
     // Process property types data
-    const totalPropertyTypes = propertyTypes.length;
-    const activePropertyTypes = propertyTypes.filter(
+    const totalPropertyTypes = propertyTypesArray.length;
+    const activePropertyTypes = propertyTypesArray.filter(
       (type: any) => !type.isDeleted
     ).length;
-    const deletedPropertyTypes = propertyTypes.filter(
+    const deletedPropertyTypes = propertyTypesArray.filter(
       (type: any) => type.isDeleted
     ).length;
 

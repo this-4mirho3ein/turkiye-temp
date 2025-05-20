@@ -384,7 +384,7 @@ export default function UsersList({
   };
 
   // Check if we should show the loading state or empty state
-  const isTableLoading = isLoading || apiLoading;
+  const isTableLoading = apiLoading || isLoading;
   const isTableEmpty = !isTableLoading && displayUsers.length === 0;
 
   return (
@@ -422,66 +422,114 @@ export default function UsersList({
               aria-label="فیلتر کاربران"
               className="p-4 min-w-[240px] bg-white rounded-lg shadow-lg border border-gray-200"
             >
-              <div key="role-filter" className="p-0">
-                <p className="font-semibold mb-3 text-gray-700">نقش کاربری</p>
-                <div className="flex flex-col gap-2 bg-gray-50 p-3 rounded-lg">
-                  <Button
-                    size="sm"
-                    variant={currentFilter === "all" ? "solid" : "light"}
-                    color={currentFilter === "all" ? "primary" : "secondary"}
-                    className="justify-start rounded-full"
-                    onPress={() => setCurrentFilter("all")}
-                  >
-                    همه کاربران
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={currentFilter === "admin" ? "solid" : "light"}
-                    color={currentFilter === "admin" ? "primary" : "secondary"}
-                    className="justify-start rounded-full"
-                    onPress={() => setCurrentFilter("admin")}
-                  >
-                    مدیران
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={currentFilter === "agency" ? "solid" : "light"}
-                    color={currentFilter === "agency" ? "primary" : "secondary"}
-                    className="justify-start rounded-full"
-                    onPress={() => setCurrentFilter("agency")}
-                  >
-                    آژانس‌ها
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={currentFilter === "consultant" ? "solid" : "light"}
-                    color={
-                      currentFilter === "consultant" ? "primary" : "secondary"
-                    }
-                    className="justify-start rounded-full"
-                    onPress={() => setCurrentFilter("consultant")}
-                  >
-                    مشاوران
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={currentFilter === "normal" ? "solid" : "light"}
-                    color={currentFilter === "normal" ? "primary" : "secondary"}
-                    className="justify-start rounded-full"
-                    onPress={() => setCurrentFilter("normal")}
-                  >
-                    کاربران عادی
-                  </Button>
-                </div>
-              </div>
-              <Divider className="my-3" />
-              <div
-                key="clear-filters"
-                className="justify-center text-danger bg-danger/5 rounded-lg hover:bg-danger/10 mt-2 p-2"
-                onClick={clearFilters}
+              <DropdownItem
+                key="role-heading"
+                className="cursor-default"
+                textValue="نقش کاربری"
               >
-                حذف فیلترها
-              </div>
+                <p className="font-semibold mb-3 text-gray-700">نقش کاربری</p>
+              </DropdownItem>
+
+              <DropdownItem
+                key="role-all"
+                textValue="همه کاربران"
+                onPress={() => setCurrentFilter("all")}
+              >
+                <Button
+                  size="sm"
+                  variant={currentFilter === "all" ? "solid" : "light"}
+                  color={currentFilter === "all" ? "primary" : "secondary"}
+                  className="justify-start rounded-full w-full"
+                >
+                  همه کاربران
+                </Button>
+              </DropdownItem>
+
+              <DropdownItem
+                key="role-admin"
+                textValue="مدیران"
+                onPress={() => setCurrentFilter("admin")}
+              >
+                <Button
+                  size="sm"
+                  variant={currentFilter === "admin" ? "solid" : "light"}
+                  color={currentFilter === "admin" ? "primary" : "secondary"}
+                  className="justify-start rounded-full w-full"
+                >
+                  مدیران
+                </Button>
+              </DropdownItem>
+
+              <DropdownItem
+                key="role-agency"
+                textValue="آژانس‌ها"
+                onPress={() => setCurrentFilter("agency")}
+              >
+                <Button
+                  size="sm"
+                  variant={currentFilter === "agency" ? "solid" : "light"}
+                  color={currentFilter === "agency" ? "primary" : "secondary"}
+                  className="justify-start rounded-full w-full"
+                >
+                  آژانس‌ها
+                </Button>
+              </DropdownItem>
+
+              <DropdownItem
+                key="role-consultant"
+                textValue="مشاوران"
+                onPress={() => setCurrentFilter("consultant")}
+              >
+                <Button
+                  size="sm"
+                  variant={currentFilter === "consultant" ? "solid" : "light"}
+                  color={
+                    currentFilter === "consultant" ? "primary" : "secondary"
+                  }
+                  className="justify-start rounded-full w-full"
+                >
+                  مشاوران
+                </Button>
+              </DropdownItem>
+
+              <DropdownItem
+                key="role-normal"
+                textValue="کاربران عادی"
+                onPress={() => setCurrentFilter("normal")}
+              >
+                <Button
+                  size="sm"
+                  variant={currentFilter === "normal" ? "solid" : "light"}
+                  color={currentFilter === "normal" ? "primary" : "secondary"}
+                  className="justify-start rounded-full w-full"
+                >
+                  کاربران عادی
+                </Button>
+              </DropdownItem>
+
+              <DropdownItem
+                key="divider"
+                className="h-px bg-gray-200 my-2"
+                textValue="divider"
+              />
+
+              <DropdownItem
+                key="clear-filters"
+                textValue="حذف فیلترها"
+                onPress={clearFilters}
+              >
+                <Button
+                  key="clear-filters"
+                  color="danger"
+                  variant="bordered"
+                  size="md"
+                  className="mx-1"
+                  startContent={<span className="ml-1">🗑️</span>}
+                  onPress={clearFilters}
+                >
+                  حذف فیلترها
+                </Button>
+              </DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </div>
@@ -518,7 +566,15 @@ export default function UsersList({
                   colSpan={9}
                   className="px-6 py-10 text-center text-gray-500"
                 >
-                  در حال بارگذاری...
+                  <div className="flex flex-col items-center justify-center py-6">
+                    <div
+                      className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
+                      role="status"
+                    ></div>
+                    <span className="mt-4 text-gray-600">
+                      در حال بارگذاری اطلاعات کاربران...
+                    </span>
+                  </div>
                 </td>
               </tr>
             )}
@@ -528,9 +584,14 @@ export default function UsersList({
                   colSpan={9}
                   className="px-6 py-10 text-center text-gray-500"
                 >
-                  {showEmptyState
-                    ? "کاربری یافت نشد"
-                    : "در حال دریافت اطلاعات کاربران..."}
+                  <div className="flex flex-col items-center justify-center py-6">
+                    <FaUsers className="text-gray-300 text-5xl mb-3" />
+                    <span className="text-gray-600">
+                      {showEmptyState
+                        ? "کاربری یافت نشد"
+                        : "در حال دریافت اطلاعات کاربران..."}
+                    </span>
+                  </div>
                 </td>
               </tr>
             )}

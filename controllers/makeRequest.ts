@@ -3,549 +3,549 @@ import { GenericAbortSignal } from "axios";
 import mainConfig from "@/configs/mainConfig";
 import axios from "axios";
 
-//#region Auth
-export const sendOtpCode = async (
-  mobile_number: string,
-  countryCode: string
-) => {
-  try {
-    const response = await api.post("/login", { mobile_number, countryCode });
-    return { ...response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
+// //#region Auth
+// export const sendOtpCode = async (
+//   mobile_number: string,
+//   countryCode: string
+// ) => {
+//   try {
+//     const response = await api.post("/login", { mobile_number, countryCode });
+//     return { ...response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const verifyOtp = async (mobile_number: string, active_code: string) => {
-  try {
-    const response = await api.post("/login/otp", {
-      mobile_number,
-      active_code,
-    });
-    return { ...response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
-export const sendInvitation = async (
-  token: string,
-  mobile_number: string,
-  role: string
-) => {
-  try {
-    // Define modedrole outside the if/else block so it's accessible in the API call
-    let modedrole = 1; // Default value for "مشاور املاک"
-    if (role === "مدیر منطقه") {
-      modedrole = 2;
-    }
+// export const verifyOtp = async (mobile_number: string, active_code: string) => {
+//   try {
+//     const response = await api.post("/login/otp", {
+//       mobile_number,
+//       active_code,
+//     });
+//     return { ...response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
+// export const sendInvitation = async (
+//   token: string,
+//   mobile_number: string,
+//   role: string
+// ) => {
+//   try {
+//     // Define modedrole outside the if/else block so it's accessible in the API call
+//     let modedrole = 1; // Default value for "مشاور املاک"
+//     if (role === "مدیر منطقه") {
+//       modedrole = 2;
+//     }
 
-    // Create headers object
-    const headers = {
-      Authorization: `Bearer ${token}`,
-    };
+//     // Create headers object
+//     const headers = {
+//       Authorization: `Bearer ${token}`,
+//     };
 
-    const response = await api.post(
-      `${mainConfig.apiServer}/send-request`,
-      {
-        mobile_number,
-        role: modedrole,
-      },
-      { headers }
-    );
+//     const response = await api.post(
+//       `${mainConfig.apiServer}/send-request`,
+//       {
+//         mobile_number,
+//         role: modedrole,
+//       },
+//       { headers }
+//     );
 
-    return { ...response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
+//     return { ...response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-//#endregion
+// //#endregion
 
-//#region Locations
-export const getCountries = async () => {
-  try {
-    const response = await api.get("/list-countries");
-    return response.data || [];
-  } catch (err) {
-    return returnError(err);
-  }
-};
-export const getProvinces = async (countrySlug: string) => {
-  try {
-    const response = await api.post("/provinces", { slug: countrySlug });
-    return response.data || [];
-  } catch (err) {
-    return returnError(err);
-  }
-};
-export const getCities = async (provinceSlug: string) => {
-  try {
-    const response = await api.post("/cities", { slug: provinceSlug });
-    return response.data || [];
-  } catch (err) {
-    return returnError(err);
-  }
-};
-export const getAreas = async (citySlug: string) => {
-  try {
-    const response = await api.post("/neighborhoods", { slug: citySlug });
-    return response.data || [];
-  } catch (err) {
-    return returnError(err);
-  }
-};
-//#endregion
+// //#region Locations
+// export const getCountries = async () => {
+//   try {
+//     const response = await api.get("/list-countries");
+//     return response.data || [];
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
+// export const getProvinces = async (countrySlug: string) => {
+//   try {
+//     const response = await api.post("/provinces", { slug: countrySlug });
+//     return response.data || [];
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
+// export const getCities = async (provinceSlug: string) => {
+//   try {
+//     const response = await api.post("/cities", { slug: provinceSlug });
+//     return response.data || [];
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
+// export const getAreas = async (citySlug: string) => {
+//   try {
+//     const response = await api.post("/neighborhoods", { slug: citySlug });
+//     return response.data || [];
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
+// //#endregion
 
-//#region User
-export const getUser = async (token: string) => {
-  try {
-    const response = await api.get("/getuser", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return { ...response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
+// //#region User
+// export const getUser = async (token: string) => {
+//   try {
+//     const response = await api.get("/getuser", {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//       },
+//     });
+//     return { ...response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const updateUser = async (token: string, data: any) => {
-  try {
-    const fullUrl = `${mainConfig.apiServer}/completeprofile`;
-    const headers = {
-      Authorization: `Bearer ${token}`,
-    };
+// export const updateUser = async (token: string, data: any) => {
+//   try {
+//     const fullUrl = `${mainConfig.apiServer}/completeprofile`;
+//     const headers = {
+//       Authorization: `Bearer ${token}`,
+//     };
 
-    console.log("💡 Request headers:", headers);
-    console.log("💡 Is FormData?", data instanceof FormData);
+//     console.log("💡 Request headers:", headers);
+//     console.log("💡 Is FormData?", data instanceof FormData);
 
-    // Log FormData entries
-    if (data instanceof FormData) {
-      console.log("💡 FormData contents:");
-      for (let pair of data.entries()) {
-        console.log(`   ${pair[0]}: ${pair[1]}`);
-      }
-    }
+//     // Log FormData entries
+//     if (data instanceof FormData) {
+//       console.log("💡 FormData contents:");
+//       for (let pair of data.entries()) {
+//         console.log(`   ${pair[0]}: ${pair[1]}`);
+//       }
+//     }
 
-    console.log("💡 Sending request...");
+//     console.log("💡 Sending request...");
 
-    // Don't set Content-Type header for FormData - browser will set it with correct boundary
-    const response = await api.post("/completeprofile", data, {
-      headers,
-    });
+//     // Don't set Content-Type header for FormData - browser will set it with correct boundary
+//     const response = await api.post("/completeprofile", data, {
+//       headers,
+//     });
 
-    return { ...response.data, status: response.status };
-  } catch (error: any) {
-    console.error("💡 Error in updateUser:", error);
-    if (error.response) {
-      console.error("💡 Error response status:", error.response.status);
-      console.error("💡 Error response data:", error.response.data);
-    } else if (error.request) {
-      console.error("💡 No response received. Request:", error.request);
-    } else {
-      console.error("💡 Error message:", error.message);
-    }
-    return returnError(error);
-  }
-};
-//#endregion
+//     return { ...response.data, status: response.status };
+//   } catch (error: any) {
+//     console.error("💡 Error in updateUser:", error);
+//     if (error.response) {
+//       console.error("💡 Error response status:", error.response.status);
+//       console.error("💡 Error response data:", error.response.data);
+//     } else if (error.request) {
+//       console.error("💡 No response received. Request:", error.request);
+//     } else {
+//       console.error("💡 Error message:", error.message);
+//     }
+//     return returnError(error);
+//   }
+// };
+// //#endregion
 
-//#region Categories
-export const getCategories = async (propertyTypeSlug: string) => {
-  try {
-    const response = await api.post("/CategorizedPropertyType", {
-      slug: propertyTypeSlug,
-    });
-    return response.data || [];
-  } catch (err) {
-    return returnError(err);
-  }
-};
-//#endregion
+// //#region Categories
+// export const getCategories = async (propertyTypeSlug: string) => {
+//   try {
+//     const response = await api.post("/CategorizedPropertyType", {
+//       slug: propertyTypeSlug,
+//     });
+//     return response.data || [];
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
+// //#endregion
 
-//#region Advertisement
-export const getAdvertisements = async (
-  filters: any,
-  page: number,
-  limit: number,
-  token?: string
-) => {
-  console.log("limit", limit);
+// //#region Advertisement
+// export const getAdvertisements = async (
+//   filters: any,
+//   page: number,
+//   limit: number,
+//   token?: string
+// ) => {
+//   console.log("limit", limit);
 
-  try {
-    const response = await api.post(
-      `/filter-elan?page=${page}&limit=${limit}`,
-      filters
-    );
-    return { ...response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
+//   try {
+//     const response = await api.post(
+//       `/filter-elan?page=${page}&limit=${limit}`,
+//       filters
+//     );
+//     return { ...response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const getPropertyFilters = async (slug: string) => {
-  try {
-    const response = await api.post(`/Featurerelated`, { slug });
-    return { data: response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
+// export const getPropertyFilters = async (slug: string) => {
+//   try {
+//     const response = await api.post(`/Featurerelated`, { slug });
+//     return { data: response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const globalSearch = async (
-  filterText: string,
-  signal: GenericAbortSignal | undefined
-) => {
-  try {
-    const response = await api.post(
-      `/search`,
-      { query: filterText },
-      { signal }
-    );
+// export const globalSearch = async (
+//   filterText: string,
+//   signal: GenericAbortSignal | undefined
+// ) => {
+//   try {
+//     const response = await api.post(
+//       `/search`,
+//       { query: filterText },
+//       { signal }
+//     );
 
-    return { data: response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
+//     return { data: response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const fetchTitle = async (slug: string) => {
-  try {
-    const response = await api.get(`/FindTitleBySlug?slug=${slug}`);
-    return response.data.title;
-  } catch (err) {
-    return returnError(err);
-  }
-};
+// export const fetchTitle = async (slug: string) => {
+//   try {
+//     const response = await api.get(`/FindTitleBySlug?slug=${slug}`);
+//     return response.data.title;
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const getAdvertisement = async (id: string, token?: string) => {
-  try {
-    const response = await api.get(`/advertisements/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return { data: response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
+// export const getAdvertisement = async (id: string, token?: string) => {
+//   try {
+//     const response = await api.get(`/advertisements/${id}`, {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//       },
+//     });
+//     return { data: response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const handleFavorite = async (
-  id: string,
-  type: string,
-  token: string
-) => {
-  try {
-    const response = await api.post(
-      `/BookMark`,
-      { id, type },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    return { data: response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
-//#endregion
+// export const handleFavorite = async (
+//   id: string,
+//   type: string,
+//   token: string
+// ) => {
+//   try {
+//     const response = await api.post(
+//       `/BookMark`,
+//       { id, type },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       }
+//     );
+//     return { data: response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
+// //#endregion
 
-//#region Dashboard
-export const getLastViewed = async (token: string, page: number = 1) => {
-  try {
-    const response = await api.post(
-      `/UserElanProfile?page=${page}`,
-      { type: "lastseen" },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    console.log(" data:", response.data, "status : ", response.status);
-    return { data: response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
+// //#region Dashboard
+// export const getLastViewed = async (token: string, page: number = 1) => {
+//   try {
+//     const response = await api.post(
+//       `/UserElanProfile?page=${page}`,
+//       { type: "lastseen" },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       }
+//     );
+//     console.log(" data:", response.data, "status : ", response.status);
+//     return { data: response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const getUserAds = async (token: string, page: number = 1) => {
-  try {
-    const response = await api.post(
-      `/UserElanProfile?page=${page}`,
-      { type: "myestate" },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    return { data: response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
+// export const getUserAds = async (token: string, page: number = 1) => {
+//   try {
+//     const response = await api.post(
+//       `/UserElanProfile?page=${page}`,
+//       { type: "myestate" },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       }
+//     );
+//     return { data: response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const getUserBookmarks = async (token: string, page: number = 1) => {
-  try {
-    const response = await api.post(
-      `/UserElanProfile?page=${page}`,
-      { type: "bookmark" },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    console.log("getUserBookmarks ------------------", response.data);
-    return { data: response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
-//#endregion
+// export const getUserBookmarks = async (token: string, page: number = 1) => {
+//   try {
+//     const response = await api.post(
+//       `/UserElanProfile?page=${page}`,
+//       { type: "bookmark" },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       }
+//     );
+//     console.log("getUserBookmarks ------------------", response.data);
+//     return { data: response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
+// //#endregion
 
-//#region Realestate
-export const getRealestateData = async (id: string) => {
-  try {
-    const response = await api.get(`/ShowManagerConsulting/${id}`);
-    return response.data || [];
-  } catch (err) {
-    return returnError(err);
-  }
-};
+// //#region Realestate
+// export const getRealestateData = async (id: string) => {
+//   try {
+//     const response = await api.get(`/ShowManagerConsulting/${id}`);
+//     return response.data || [];
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const getCompanyHeader = async () => {
-  try {
-    const response = await api.get("/api/company/header");
-    return { data: response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
+// export const getCompanyHeader = async () => {
+//   try {
+//     const response = await api.get("/api/company/header");
+//     return { data: response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const getCompanyMembers = async () => {
-  try {
-    const response = await api.get("/api/company/members");
-    return { data: response.data.members, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
+// export const getCompanyMembers = async () => {
+//   try {
+//     const response = await api.get("/api/company/members");
+//     return { data: response.data.members, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const getCompanyProperties = async (
-  page: number = 1,
-  limit: number = 9
-) => {
-  try {
-    const response = await api.get(
-      `/api/properties?page=${page}&limit=${limit}`
-    );
-    return { data: response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
-//#endregion
+// export const getCompanyProperties = async (
+//   page: number = 1,
+//   limit: number = 9
+// ) => {
+//   try {
+//     const response = await api.get(
+//       `/api/properties?page=${page}&limit=${limit}`
+//     );
+//     return { data: response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
+// //#endregion
 
-//#region Support
-export const submitSupportTicket = async (
-  token: string,
-  data: {
-    title: string;
-    description: string;
-    contactEmail?: string;
-    type: "bug" | "support";
-  }
-) => {
-  try {
-    const response = await api.post("/api/support/ticket", data, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return { data: response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
+// //#region Support
+// export const submitSupportTicket = async (
+//   token: string,
+//   data: {
+//     title: string;
+//     description: string;
+//     contactEmail?: string;
+//     type: "bug" | "support";
+//   }
+// ) => {
+//   try {
+//     const response = await api.post("/api/support/ticket", data, {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//       },
+//     });
+//     return { data: response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const getUserTickets = async (token: string) => {
-  try {
-    const response = await api.post("/api/support/ticket", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return { data: response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
-//#endregion
+// export const getUserTickets = async (token: string) => {
+//   try {
+//     const response = await api.post("/api/support/ticket", {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//       },
+//     });
+//     return { data: response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
+// //#endregion
 
-export const createAdvertisementStep1 = async (data: any, token: string) => {
-  try {
-    const response = await api.post("/AdvertisementCreateStep1APIView", data, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return { ...response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
+// export const createAdvertisementStep1 = async (data: any, token: string) => {
+//   try {
+//     const response = await api.post("/AdvertisementCreateStep1APIView", data, {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//       },
+//     });
+//     return { ...response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const getFeatureRelatedFields = async (propertyTypeSlug: string) => {
-  try {
-    const response = await api.post("/FeatureRelatedAPIViewAddView", {
-      slug: propertyTypeSlug,
-    });
-    return response.data;
-  } catch (err) {
-    return returnError(err);
-  }
-};
+// export const getFeatureRelatedFields = async (propertyTypeSlug: string) => {
+//   try {
+//     const response = await api.post("/FeatureRelatedAPIViewAddView", {
+//       slug: propertyTypeSlug,
+//     });
+//     return response.data;
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const createAdvertisementStep2 = async (data: any, token: string) => {
-  try {
-    const response = await api.post("/AdvertisementCreateStep2APIView", data, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return { ...response.data, status: response.status };
-  } catch (err) {
-    return returnError(err);
-  }
-};
+// export const createAdvertisementStep2 = async (data: any, token: string) => {
+//   try {
+//     const response = await api.post("/AdvertisementCreateStep2APIView", data, {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//       },
+//     });
+//     return { ...response.data, status: response.status };
+//   } catch (err) {
+//     return returnError(err);
+//   }
+// };
 
-export const createAdvertisementStep3 = async (data: any, token: string) => {
-  try {
-    console.log("createAdvertisementStep3 function called");
-    console.log("Using API server:", mainConfig.apiServer);
+// export const createAdvertisementStep3 = async (data: any, token: string) => {
+//   try {
+//     console.log("createAdvertisementStep3 function called");
+//     console.log("Using API server:", mainConfig.apiServer);
 
-    const fullUrl = `${mainConfig.apiServer}/AdvertisementStep3APISimple`;
-    console.log("Full API URL:", fullUrl);
+//     const fullUrl = `${mainConfig.apiServer}/AdvertisementStep3APISimple`;
+//     console.log("Full API URL:", fullUrl);
 
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
+//     const headers: Record<string, string> = {
+//       "Content-Type": "application/json",
+//     };
 
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
+//     if (token) {
+//       headers["Authorization"] = `Bearer ${token}`;
+//     }
 
-    // Import axios directly for this call to bypass Next.js API routes
-    const axios = (await import("axios")).default;
+//     // Import axios directly for this call to bypass Next.js API routes
+//     const axios = (await import("axios")).default;
 
-    const response = await axios.post(fullUrl, data, {
-      headers,
-    });
+//     const response = await axios.post(fullUrl, data, {
+//       headers,
+//     });
 
-    console.log("API response received:", response.status);
-    return { ...response.data, status: response.status };
-  } catch (err) {
-    console.error("Error in createAdvertisementStep3:", err);
-    return returnError(err);
-  }
-};
+//     console.log("API response received:", response.status);
+//     return { ...response.data, status: response.status };
+//   } catch (err) {
+//     console.error("Error in createAdvertisementStep3:", err);
+//     return returnError(err);
+//   }
+// };
 
-export const registerAgency = async (token: string, data: FormData) => {
-  try {
-    console.log("🏢 registerAgency function called");
-    console.log("🏢 API Server URL:", mainConfig.apiServer);
-    const fullUrl = `${mainConfig.apiServer}/RegisterAgencyView`;
-    console.log("🏢 Full API URL being called:", fullUrl);
+// export const registerAgency = async (token: string, data: FormData) => {
+//   try {
+//     console.log("🏢 registerAgency function called");
+//     console.log("🏢 API Server URL:", mainConfig.apiServer);
+//     const fullUrl = `${mainConfig.apiServer}/RegisterAgencyView`;
+//     console.log("🏢 Full API URL being called:", fullUrl);
 
-    console.log(
-      "🏢 Sending agency registration with token:",
-      token ? `Token exists (length: ${token.length})` : "No token"
-    );
+//     console.log(
+//       "🏢 Sending agency registration with token:",
+//       token ? `Token exists (length: ${token.length})` : "No token"
+//     );
 
-    // Don't set Content-Type header for FormData - browser will set it with correct boundary
-    const headers = {
-      Authorization: `Bearer ${token}`,
-    };
+//     // Don't set Content-Type header for FormData - browser will set it with correct boundary
+//     const headers = {
+//       Authorization: `Bearer ${token}`,
+//     };
 
-    console.log("🏢 Request headers:", headers);
-    console.log("🏢 Is FormData?", data instanceof FormData);
+//     console.log("🏢 Request headers:", headers);
+//     console.log("🏢 Is FormData?", data instanceof FormData);
 
-    // Log FormData entries
-    if (data instanceof FormData) {
-      console.log("🏢 FormData contents:");
-      for (let pair of data.entries()) {
-        console.log(`   ${pair[0]}: ${pair[1]}`);
-      }
-    }
+//     // Log FormData entries
+//     if (data instanceof FormData) {
+//       console.log("🏢 FormData contents:");
+//       for (let pair of data.entries()) {
+//         console.log(`   ${pair[0]}: ${pair[1]}`);
+//       }
+//     }
 
-    console.log("🏢 Sending request...");
+//     console.log("🏢 Sending request...");
 
-    const response = await api.post("/RegisterAgencyView", data, {
-      headers,
-    });
+//     const response = await api.post("/RegisterAgencyView", data, {
+//       headers,
+//     });
 
-    return { ...response.data, status: response.status };
-  } catch (error: any) {
-    console.error("🏢 Error in registerAgency:", error);
-    if (error.response) {
-      console.error("🏢 Error response status:", error.response.status);
-      console.error("🏢 Error response data:", error.response.data);
-    } else if (error.request) {
-      console.error("🏢 No response received. Request:", error.request);
-    } else {
-      console.error("🏢 Error message:", error.message);
-    }
-    return returnError(error);
-  }
-};
+//     return { ...response.data, status: response.status };
+//   } catch (error: any) {
+//     console.error("🏢 Error in registerAgency:", error);
+//     if (error.response) {
+//       console.error("🏢 Error response status:", error.response.status);
+//       console.error("🏢 Error response data:", error.response.data);
+//     } else if (error.request) {
+//       console.error("🏢 No response received. Request:", error.request);
+//     } else {
+//       console.error("🏢 Error message:", error.message);
+//     }
+//     return returnError(error);
+//   }
+// };
 
-export const getUserNotifications = async (token: string) => {
-  try {
-    console.log("Fetching user notifications...");
-    // Define the correct API endpoint URL
-    const apiUrl = `${mainConfig.apiServer}/MessageElanProfileView`;
-    console.log("Using direct API URL:", apiUrl);
+// export const getUserNotifications = async (token: string) => {
+//   try {
+//     console.log("Fetching user notifications...");
+//     // Define the correct API endpoint URL
+//     const apiUrl = `${mainConfig.apiServer}/MessageElanProfileView`;
+//     console.log("Using direct API URL:", apiUrl);
 
-    console.log(
-      "Authorization token:",
-      token ? `Token exists (length: ${token.length})` : "No token"
-    );
+//     console.log(
+//       "Authorization token:",
+//       token ? `Token exists (length: ${token.length})` : "No token"
+//     );
 
-    const headers = {
-      Authorization: `Bearer ${token}`,
-    };
+//     const headers = {
+//       Authorization: `Bearer ${token}`,
+//     };
 
-    console.log("Request headers:", headers);
+//     console.log("Request headers:", headers);
 
-    // Import axios directly to make the request to the specific endpoint
-    const axios = (await import("axios")).default;
-    const response = await axios.get(apiUrl, {
-      headers,
-    });
+//     // Import axios directly to make the request to the specific endpoint
+//     const axios = (await import("axios")).default;
+//     const response = await axios.get(apiUrl, {
+//       headers,
+//     });
 
-    console.log("Notifications response status:", response.status);
-    console.log("Notifications response data:", response.data);
+//     console.log("Notifications response status:", response.status);
+//     console.log("Notifications response data:", response.data);
 
-    return { data: response.data, status: response.status };
-  } catch (err: any) {
-    console.error("Error fetching notifications:", err);
-    if (err.response) {
-      console.error("Error response status:", err.response.status);
-      console.error("Error response data:", err.response.data);
-    } else if (err.request) {
-      console.error("No response received. Request:", err.request);
-    } else {
-      console.error("Error message:", err.message);
-    }
-    return returnError(err);
-  }
-};
+//     return { data: response.data, status: response.status };
+//   } catch (err: any) {
+//     console.error("Error fetching notifications:", err);
+//     if (err.response) {
+//       console.error("Error response status:", err.response.status);
+//       console.error("Error response data:", err.response.data);
+//     } else if (err.request) {
+//       console.error("No response received. Request:", err.request);
+//     } else {
+//       console.error("Error message:", err.message);
+//     }
+//     return returnError(err);
+//   }
+// };
 
 //#region AdminRegions
 interface ApiResponse {
@@ -554,6 +554,109 @@ interface ApiResponse {
   data?: any;
   status?: number;
 }
+
+// Get Agency Details
+export const getAgencyDetails = async (id: string): Promise<ApiResponse> => {
+  try {
+    const apiUrl = `${mainConfig.apiServer}/admin/agency/get-agency/${id}`;
+    // Get token from localStorage if in browser
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const response = await api.get(apiUrl, { headers });
+
+    return {
+      success: true,
+      data: response.data,
+      status: response.status,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err.message || "Failed to fetch agency details",
+      status: err.response?.status || 500,
+    };
+  }
+};
+
+// Admin Agencies
+export const getAdminAgencies = async (
+  params: {
+    page?: number;
+    limit?: number;
+    forceRefresh?: boolean;
+    name?: string;
+    province?: string;
+    city?: string;
+    area?: string;
+    isVerified?: boolean;
+    isActive?: boolean;
+    sortField?: string;
+    sortOrder?: number;
+  } = {}
+): Promise<ApiResponse> => {
+  const {
+    page = 1,
+    limit = 10,
+    forceRefresh = false,
+    name,
+    province,
+    city,
+    area,
+    isVerified,
+    isActive,
+    sortField = "createdAt",
+    sortOrder = -1,
+  } = params;
+
+  // Add cache-busting parameter if forceRefresh is true
+  const cacheParam = forceRefresh ? `&_t=${Date.now()}` : "";
+
+  // Build query parameters
+  let queryParams = `page=${page}&limit=${limit}`;
+
+  // Add filter parameters if they exist
+  if (name) queryParams += `&name=${encodeURIComponent(name)}`;
+  if (province) queryParams += `&province=${encodeURIComponent(province)}`;
+  if (city) queryParams += `&city=${encodeURIComponent(city)}`;
+  if (area) queryParams += `&area=${encodeURIComponent(area)}`;
+  if (isVerified !== undefined) queryParams += `&isVerified=${isVerified}`;
+  if (isActive !== undefined) queryParams += `&isActive=${isActive}`;
+  if (sortField) queryParams += `&sortField=${sortField}`;
+  if (sortOrder !== undefined) queryParams += `&sortOrder=${sortOrder}`;
+
+  try {
+    console.log(`🏢 Fetching agencies with filters...`);
+    const apiUrl = `/admin/agency/get-all-agencies?${queryParams}${cacheParam}`;
+    console.log(`🏢 API URL: ${apiUrl}`);
+
+    const response = await api.get(apiUrl);
+
+    console.log("🏢 Agencies API response status:", response.status);
+    console.log("🏢 Agencies API response data:", response.data);
+
+    return {
+      success: true,
+      data: response.data,
+      status: response.status,
+    };
+  } catch (err: any) {
+    console.error("🏢 Error fetching agencies:", err);
+    if (err.response) {
+      console.error("🏢 Error response status:", err.response.status);
+      console.error("🏢 Error response data:", err.response.data);
+    }
+    return {
+      success: false,
+      message: err.message || "Failed to fetch agencies",
+      status: err.response?.status || 500,
+    };
+  }
+};
 
 // --- Country ---
 export const getAdminCountries = async (
@@ -1484,11 +1587,29 @@ export const getAdminUsers = async (
 
   try {
     console.log(`🔍 Fetching admin users (force refresh: ${forceRefresh})...`);
+
+    // Get authentication token
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+
+    // Add headers with authentication token if available
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["x-access-token"] = token;
+    }
+
     const response = await api.get(
-      `/admin/user/get-users?page=${page}&limit=${limit}${cacheParam}`
+      `/admin/user/get-users?page=${page}&limit=${limit}${cacheParam}`,
+      { headers }
     );
 
     console.log("🔍 Admin users API response status:", response.status);
+    console.log(
+      "🔍 Admin users API response data:",
+      JSON.stringify(response.data, null, 2)
+    );
 
     // Log data summary
     const dataStructureSummary = {
@@ -1503,38 +1624,60 @@ export const getAdminUsers = async (
     };
     console.log("🔍 Data structure summary:", dataStructureSummary);
 
-    // Handle response structure
-    let data = [];
+    // Handle different possible response structures to extract the users array
     if (response.data?.data && Array.isArray(response.data.data)) {
-      data = response.data.data;
-      console.log(`🔍 Found ${data.length} users in response.data.data`);
-
-      // Log first item to see structure
-      if (data.length > 0) {
-        console.log("🔍 Sample user data:", JSON.stringify(data[0], null, 2));
-      }
+      console.log(
+        `🔍 Found ${response.data.data.length} users in response.data.data array`
+      );
+      return response.data.data;
     } else if (Array.isArray(response.data)) {
-      data = response.data;
-      console.log(`🔍 Found ${data.length} users in response.data (array)`);
+      console.log(
+        `🔍 Found ${response.data.length} users in response.data array`
+      );
+      return response.data;
+    } else if (response.data && typeof response.data === "object") {
+      // If the API returns {status, data, message, success} format
+      // Return the entire response for the component to handle
+      return response.data;
     } else {
       console.warn("⚠️ Unexpected users response structure:", response.data);
+      return [];
     }
-
-    return data || [];
   } catch (err) {
     console.error("❌ Error fetching users:", err);
 
     // Fallback to direct Axios call if the api instance fails
     try {
       console.log("⚙️ Attempting direct Axios fallback for users...");
+
+      // Get authentication token
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+
+      // Create headers with token
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (token) {
+        headers["x-access-token"] = token;
+      }
+
       const directResponse = await axios.get(
         `${mainConfig.apiServer}/admin/user/get-users?page=${page}&limit=${limit}${cacheParam}`,
         {
+          headers,
           withCredentials: false,
         }
       );
 
       console.log("⚙️ Direct users request status:", directResponse.status);
+      console.log(
+        "⚙️ Direct users request data:",
+        JSON.stringify(directResponse.data, null, 2)
+      );
 
       // Handle different possible response structures
       let directData = [];
@@ -1546,14 +1689,6 @@ export const getAdminUsers = async (
         console.log(
           `⚙️ Found ${directData.length} users in directResponse.data.data`
         );
-
-        // Log first item to see structure
-        if (directData.length > 0) {
-          console.log(
-            "⚙️ Sample user data (direct):",
-            JSON.stringify(directData[0], null, 2)
-          );
-        }
       } else if (Array.isArray(directResponse.data)) {
         directData = directResponse.data;
         console.log(
@@ -1617,9 +1752,15 @@ export const updateAdminUser = async (
   data: Record<string, any>
 ): Promise<ApiResponse> => {
   try {
-    console.log(`🔄 Updating user with data:`, JSON.stringify(data, null, 2));
+    // Ensure the ID is included in the data object
+    const requestData = { ...data, id };
+
+    console.log(
+      `🔄 Updating user with data:`,
+      JSON.stringify(requestData, null, 2)
+    );
     // The endpoint doesn't need the ID as part of the URL - it's in the request body
-    const response = await api.put(`/admin/user/update-user`, data);
+    const response = await api.put(`/admin/user/update-user`, requestData);
     console.log(`🔄 Update response:`, response.status, response.data);
     return {
       success: response.status >= 200 && response.status < 300,
@@ -1643,9 +1784,12 @@ export const updateAdminUser = async (
           ? localStorage.getItem("accessToken")
           : null;
 
+      // Ensure the ID is included in the fallback request data as well
+      const fallbackRequestData = { ...data, id };
+
       const directResponse = await axios.put(
         `${mainConfig.apiServer}/admin/user/update-user`,
-        data,
+        fallbackRequestData,
         {
           withCredentials: false,
           headers: {

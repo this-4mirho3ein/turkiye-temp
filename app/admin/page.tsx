@@ -23,6 +23,8 @@ import {
   FaUserTie,
 } from "react-icons/fa";
 import { IconType } from "react-icons";
+import { getAdminAgencies } from "@/controllers/makeRequest";
+import { Building } from "lucide-react";
 
 // Animation variants
 const containerVariants = {
@@ -152,6 +154,108 @@ const AdminCard = ({
         </div>
       </Link>
     </motion.div>
+  );
+};
+
+// Agency stats component
+const AgencyStats = () => {
+  const [agencyStats, setAgencyStats] = useState({
+    totalAgencies: 0,
+    activeAgencies: 0,
+    pendingVerification: 0,
+    totalAds: 0,
+    isLoading: true,
+  });
+
+  useEffect(() => {
+    const fetchAgencyStats = async () => {
+      try {
+        const response = await getAdminAgencies({ limit: 100 });
+
+        if (response.success && response.data) {
+          const agencies = response.data.data || [];
+
+          setAgencyStats({
+            totalAgencies: response.data.count || 0,
+            activeAgencies: agencies.filter((a: any) => a.isActive).length || 0,
+            pendingVerification:
+              agencies.filter((a: any) => !a.isVerified).length || 0,
+            totalAds:
+              agencies.reduce(
+                (sum: number, agency: any) => sum + (agency.activeAdCount || 0),
+                0
+              ) || 0,
+            isLoading: false,
+          });
+        } else {
+          setAgencyStats((prev) => ({ ...prev, isLoading: false }));
+        }
+      } catch (error) {
+        console.error("Error fetching agency stats:", error);
+        setAgencyStats((prev) => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    fetchAgencyStats();
+  }, []);
+
+  if (agencyStats.isLoading) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <div className="w-8 h-8 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-10">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800 border-r-4 border-blue-500 pr-3">
+        آمار آژانس‌های املاک
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex items-center gap-4">
+          <div className="bg-blue-50 p-3 rounded-lg">
+            <FaBuilding className="h-6 w-6 text-blue-500" />
+          </div>
+          <div>
+            <p className="text-gray-500 text-sm">کل آژانس‌ها</p>
+            <p className="text-2xl font-bold">{agencyStats.totalAgencies}</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex items-center gap-4">
+          <div className="bg-green-50 p-3 rounded-lg">
+            <FaBuilding className="h-6 w-6 text-green-500" />
+          </div>
+          <div>
+            <p className="text-gray-500 text-sm">آژانس‌های فعال</p>
+            <p className="text-2xl font-bold">{agencyStats.activeAgencies}</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex items-center gap-4">
+          <div className="bg-amber-50 p-3 rounded-lg">
+            <FaBuilding className="h-6 w-6 text-amber-500" />
+          </div>
+          <div>
+            <p className="text-gray-500 text-sm">در انتظار تایید</p>
+            <p className="text-2xl font-bold">
+              {agencyStats.pendingVerification}
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex items-center gap-4">
+          <div className="bg-purple-50 p-3 rounded-lg">
+            <FaBuilding className="h-6 w-6 text-purple-500" />
+          </div>
+          <div>
+            <p className="text-gray-500 text-sm">کل آگهی‌ها</p>
+            <p className="text-2xl font-bold">{agencyStats.totalAds}</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -291,6 +395,11 @@ export default function AdminDashboard() {
       {/* Summary stats */}
       <motion.div variants={itemVariants}>
         <DashboardStats />
+      </motion.div>
+
+      {/* Agency Stats */}
+      <motion.div variants={itemVariants}>
+        <AgencyStats />
       </motion.div>
 
       {/* Quick Access Cards */}
