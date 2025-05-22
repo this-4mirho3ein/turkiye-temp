@@ -34,16 +34,24 @@ const AdminAuthGuard = ({ children }: AdminAuthGuardProps) => {
         return;
       }
 
-      if (!isAuth && !contextIsAuthenticated) {
-        // Only redirect if both authentication systems report as unauthenticated
-        console.log(
-          "Not authenticated in either system, redirecting to login page"
-        );
-        router.replace("/admin/login");
-      } else {
-        // If authenticated in at least one system, allow access
+      // Check for token in both localStorage and cookies
+      const localToken = localStorage.getItem("accessToken");
+      const cookieToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('accessToken='))
+        ?.split('=')[1];
+
+      // If we have a token in either place, consider the user authenticated
+      const hasValidToken = !!(localToken || cookieToken);
+
+      if (hasValidToken || isAuth || contextIsAuthenticated) {
+        // If authenticated in any system, allow access
         console.log("Authenticated in at least one system, allowing access");
         setIsAuthenticated(true);
+      } else {
+        // Only redirect if all authentication systems report as unauthenticated
+        console.log("Not authenticated in any system, redirecting to login page");
+        router.replace("/admin/login");
       }
 
       setIsLoading(false);

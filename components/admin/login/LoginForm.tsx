@@ -37,12 +37,17 @@ const LoginForm = ({ onSubmit }: LoginFormProps) => {
     e.preventDefault();
     if (!isFormValid) return;
 
+    // Set loading state to true when button is clicked
     setIsLoading(true);
+    
     try {
+      // Show loading state during API call
       await onSubmit(phoneNumber);
     } catch (error) {
       console.error("Login error:", error);
     } finally {
+      // Keep loading state true if successful (will be handled by navigation)
+      // Only set to false if there was an error
       setIsLoading(false);
     }
   };

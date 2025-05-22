@@ -125,15 +125,23 @@ const adminAuthService = {
         localStorage.setItem("roles", JSON.stringify(roles));
 
         // Also store the accessToken in cookies for middleware detection
+        // Not setting 'expires' option makes this a session cookie that will be deleted when browser closes
         Cookies.set("accessToken", accessToken, {
-          expires: 1, // 1 day
           path: "/",
           secure: window.location.protocol === "https:",
           sameSite: "Lax",
+          expires: 7, // Set cookie to expire in 7 days for better persistence
         });
 
         // Also set for axios client globally
         axios.defaults.headers.common["x-access-token"] = accessToken;
+
+        // Store user data for AuthContext synchronization
+        const userData = {
+          id: userId,
+          roles: roles,
+        };
+        localStorage.setItem("userData", JSON.stringify(userData));
 
         console.log(
           "Login successful. Tokens stored in localStorage and cookies."

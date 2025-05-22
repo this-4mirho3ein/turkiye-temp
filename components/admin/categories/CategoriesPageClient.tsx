@@ -5,6 +5,7 @@ import Card from "@/components/admin/ui/Card";
 import CategoryTable, { Category } from "./CategoryTable";
 import CategoryFormModal from "./CategoryFormModal";
 import DeleteCategoryModal from "./DeleteCategoryModal";
+import CategorySearch from "./CategorySearch";
 import { Button, Checkbox } from "@heroui/react";
 import { FaPlus, FaSync, FaLayerGroup, FaFilter } from "react-icons/fa";
 import {
@@ -49,6 +50,7 @@ function CategoriesPageClientInner() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showDeletedItems, setShowDeletedItems] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -62,16 +64,36 @@ function CategoriesPageClientInner() {
   } = useApi<Category[]>(
     "admin-categories",
     fetchers,
-    { page: 1, limit: 100, forceRefresh: refreshTrigger > 0 },
+    { 
+      page: 1, 
+      limit: 100, 
+      forceRefresh: refreshTrigger > 0,
+      ...(searchTerm && { search: searchTerm })
+    },
     true
   );
 
+  // Apply client-side filtering for categories
+  const displayCategories = categories.filter(category => {
+    // Filter by deleted status
+    if (!showDeletedItems && category.isDeleted) {
+      return false;
+    }
+    
+    // Apply search term filter (client-side fallback)
+    if (searchTerm && !category.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    return true;
+  });
+
   // Debug categories data
   useEffect(() => {
-    console.log("Categories data:", categories);
+    console.log("Categories data:", displayCategories);
 
     // Check for deleted items
-    const deletedItems = categories.filter((cat) => cat.isDeleted);
+    const deletedItems = displayCategories.filter((cat) => cat.isDeleted);
     console.log(
       `Found ${deletedItems.length} deleted categories:`,
       deletedItems
@@ -85,7 +107,7 @@ function CategoriesPageClientInner() {
         categories.some((cat) => "isDeleted" in cat)
       );
     }
-  }, [categories]);
+  }, [categories, displayCategories, searchTerm]);
 
   // Log any errors
   useEffect(() => {
@@ -269,13 +291,6 @@ function CategoriesPageClientInner() {
     }
   };
 
-  // آمار و اطلاعات خلاصه
-  const totalCount = categories.length;
-  const activeCount = categories.filter(
-    (item) => item.isActive && !item.isDeleted
-  ).length;
-  const deletedCount = categories.filter((item) => item.isDeleted).length;
-
   return (
     <div className="space-y-6">
       {/* هدر صفحه */}
@@ -303,6 +318,17 @@ function CategoriesPageClientInner() {
         </div>
       </div>
 
+      {/* جستجو */}
+      <CategorySearch
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        onSearch={() => {
+          console.log('Searching for:', searchTerm);
+          setRefreshTrigger(prev => prev + 1);
+        }}
+        isLoading={isLoading}
+      />
+      
       {/* فیلترها */}
       <div className="bg-white p-4 rounded-lg shadow-sm border-t-4 border-purple-500">
         <div className="font-bold text-gray-700 mb-3 flex items-center">
@@ -312,7 +338,7 @@ function CategoriesPageClientInner() {
         <div className="flex items-center">
           <Checkbox
             checked={showDeletedItems}
-            onChange={(e) => setShowDeletedItems(e.target.checked)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setShowDeletedItems(e.target.checked)}
             className="ml-2 text-purple-500"
           />
           <label className="mb-0 text-sm cursor-pointer">
@@ -324,7 +350,7 @@ function CategoriesPageClientInner() {
       <Card shadow="sm">
         <div className="p-4">
           <CategoryTable
-            categories={categories}
+            categories={displayCategories}
             onEdit={handleAddEdit}
             onDelete={handleDelete}
             onRestore={handleRestore}
@@ -353,6 +379,7 @@ function CategoriesPageClientInner() {
       />
     </div>
   );
+
 }
 
 // Wrapper component that provides QueryClient context

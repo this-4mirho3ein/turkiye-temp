@@ -63,12 +63,19 @@ const VerificationContainer = () => {
         // Set a flag in sessionStorage to prevent redirect loops during authentication
         sessionStorage.setItem("isAuthenticating", "true");
 
-        // Extract token from response
-        const { accessToken } = response.data;
+        // Extract token and user data from response
+        const { accessToken, userId, roles, refreshToken, sessionId } = response.data;
+
+        // Store tokens in localStorage
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", refreshToken || "");
+        localStorage.setItem("userId", userId || "");
+        localStorage.setItem("sessionId", sessionId || "");
+        localStorage.setItem("roles", JSON.stringify(roles || []));
 
         // Store the token in cookie for middleware detection
+        // Not setting 'expires' option makes this a session cookie that will be deleted when browser closes
         Cookies.set("accessToken", accessToken, {
-          expires: 1, // 1 day
           path: "/",
           secure: window.location.protocol === "https:",
           sameSite: "Lax",
@@ -79,16 +86,13 @@ const VerificationContainer = () => {
 
         // Also update the AuthContext state to avoid authentication conflicts
         // This ensures both auth systems are in sync
-        if (response.data) {
-          const { userId, roles } = response.data;
-          const userData = {
-            id: userId || "",
-            roles: roles || [],
-          };
+        const userData = {
+          id: userId || "",
+          roles: roles || [],
+        };
 
-          // Call the AuthContext login to sync both auth systems
-          login(accessToken, userData);
-        }
+        // Call the AuthContext login to sync both auth systems
+        login(accessToken, userData);
 
         // Show success toast
         showToast({
@@ -102,13 +106,11 @@ const VerificationContainer = () => {
 
         // Add a sufficient delay before redirect to ensure context updates completely
         setTimeout(() => {
-          // Redirect to admin dashboard
-          router.replace("/admin");
-
-          // After a brief delay, remove the authenticating flag to restore normal behavior
-          setTimeout(() => {
-            sessionStorage.removeItem("isAuthenticating");
-          }, 2000);
+          // Use window.location for a more reliable redirect that forces a full page reload
+          // This ensures all authentication states are properly synchronized
+          window.location.href = "/admin";
+          
+          // We don't need to manually remove the authenticating flag as the page will reload
         }, 1500);
       } else {
         // Show error toast and stay on the verification page

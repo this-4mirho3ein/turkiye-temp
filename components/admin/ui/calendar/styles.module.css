@@ -1,0 +1,61 @@
+/* Custom styles for Persian date picker */
+.responsiveCalendar {
+  direction: rtl !important;
+  font-family: var(--font-vazir), sans-serif !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  background-color: white !important;
+  border: 1px solid #e5e7eb !important;
+  z-index: 50 !important;
+}
+
+.responsiveCalendar :global(.Calendar__weekDay) {
+  color: #6b7280 !important;
+  font-size: 0.85rem !important;
+}
+
+.responsiveCalendar :global(.Calendar__day) {
+  color: #1f2937 !important;
+  font-size: 0.9rem !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.responsiveCalendar :global(.Calendar__day.-selected) {
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+.responsiveCalendar :global(.Calendar__day:not(.-blank):not(.-selectedStart):not(.-selectedEnd):not(.-selectedBetween):hover) {
+  background-color: #e5e7eb !important;
+  color: #1f2937 !important;
+}
+
+.responsiveCalendar :global(.Calendar__day.-weekend:not(.-selected)) {
+  color: #ef4444 !important;
+}
+
+.responsiveCalendar :global(.Calendar__monthArrow) {
+  color: #6b7280 !important;
+}
+
+.responsiveCalendar :global(.Calendar__monthArrow:hover) {
+  color: #3b82f6 !important;
+}
+
+.responsiveCalendar :global(.Calendar__monthText),
+.responsiveCalendar :global(.Calendar__yearText) {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+}
+
+/* Input field styling */
+.datePickerInput :global(.DatePicker__input) {
+  height: 42px !important;
+  font-family: var(--font-vazir), sans-serif !important;
+  text-align: right !important;
+  padding-right: 12px !important;
+  font-size: 0.9rem !important;
+}

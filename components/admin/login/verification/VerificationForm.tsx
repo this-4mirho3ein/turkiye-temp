@@ -1,7 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@heroui/react";
+import dynamic from "next/dynamic";
+
+// Dynamically import Card component with SSR disabled to prevent hydration errors
+const DynamicCard = dynamic(
+  () => import("@heroui/react").then((mod) => mod.Card),
+  { ssr: false }
+);
 import { z } from "zod";
 import { FaShieldAlt, FaHistory, FaCheck } from "react-icons/fa";
 import { motion } from "framer-motion";
@@ -34,6 +41,7 @@ const VerificationForm = ({
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(120); // 2 minutes countdown
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+  const firstInputRef = useRef<HTMLInputElement>(null);
 
   // Set up countdown timer
   useEffect(() => {
@@ -42,6 +50,14 @@ const VerificationForm = ({
       return () => clearTimeout(timer);
     }
   }, [countdown]);
+  
+  // Auto-focus on the first input field when component mounts
+  useEffect(() => {
+    // Focus on the first input immediately
+    if (firstInputRef.current) {
+      firstInputRef.current.focus();
+    }
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   // Format phone number for display
   const formatPhoneNumber = (phone: string) => {
@@ -87,20 +103,51 @@ const VerificationForm = ({
     e: React.ChangeEvent<HTMLInputElement>,
     index: number
   ) => {
-    const value = e.target.value.replace(/\D/g, "");
-
-    if (value.length <= 1) {
+    // Get the input value and filter out non-digits
+    const inputValue = e.target.value.replace(/\D/g, "");
+    
+    // Handle case where user types multiple digits quickly
+    if (inputValue.length > 1) {
+      // User might be typing quickly, try to fill multiple inputs
+      const newCodeArray = [...codeArray];
+      
+      // Fill as many inputs as we have digits, starting from current index
+      for (let i = 0; i < inputValue.length && index + i < 6; i++) {
+        newCodeArray[index + i] = inputValue[i];
+      }
+      
+      const newCode = newCodeArray.join("");
+      setVerificationCode(newCode);
+      
+      // Focus on the next empty input or the last input
+      const nextEmptyIndex = Math.min(index + inputValue.length, 5);
+      const nextInput = document.getElementById(`otp-input-${nextEmptyIndex}`);
+      if (nextInput) {
+        (nextInput as HTMLInputElement).focus();
+      }
+      
+      // Validate and potentially submit
+      const isNewCodeValid = validateCode(newCode);
+      if (isNewCodeValid && newCode.length === 6 && !isLoading) {
+        onSubmit(newCode);
+      }
+      
+      return;
+    }
+    
+    // Handle single digit input (normal case)
+    if (inputValue.length <= 1) {
       // Create new code with the single digit in the correct position
       const newCode = codeArray
-        .map((digit, i) => (i === index ? value : digit))
+        .map((digit, i) => (i === index ? inputValue : digit))
         .join("");
       setVerificationCode(newCode);
 
       // Move focus to next input if a digit was entered
-      if (value.length === 1 && index < 5) {
+      if (inputValue.length === 1 && index < 5) {
         const nextInput = document.getElementById(`otp-input-${index + 1}`);
         if (nextInput) {
-          nextInput.focus();
+          (nextInput as HTMLInputElement).focus();
         }
       }
 
@@ -121,6 +168,14 @@ const VerificationForm = ({
       .replace(/\D/g, "")
       .substring(0, 6);
     setVerificationCode(pasteData);
+    
+    // Focus on the last filled input or the next empty one
+    const focusIndex = Math.min(pasteData.length, 5);
+    const inputToFocus = document.getElementById(`otp-input-${focusIndex}`);
+    if (inputToFocus) {
+      (inputToFocus as HTMLInputElement).focus();
+    }
+    
     const isValid = validateCode(pasteData);
     
     // Auto-submit if all 6 digits are pasted and the code is valid
@@ -131,11 +186,35 @@ const VerificationForm = ({
 
   // Handle key press for backspace navigation
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
-    if (e.key === "Backspace" && !verificationCode[index] && index > 0) {
-      // Move focus to previous input on backspace if current is empty
+    // Handle backspace
+    if (e.key === "Backspace") {
+      if (!verificationCode[index] && index > 0) {
+        // Move focus to previous input on backspace if current is empty
+        const prevInput = document.getElementById(`otp-input-${index - 1}`);
+        if (prevInput) {
+          (prevInput as HTMLInputElement).focus();
+          (prevInput as HTMLInputElement).select();
+        }
+      } else {
+        // Clear current digit and keep focus on current input
+        const newCode = codeArray
+          .map((digit, i) => (i === index ? "" : digit))
+          .join("");
+        setVerificationCode(newCode);
+      }
+    }
+    
+    // Handle arrow keys for navigation
+    if (e.key === "ArrowLeft" && index < 5) {
+      const nextInput = document.getElementById(`otp-input-${index + 1}`);
+      if (nextInput) {
+        (nextInput as HTMLInputElement).focus();
+      }
+    }
+    if (e.key === "ArrowRight" && index > 0) {
       const prevInput = document.getElementById(`otp-input-${index - 1}`);
       if (prevInput) {
-        prevInput.focus();
+        (prevInput as HTMLInputElement).focus();
       }
     }
   };
@@ -162,7 +241,7 @@ const VerificationForm = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Card className="overflow-hidden backdrop-blur-sm bg-white/90 border border-white/20 shadow-lg rounded-xl">
+        <DynamicCard className="overflow-hidden backdrop-blur-sm bg-white/90 border border-white/20 shadow-lg rounded-xl">
           {/* Header with gradient */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 py-4 px-5 text-white text-center">
             <div className="flex justify-center mb-2">
@@ -219,6 +298,7 @@ const VerificationForm = ({
                       onBlur={() => setFocusedIndex(null)}
                       className="w-full h-full text-center text-base bg-transparent focus:outline-none"
                       autoComplete="one-time-code"
+                      ref={index === 0 ? firstInputRef : null}
                     />
                     {/* Animation for filled input */}
                     {digit && (
@@ -315,7 +395,7 @@ const VerificationForm = ({
               )}
             </div>
           </div>
-        </Card>
+        </DynamicCard>
       </motion.div>
     </form>
   );

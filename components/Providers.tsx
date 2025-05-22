@@ -12,7 +12,8 @@ export default function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
   const pathname = usePathname();
 
-  const isDashboard = pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
+  const isDashboard =
+    pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
 
   // Split the pathname into parts
   const pathSegments = pathname.split("/").filter(Boolean); // Remove empty segments
@@ -22,7 +23,7 @@ export default function Providers({ children }: { children: ReactNode }) {
     pathSegments.length >= 3 &&
     /^[a-f0-9-]{36}$/.test(pathSegments[pathSegments.length - 1]);
 
-    const isChatPage = pathname.startsWith("/chat");
+  const isChatPage = pathname.startsWith("/chat");
 
   return (
     <HeroUIProvider>
@@ -32,7 +33,6 @@ export default function Providers({ children }: { children: ReactNode }) {
           <FiltersProvider>
             <div className="flex flex-col min-h-screen">
               {!isDashboard && <NavbarComponent />}
-      
 
               <main className="flex-grow">{children}</main>
 

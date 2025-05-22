@@ -11,6 +11,7 @@
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^41.4.2",
     "@ckeditor/ckeditor5-react": "^9.5.0",
+    "@hassanmojab/react-modern-calendar-datepicker": "^3.1.7",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.2.0",
     "@heroui/divider": "^2.2.11",
@@ -21,11 +22,13 @@
     "@react-stately/data": "^3.12.2",
     "@reduxjs/toolkit": "^2.6.0",
     "@tanstack/react-query": "^5.67.1",
+    "@types/react-datepicker": "^6.2.0",
     "autoprefixer": "^10.4.20",
     "axios": "^1.8.1",
     "date-fns-jalali": "^4.1.0-0",
     "dompurify": "^3.2.4",
     "framer-motion": "^12.11.3",
+    "jalali-moment": "^3.3.11",
     "joi": "^17.13.3",
     "js-cookie": "^3.0.5",
     "leaflet": "^1.9.4",
@@ -33,6 +36,7 @@
     "next": "15.2.0",
     "postcss": "^8.4.38",
     "react": "^19.0.0",
+    "react-datepicker": "^8.3.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
     "react-leaflet": "^5.0.0",
@@ -45,7 +49,7 @@
     "tailwindcss": "^3.4.17",
     "tailwindcss-rtl": "^0.9.0",
     "yet-another-react-lightbox": "^3.21.8",
-    "zod": "^3.24.4"
+    "zod": "^3.25.20"
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.6",

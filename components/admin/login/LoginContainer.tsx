@@ -50,6 +50,9 @@ const LoginContainer = () => {
       console.log("Login phone number submitted:", phoneNumber);
       console.log("Formatted for API:", formattedPhone);
 
+      // Loading state is managed in LoginForm component
+      // The button will show loading state during this API call
+      
       // Send login code via API
       const response = await adminAuthService.sendLoginCode(formattedPhone);
 
@@ -69,6 +72,9 @@ const LoginContainer = () => {
 
         // Redirect to verification page
         router.push("/admin/login/verification");
+        
+        // Return true to indicate success (loading state will continue until redirect)
+        return true;
       } else {
         // Show error toast with additional details
         let errorMessage =
@@ -80,6 +86,9 @@ const LoginContainer = () => {
           type: "error",
           duration: 5000,
         });
+        
+        // Return false to indicate error (will stop loading state in form)
+        return false;
       }
     } catch (error) {
       console.error("Login error:", error);

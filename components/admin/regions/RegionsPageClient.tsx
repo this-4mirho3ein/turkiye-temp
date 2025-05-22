@@ -237,13 +237,41 @@ function RegionsPageClientInner() {
         isDeleted: !!item.isDeleted, // Ensure boolean conversion with double negation
       };
 
-      // Add parent info if available
-      if (item.parent) {
+      // Handle parent info based on region type
+      if (type === "provinces") {
+        // For provinces, the parent is the country field
+        if (item.country) {
+          result.parent = {
+            id: createNumericId(item.country.toString()),
+            name: "", // We don't have the name in this API response
+            originalId: item.country.toString(),
+          };
+        }
+      } else if (type === "cities") {
+        // For cities, the parent is the province field
+        if (item.province) {
+          result.parent = {
+            id: createNumericId(item.province.toString()),
+            name: "", // We don't have the name in this API response
+            originalId: item.province.toString(),
+          };
+        }
+      } else if (type === "areas") {
+        // For areas, the parent is the city object
+        if (item.city && item.city._id) {
+          result.parent = {
+            id: createNumericId(item.city._id.toString()),
+            name: item.city.name || "",
+            originalId: item.city._id.toString(),
+          };
+        }
+      } else if (item.parent) {
+        // Fallback for any other parent structure
         const parentId = item.parent.id || item.parent._id;
         if (parentId) {
           result.parent = {
             id: createNumericId(parentId.toString()),
-            name: item.parent.name,
+            name: item.parent.name || "",
             originalId: parentId.toString(),
           };
         }

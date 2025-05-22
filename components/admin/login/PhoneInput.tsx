@@ -27,6 +27,7 @@ export const PhoneInput = ({
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [touched, setTouched] = useState(false);
 
   useEffect(() => {
     if (initialValue) {
@@ -43,8 +44,11 @@ export const PhoneInput = ({
       onPhoneChange(value, true);
       return true;
     } catch (error) {
-      if (error instanceof z.ZodError) {
+      if (error instanceof z.ZodError && touched) {
         setError(error.errors[0].message);
+        onPhoneChange(value, false);
+      } else if (!touched) {
+        // Don't show error if the field hasn't been touched yet
         onPhoneChange(value, false);
       }
       return false;
@@ -115,7 +119,12 @@ export const PhoneInput = ({
               value={phoneNumber}
               onChange={(e) => handleInputChange(e.target.value)}
               onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
+              onBlur={() => {
+                setIsFocused(false);
+                setTouched(true);
+                // Validate again on blur to show errors after user interaction
+                validatePhone(phoneNumber);
+              }}
               placeholder="09123456789"
               className="w-full bg-transparent border-none outline-none text-base py-0.5 rtl"
               dir="rtl"

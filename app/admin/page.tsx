@@ -170,10 +170,13 @@ const AgencyStats = () => {
   useEffect(() => {
     const fetchAgencyStats = async () => {
       try {
+        // Fetch agencies with a higher limit to get more comprehensive stats
         const response = await getAdminAgencies({ limit: 100 });
+        console.log('Agency response:', response);
 
         if (response.success && response.data) {
-          const agencies = response.data.data || [];
+          // Ensure agencies is always an array
+          const agencies = Array.isArray(response.data.data) ? response.data.data : [];
 
           setAgencyStats({
             totalAgencies: response.data.count || 0,

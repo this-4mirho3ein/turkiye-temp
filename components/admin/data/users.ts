@@ -24,6 +24,8 @@ export interface User {
   createdAt: string;
   originalId?: string; // Original ID from API for reference
   isDeleted?: boolean; // Flag to indicate if the user is deleted
+  displayMobile?: boolean; // Whether to display the mobile number
+  displayEmail?: boolean; // Whether to display the email
 }
 
 // Define role groups (without icon components)

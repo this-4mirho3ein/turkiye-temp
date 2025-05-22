@@ -110,6 +110,38 @@ const AgenciesPageClient: React.FC<AgenciesPageClientProps> = ({
   const [provinceLoading, setProvinceLoading] = useState(false);
   const [cityLoading, setCityLoading] = useState(false);
   const [areaLoading, setAreaLoading] = useState(false);
+  
+  // Create a separate state for input values to implement debounce
+  const [inputValues, setInputValues] = useState<AgencyFilters>({
+    name: "",
+    province: "",
+    city: "",
+    area: "",
+    isVerified: undefined,
+    isActive: undefined,
+    sortField: "createdAt",
+    sortOrder: -1,
+  });
+  
+  // Debounce the name input value
+// Custom hook for debouncing values
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
+const debouncedNameValue = useDebounce(inputValues.name, 1000);
 
   const fetchAgencies = async (page: number = 1) => {
     setLoading(true);
@@ -148,6 +180,14 @@ const AgenciesPageClient: React.FC<AgenciesPageClientProps> = ({
     }
   };
 
+  // Apply debounced text input values to filters
+  useEffect(() => {
+    setFilters(prev => ({
+      ...prev,
+      name: debouncedNameValue
+    }));
+  }, [debouncedNameValue]);
+  
   useEffect(() => {
     // Always fetch fresh data when component mounts
     fetchAgencies(currentPage);
@@ -203,7 +243,22 @@ const AgenciesPageClient: React.FC<AgenciesPageClientProps> = ({
     fetchAgencies(currentPage);
   };
 
+  // Handle input changes (for debounce)
+  const handleInputChange = (name: string, value: any) => {
+    setInputValues((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+  
+  // Handle filter changes for non-text inputs (no debounce needed)
   const handleFilterChange = (name: string, value: any) => {
+    // Update both input values and filters for consistency
+    setInputValues((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    
     setFilters((prev) => ({
       ...prev,
       [name]: value,
@@ -217,7 +272,8 @@ const AgenciesPageClient: React.FC<AgenciesPageClientProps> = ({
   };
 
   const resetFilters = () => {
-    setFilters({
+    // Reset both input values and filters
+    const resetValues = {
       name: "",
       province: "",
       city: "",
@@ -226,7 +282,10 @@ const AgenciesPageClient: React.FC<AgenciesPageClientProps> = ({
       isActive: undefined,
       sortField: "createdAt",
       sortOrder: -1,
-    });
+    };
+    
+    setInputValues(resetValues);
+    setFilters(resetValues);
   };
 
   // Filter section component
@@ -249,8 +308,8 @@ const AgenciesPageClient: React.FC<AgenciesPageClientProps> = ({
               list="agency-names"
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               placeholder="جستجو بر اساس نام"
-              value={filters.name || ""}
-              onChange={(e) => handleFilterChange("name", e.target.value)}
+              value={inputValues.name || ""}
+              onChange={(e) => handleInputChange("name", e.target.value)}
               dir="rtl"
             />
             <datalist id="agency-names">

@@ -1,7 +1,31 @@
-import { api, returnError } from "@/lib/api";
-import { GenericAbortSignal } from "axios";
 import mainConfig from "@/configs/mainConfig";
 import axios from "axios";
+
+// Create a reusable axios instance with base URL and default config
+const api = axios.create({
+  baseURL: mainConfig.apiServer,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: false,
+});
+
+// Add request interceptor to include auth token
+api.interceptors.request.use(
+  (config) => {
+    // Get token from localStorage if we're in the browser
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        config.headers['x-access-token'] = token;
+      }
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // //#region Auth
 // export const sendOtpCode = async (
@@ -1578,15 +1602,53 @@ export const deleteAdminArea = async (id: string): Promise<ApiResponse> => {
 
 //#region AdminUsers
 export const getAdminUsers = async (
-  params: { page?: number; limit?: number; forceRefresh?: boolean } = {}
+  params: {
+    page?: number;
+    limit?: number;
+    forceRefresh?: boolean;
+    roles?: string;
+    isActive?: boolean;
+    isBanned?: boolean;
+    isProfileComplete?: boolean;
+    search?: string;
+  } = {}
 ): Promise<any[]> => {
-  const { page = 1, limit = 100, forceRefresh = false } = params;
+  const {
+    page = 1,
+    limit = 100,
+    forceRefresh = false,
+    roles,
+    isActive,
+    isBanned,
+    isProfileComplete,
+    search
+  } = params;
 
   // Add cache-busting parameter if forceRefresh is true
   const cacheParam = forceRefresh ? `&_t=${Date.now()}` : "";
+  
+  // Build query parameters for filters
+  let queryParams = `page=${page}&limit=${limit}${cacheParam}`;
+  
+  // Add filter parameters if they exist
+  if (roles) queryParams += `&roles=${roles}`;
+  if (isActive !== undefined) queryParams += `&isActive=${isActive}`;
+  if (isBanned !== undefined) queryParams += `&isBanned=${isBanned}`;
+  if (isProfileComplete !== undefined) queryParams += `&isProfileComplete=${isProfileComplete}`;
+  if (search) queryParams += `&search=${encodeURIComponent(search)}`;
 
   try {
-    console.log(`🔍 Fetching admin users (force refresh: ${forceRefresh})...`);
+    console.log(`🔍 Fetching admin users with filters:`, {
+      page,
+      limit,
+      forceRefresh,
+      roles,
+      isActive,
+      isBanned,
+      isProfileComplete,
+      search
+    });
+    console.log(`🔍 API request URL: /admin/user/get-users?${queryParams}`);
 
     // Get authentication token
     const token =
@@ -1601,11 +1663,19 @@ export const getAdminUsers = async (
     }
 
     const response = await api.get(
-      `/admin/user/get-users?page=${page}&limit=${limit}${cacheParam}`,
+      `/admin/user/get-users?${queryParams}`,
       { headers }
     );
 
     console.log("🔍 Admin users API response status:", response.status);
+    
+    // Log the filtered results count
+    if (response.data?.data && Array.isArray(response.data.data)) {
+      console.log(`🔍 Filtered results: ${response.data.data.length} users found`);
+    } else if (Array.isArray(response.data)) {
+      console.log(`🔍 Filtered results: ${response.data.length} users found`);
+    }
+    
     console.log(
       "🔍 Admin users API response data:",
       JSON.stringify(response.data, null, 2)
@@ -1666,7 +1736,7 @@ export const getAdminUsers = async (
       }
 
       const directResponse = await axios.get(
-        `${mainConfig.apiServer}/admin/user/get-users?page=${page}&limit=${limit}${cacheParam}`,
+        `${mainConfig.apiServer}/admin/user/get-users?${queryParams}`,
         {
           headers,
           withCredentials: false,
@@ -1751,6 +1821,9 @@ export const updateAdminUser = async (
   id: string,
   data: Record<string, any>
 ): Promise<ApiResponse> => {
+  console.log('updateAdminUser function called with id:', id);
+  console.log('updateAdminUser data:', JSON.stringify(data, null, 2));
+  
   try {
     // Ensure the ID is included in the data object
     const requestData = { ...data, id };
@@ -1760,8 +1833,13 @@ export const updateAdminUser = async (
       JSON.stringify(requestData, null, 2)
     );
     // The endpoint doesn't need the ID as part of the URL - it's in the request body
+    console.log(`Attempting PUT request to /admin/user/update-user`);
+    console.log(`Full URL: ${mainConfig.apiServer}/admin/user/update-user`);
+    
     const response = await api.put(`/admin/user/update-user`, requestData);
-    console.log(`🔄 Update response:`, response.status, response.data);
+    console.log(`PUT request successful with status: ${response.status}`);
+    console.log(`f504 Update response:`, response.status, response.data);
+    console.log(`f504 Response message:`, response.data?.message || 'کاربر با موفقیت به‌روزرسانی شد');
     return {
       success: response.status >= 200 && response.status < 300,
       message: response.data?.message || "کاربر با موفقیت به‌روزرسانی شد",

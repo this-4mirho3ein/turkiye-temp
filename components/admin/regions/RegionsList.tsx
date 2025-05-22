@@ -35,6 +35,7 @@ import RegionSearchBar from "./RegionSearchBar";
 import RegionsTable from "./RegionsTable";
 import RegionFormModal from "./RegionFormModal";
 import DeleteRegionModal from "./DeleteRegionModal";
+import RegionParentFilter from "./RegionParentFilter";
 
 interface RegionsListProps {
   type: "countries" | "provinces" | "cities" | "areas";
@@ -57,6 +58,7 @@ export default function RegionsList({
   const [search, setSearch] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
   const [regionToDelete, setRegionToDelete] = useState<Region | null>(null);
+  const [selectedParentId, setSelectedParentId] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -136,14 +138,76 @@ export default function RegionsList({
     }
   }, [selectedRegion]);
 
-  // Client-side filtering based on search input
-  const filteredRegions = search.trim()
-    ? regions.filter(
-        (region) =>
-          region.name.toLowerCase().includes(search.toLowerCase()) ||
-          region.slug.toLowerCase().includes(search.toLowerCase())
-      )
-    : regions;
+  // Debug parent filter
+  useEffect(() => {
+    if (selectedParentId) {
+      console.log('Selected parent ID:', selectedParentId);
+      console.log('Region type:', type);
+      console.log('Total regions:', regions.length);
+      
+      // Log the structure of a sample region to debug
+      if (regions.length > 0) {
+        console.log('Sample region structure:', JSON.stringify(regions[0], null, 2));
+      }
+    }
+  }, [selectedParentId, regions, type]);
+
+  // Client-side filtering based on search input and parent filter
+  const filteredRegions = regions.filter(region => {
+    // Apply search filter
+    if (search.trim() && 
+        !region.name.toLowerCase().includes(search.toLowerCase()) && 
+        !region.slug.toLowerCase().includes(search.toLowerCase())) {
+      return false;
+    }
+    
+    // Apply parent filter based on region type
+    if (selectedParentId && selectedParentId !== '') {
+      switch (type) {
+        case 'provinces': {
+          // For provinces, filter by country ID
+          // The country field in the API response contains the country ID
+          const countryId = region.parent?.originalId;
+          if (!countryId || countryId !== selectedParentId) {
+            return false;
+          }
+          break;
+        }
+        case 'cities': {
+          // For cities, filter by province ID
+          // The province field in the API response contains the province ID
+          const provinceId = region.parent?.originalId;
+          if (!provinceId || provinceId !== selectedParentId) {
+            return false;
+          }
+          break;
+        }
+        case 'areas': {
+          // For areas, filter by city ID
+          // The city field in the API response contains the city object with _id
+          const cityId = region.parent?.originalId;
+          if (!cityId || cityId !== selectedParentId) {
+            return false;
+          }
+          break;
+        }
+      }
+    }
+    
+    // Show only non-deleted items unless showDeletedItems is true
+    if (!showDeletedItems && region.isDeleted) {
+      return false;
+    }
+    
+    return true;
+  });
+  
+  // Log filtered results for debugging
+  useEffect(() => {
+    if (selectedParentId) {
+      console.log(`Filtered ${type} count:`, filteredRegions.length);
+    }
+  }, [filteredRegions, selectedParentId, type]);
 
   // Log if we have any deleted items for debugging
   const deletedCount = regions.filter(
@@ -844,6 +908,17 @@ export default function RegionsList({
         onAdd={() => handleAddEdit()}
         typeTitle={getTypeTitle()}
       />
+      
+      {/* Parent Filter */}
+      {type !== "countries" && parentRegions.length > 0 && (
+        <RegionParentFilter
+          type={type}
+          parentRegions={parentRegions}
+          selectedParentId={selectedParentId}
+          onParentChange={setSelectedParentId}
+        />
+      )}
+      
       <RegionsTable
         regions={filteredRegions}
         type={type}

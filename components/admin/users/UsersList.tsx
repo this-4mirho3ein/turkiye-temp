@@ -4,15 +4,14 @@ import { useState, useEffect } from "react";
 import {
   FaEdit,
   FaTrash,
-  FaSearch,
   FaExclamationTriangle,
   FaCheck,
   FaUserPlus,
-  FaFilter,
   FaTrashRestore,
   FaTimes,
   FaUsers,
 } from "react-icons/fa";
+
 import Button from "@/components/admin/ui/Button";
 import Input from "@/components/admin/ui/Input";
 import Avatar from "@/components/admin/ui/Avatar";
@@ -45,6 +44,7 @@ interface UsersListProps {
   isLoading?: boolean;
   refetchUsers?: () => Promise<any>;
   showEmptyState?: boolean;
+  searchTerm: string;
 }
 
 export default function UsersList({
@@ -53,14 +53,11 @@ export default function UsersList({
   isLoading: apiLoading = false,
   refetchUsers,
   showEmptyState = false,
+  searchTerm,
 }: UsersListProps) {
   const [displayUsers, setDisplayUsers] = useState<User[]>(initialUsers);
-  const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [currentFilter, setCurrentFilter] = useState<UserRole | "all">(
-    filterRole
-  );
   const [isLoading, setIsLoading] = useState(false);
 
   // Modal controls
@@ -83,51 +80,20 @@ export default function UsersList({
 
     setIsLoading(true);
     try {
-      // First try using server action
-      const data = await filterUsers(search, currentFilter);
+      // Get all users without filtering
+      const data = await filterUsers("", "all");
 
       if (data && data.length > 0) {
         setDisplayUsers(data);
       } else {
-        // If server action returns empty data but we have initialUsers,
-        // filter them based on search and currentFilter
-        const filteredUsers = initialUsers.filter((user) => {
-          // Filter by search term
-          const matchesSearch = search
-            ? user.name.toLowerCase().includes(search.toLowerCase()) ||
-              user.email.toLowerCase().includes(search.toLowerCase()) ||
-              user.phone.includes(search)
-            : true;
-
-          // Filter by role
-          const matchesRole =
-            currentFilter === "all" ? true : user.role === currentFilter;
-
-          return matchesSearch && matchesRole;
-        });
-
-        setDisplayUsers(filteredUsers);
+        // If server action returns empty data, use initialUsers
+        setDisplayUsers(initialUsers);
       }
     } catch (error) {
       console.error("Failed to load users:", error);
 
-      // Fallback to filtering initialUsers client-side
-      const filteredUsers = initialUsers.filter((user) => {
-        // Filter by search term
-        const matchesSearch = search
-          ? user.name.toLowerCase().includes(search.toLowerCase()) ||
-            user.email.toLowerCase().includes(search.toLowerCase()) ||
-            user.phone.includes(search)
-          : true;
-
-        // Filter by role
-        const matchesRole =
-          currentFilter === "all" ? true : user.role === currentFilter;
-
-        return matchesSearch && matchesRole;
-      });
-
-      setDisplayUsers(filteredUsers);
+      // Fallback to initialUsers
+      setDisplayUsers(initialUsers);
 
       addToast({
         title: "هشدار",
@@ -141,26 +107,25 @@ export default function UsersList({
     }
   };
 
-  // Load users when filter or search changes
+  // Load users when component mounts or refetchUsers changes
   useEffect(() => {
     loadUsers();
-  }, [search, currentFilter]);
+  }, [refetchUsers]);
 
-  // Update displayUsers when initialUsers changes, but keep any filtering applied
+  // Update displayUsers when initialUsers changes
   useEffect(() => {
-    // Re-apply current filters instead of just setting to initialUsers
-    if (search || currentFilter !== "all") {
-      loadUsers();
-    } else {
+    if (!searchTerm) {
       setDisplayUsers(initialUsers);
+      return;
     }
-
-    // Log for debugging
-    console.log(
-      "Received updated initialUsers list. Length:",
-      initialUsers.length
+    const lower = searchTerm.toLowerCase();
+    const filtered = initialUsers.filter((user) =>
+      [user.name, user.email, user.phone].some((field) =>
+        field?.toLowerCase().includes(lower)
+      )
     );
-  }, [initialUsers]);
+    setDisplayUsers(filtered);
+  }, [searchTerm, initialUsers]);
 
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
@@ -319,11 +284,17 @@ export default function UsersList({
             await loadUsers();
           }
 
+          // Check if we have a response message from the API
+          const responseMessage = (userData as any)._responseMessage;
+          const isSuccess = (userData as any)._responseStatus !== false;
+          
+          console.log('Using response message for toast:', responseMessage);
+          
           addToast({
-            title: "ویرایش موفقیت‌آمیز",
-            description: `اطلاعات کاربر ${userData.name} با موفقیت بروزرسانی شد`,
-            color: "success",
-            icon: <FaCheck />,
+            title: isSuccess ? "ویرایش موفقیت‌آمیز" : "خطا",
+            description: responseMessage || `اطلاعات کاربر ${userData.name} با موفقیت بروزرسانی شد`,
+            color: isSuccess ? "success" : "danger",
+            icon: isSuccess ? <FaCheck /> : <FaExclamationTriangle />,
           });
         } else {
           // Update existing local user
@@ -371,169 +342,13 @@ export default function UsersList({
     onEditModalClose();
   };
 
-  const getFiltersCount = () => {
-    let count = 0;
-    if (currentFilter !== "all") count++;
-    if (search) count++;
-    return count;
-  };
-
-  const clearFilters = () => {
-    setSearch("");
-    setCurrentFilter("all");
-  };
-
   // Check if we should show the loading state or empty state
   const isTableLoading = apiLoading || isLoading;
   const isTableEmpty = !isTableLoading && displayUsers.length === 0;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between gap-4">
-        <div className="flex flex-col sm:flex-row gap-3 flex-1">
-          <div className="relative w-full md:w-96">
-            <Input
-              placeholder="جستجو در کاربران..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              startContent={<FaSearch className="text-gray-400" />}
-              className="w-full"
-            />
-          </div>
-
-          <Dropdown>
-            <DropdownTrigger>
-              <Button
-                variant="bordered"
-                startContent={<FaFilter />}
-                endContent={
-                  getFiltersCount() > 0 ? (
-                    <span className="bg-primary text-white w-5 h-5 flex items-center justify-center rounded-full text-xs">
-                      {getFiltersCount()}
-                    </span>
-                  ) : undefined
-                }
-                className="border-primary text-primary hover:bg-primary/10 transition-colors"
-              >
-                فیلتر
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label="فیلتر کاربران"
-              className="p-4 min-w-[240px] bg-white rounded-lg shadow-lg border border-gray-200"
-            >
-              <DropdownItem
-                key="role-heading"
-                className="cursor-default"
-                textValue="نقش کاربری"
-              >
-                <p className="font-semibold mb-3 text-gray-700">نقش کاربری</p>
-              </DropdownItem>
-
-              <DropdownItem
-                key="role-all"
-                textValue="همه کاربران"
-                onPress={() => setCurrentFilter("all")}
-              >
-                <Button
-                  size="sm"
-                  variant={currentFilter === "all" ? "solid" : "light"}
-                  color={currentFilter === "all" ? "primary" : "secondary"}
-                  className="justify-start rounded-full w-full"
-                >
-                  همه کاربران
-                </Button>
-              </DropdownItem>
-
-              <DropdownItem
-                key="role-admin"
-                textValue="مدیران"
-                onPress={() => setCurrentFilter("admin")}
-              >
-                <Button
-                  size="sm"
-                  variant={currentFilter === "admin" ? "solid" : "light"}
-                  color={currentFilter === "admin" ? "primary" : "secondary"}
-                  className="justify-start rounded-full w-full"
-                >
-                  مدیران
-                </Button>
-              </DropdownItem>
-
-              <DropdownItem
-                key="role-agency"
-                textValue="آژانس‌ها"
-                onPress={() => setCurrentFilter("agency")}
-              >
-                <Button
-                  size="sm"
-                  variant={currentFilter === "agency" ? "solid" : "light"}
-                  color={currentFilter === "agency" ? "primary" : "secondary"}
-                  className="justify-start rounded-full w-full"
-                >
-                  آژانس‌ها
-                </Button>
-              </DropdownItem>
-
-              <DropdownItem
-                key="role-consultant"
-                textValue="مشاوران"
-                onPress={() => setCurrentFilter("consultant")}
-              >
-                <Button
-                  size="sm"
-                  variant={currentFilter === "consultant" ? "solid" : "light"}
-                  color={
-                    currentFilter === "consultant" ? "primary" : "secondary"
-                  }
-                  className="justify-start rounded-full w-full"
-                >
-                  مشاوران
-                </Button>
-              </DropdownItem>
-
-              <DropdownItem
-                key="role-normal"
-                textValue="کاربران عادی"
-                onPress={() => setCurrentFilter("normal")}
-              >
-                <Button
-                  size="sm"
-                  variant={currentFilter === "normal" ? "solid" : "light"}
-                  color={currentFilter === "normal" ? "primary" : "secondary"}
-                  className="justify-start rounded-full w-full"
-                >
-                  کاربران عادی
-                </Button>
-              </DropdownItem>
-
-              <DropdownItem
-                key="divider"
-                className="h-px bg-gray-200 my-2"
-                textValue="divider"
-              />
-
-              <DropdownItem
-                key="clear-filters"
-                textValue="حذف فیلترها"
-                onPress={clearFilters}
-              >
-                <Button
-                  key="clear-filters"
-                  color="danger"
-                  variant="bordered"
-                  size="md"
-                  className="mx-1"
-                  startContent={<span className="ml-1">🗑️</span>}
-                  onPress={clearFilters}
-                >
-                  حذف فیلترها
-                </Button>
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        </div>
-
+      <div className="flex justify-end">
         <Button
           color="primary"
           startContent={<FaUserPlus />}
@@ -625,9 +440,15 @@ export default function UsersList({
                       </Link>
                     </div>
                   </td>
-                  <td className="px-6 py-4">{user.email}</td>
+                  <td className="px-6 py-4">
+                    {user.displayEmail ? user.email : 
+                      <span className="text-gray-400 italic">مخفی شده</span>
+                    }
+                  </td>
                   <td className="px-6 py-4" dir="ltr">
-                    {user.phone}
+                    {user.displayMobile ? user.phone : 
+                      <span className="text-gray-400 italic">مخفی شده</span>
+                    }
                   </td>
                   <td className="px-6 py-4">
                     <UserRoleBadge role={user.role} />
