@@ -47,7 +47,6 @@ interface AgencyAddress {
 interface AgencyDetails {
   _id: string;
   name: string;
-  address: string | AgencyAddress;
   phone: string;
   owner: {
     _id: string;
@@ -56,21 +55,23 @@ interface AgencyDetails {
     phone: string;
     email: string;
   };
-  consultants: any[];
-  areaAdmins: any[];
+  consultants: AgencyConsultant[];
+  areaAdmins: AgencyAreaAdmin[];
   adQuota: number;
-  activeAdCount: number;
   isActive: boolean;
-  isDeleted: boolean;
   isVerified: boolean;
   description: string;
-  logo: {
-    fileName: string;
-  } | null;
-  isPhoneShow: boolean;
-  isAddressShow: boolean;
   createdAt: string;
   updatedAt: string;
+  activeAdCount: number;
+  logo?: {
+    fileName: string;
+  };
+  address?: string | AgencyAddress;
+  isPhoneShow?: boolean;
+  isAddressShow?: boolean;
+  email?: string;
+  website?: string;
   socialMedia?: {
     instagram?: string;
     twitter?: string;
@@ -138,16 +139,27 @@ const AgencyDetailsCard: React.FC<AgencyDetailsCardProps> = ({ agency }) => {
   const fetchMembers = async () => {
     try {
       setMembersLoading(true);
+      console.log("Fetching members for agency ID:", agency._id);
       const response = await getAgencyMembers(agency._id);
+      console.log("Agency members API response:", response);
 
       if (response.success) {
-        setMembers(response.data as AgencyMember);
-        console.log("اطلاعات اعضای آژانس با موفقیت دریافت شد");
+        // Check the actual structure of the response
+        if (response.data && typeof response.data === 'object') {
+          console.log("Raw members data:", response.data);
+          // Check if data is nested under a 'data' property
+          const memberData = response.data.data || response.data;
+          console.log("Member data after extraction:", memberData);
+          setMembers(memberData as AgencyMember);
+          console.log("اطلاعات اعضای آژانس با موفقیت دریافت شد");
+        } else {
+          console.error("Invalid response data structure:", response.data);
+        }
       } else {
-        console.error(response.message || "خطا در دریافت اطلاعات اعضای آژانس");
+        console.error("API Error:", response.message || "خطا در دریافت اطلاعات اعضای آژانس");
       }
     } catch (err) {
-      console.error("Error fetching agency members:", err);
+      console.error("Exception when fetching agency members:", err);
     } finally {
       setMembersLoading(false);
     }
@@ -159,6 +171,16 @@ const AgencyDetailsCard: React.FC<AgencyDetailsCardProps> = ({ agency }) => {
       fetchMembers();
     }
     setShowMembers(!showMembers);
+  };
+  
+  // Function to render address safely
+  const renderAddress = () => {
+    if (typeof agency.address === "string") {
+      return agency.address;
+    } else if (agency.address?.fullAddress) {
+      return agency.address.fullAddress;
+    }
+    return "نامشخص";
   };
 
   return (
@@ -394,84 +416,159 @@ const AgencyDetailsCard: React.FC<AgencyDetailsCardProps> = ({ agency }) => {
                 ></path>
               </svg>
               <span className="text-gray-800 font-semibold">
-                آدرس:{" "}
-                {typeof agency.address === "string"
-                  ? agency.address
-                  : agency.address?.fullAddress || "نامشخص"}
+                آدرس: {renderAddress()}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Social Media */}
-        {agency.socialMedia &&
-          Object.values(agency.socialMedia || {}).some((value) => value) && (
-            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                <svg
-                  className="w-5 h-5 text-purple-600 ml-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                  ></path>
-                </svg>
-                شبکه‌های اجتماعی
-              </h2>
+        {/* Show members section when button is clicked */}
+        {showMembers && (
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            {membersLoading ? (
+              <div className="flex justify-center items-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-2 border-purple-500 border-t-transparent"></div>
+                <span className="mr-2 text-gray-600">در حال بارگذاری اطلاعات اعضا...</span>
+              </div>
+            ) : members ? (
+              <div className="space-y-6">
 
-              <div className="flex flex-wrap gap-3">
-                {agency.socialMedia.instagram && (
-                  <a
-                    href={agency.socialMedia.instagram}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
-                  >
-                    <span className="font-medium">اینستاگرام</span>
-                  </a>
+                {/* Member Basic Info */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">اطلاعات عضو</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-white rounded-lg border border-gray-200">
+                    <div>
+                      <p className="text-gray-700 mb-2">نام: <span className="font-medium">{members.name || 'نامشخص'}</span></p>
+                      <p className="text-gray-700 mb-2">تلفن: <span className="font-medium">{members.phone || 'نامشخص'}</span></p>
+                      <p className="text-gray-700 mb-2">آدرس: <span className="font-medium">{members.address || 'نامشخص'}</span></p>
+                    </div>
+                    <div>
+                      <p className="text-gray-700 mb-2">وضعیت: 
+                        <span className={`inline-block mx-2 px-2 py-1 text-xs rounded-full ${members.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          {members.isActive ? 'فعال' : 'غیرفعال'}
+                        </span>
+                      </p>
+                      <p className="text-gray-700 mb-2">تایید شده: 
+                        <span className={`inline-block mx-2 px-2 py-1 text-xs rounded-full ${members.isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                          {members.isVerified ? 'بله' : 'خیر'}
+                        </span>
+                      </p>
+                      {members.createdAt && (
+                        <p className="text-gray-700 mb-2">تاریخ ثبت: <span className="font-medium">
+                          {new Date(members.createdAt).toLocaleDateString("fa-IR")}
+                        </span></p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Consultants Section */}
+                {members.consultants && Array.isArray(members.consultants) && members.consultants.length > 0 ? (
+                  <div className="p-4 bg-white rounded-lg border border-gray-200">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-800">مشاوران</h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نام</th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تلفن</th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ایمیل</th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وضعیت</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {members.consultants.map((consultant: any) => (
+                            <tr key={consultant._id}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {consultant.firstName || ''} {consultant.lastName || ''}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dir-ltr">
+                                {consultant.phone || '-'}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dir-ltr">
+                                {consultant.email || '-'}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${consultant.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                  {consultant.isActive ? 'فعال' : 'غیرفعال'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-yellow-50 text-yellow-700 p-4 rounded-md border border-yellow-200">
+                    <div className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p>هیچ مشاوری برای این آژانس ثبت نشده است.</p>
+                    </div>
+                  </div>
                 )}
-
-                {agency.socialMedia.twitter && (
-                  <a
-                    href={agency.socialMedia.twitter}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-300"
-                  >
-                    <span className="font-medium">توییتر</span>
-                  </a>
-                )}
-
-                {agency.socialMedia.facebook && (
-                  <a
-                    href={agency.socialMedia.facebook}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-all duration-300"
-                  >
-                    <span className="font-medium">فیسبوک</span>
-                  </a>
-                )}
-
-                {agency.socialMedia.linkedin && (
-                  <a
-                    href={agency.socialMedia.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300"
-                  >
-                    <span className="font-medium">لینکدین</span>
-                  </a>
+                
+                {/* Area Admins Section */}
+                {members.areaAdmins && Array.isArray(members.areaAdmins) && members.areaAdmins.length > 0 ? (
+                  <div className="p-4 bg-white rounded-lg border border-gray-200">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-800">مدیران منطقه</h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نام</th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تلفن</th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ایمیل</th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">منطقه</th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وضعیت</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {members.areaAdmins.map((admin: any) => (
+                            <tr key={admin._id}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {admin.firstName || ''} {admin.lastName || ''}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dir-ltr">
+                                {admin.phone || '-'}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dir-ltr">
+                                {admin.email || '-'}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {admin.area?.name || '-'}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${admin.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                  {admin.isActive ? 'فعال' : 'غیرفعال'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-yellow-50 text-yellow-700 p-4 rounded-md border border-yellow-200">
+                    <div className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p>هیچ مدیر منطقه‌ای برای این آژانس ثبت نشده است.</p>
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="p-4 bg-yellow-50 text-yellow-700 rounded-lg border border-yellow-200">
+                <p>اطلاعات اعضای آژانس یافت نشد.</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

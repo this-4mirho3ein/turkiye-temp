@@ -579,30 +579,510 @@ interface ApiResponse {
   status?: number;
 }
 
-// Get Agency Details
-export const getAgencyDetails = async (id: string): Promise<ApiResponse> => {
+
+
+// Get Agency Members
+export const getAgencyMembers = async (id: string): Promise<ApiResponse> => {
   try {
-    const apiUrl = `${mainConfig.apiServer}/admin/agency/get-agency/${id}`;
-    // Get token from localStorage if in browser
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("accessToken")
-        : null;
+    console.log(`🔍 Fetching agency members for ID: ${id}`);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     const headers: Record<string, string> = {};
-    if (token) headers["x-access-token"] = token;
+    if (token) headers['x-access-token'] = token;
 
-    const response = await api.get(apiUrl, { headers });
-
-    return {
+    const response = await api.get(`/admin/agency/get-members/${id}`, { headers });
+    console.log(`✅ Agency members response:`, response.data);
+    
+    return { 
       success: true,
       data: response.data,
-      status: response.status,
+      status: response.status 
     };
-  } catch (err: any) {
+  } catch (error: any) {
+    console.error(`❌ Error fetching agency members for ID ${id}:`, error);
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+    }
+    return returnError(error);
+  }
+};
+
+// Add area admin to an agency
+export const addAgencyAreaAdmin = async (
+  agencyId: string,
+  phone: string
+): Promise<ApiResponse> => {
+  try {
+    console.log(`🔍 Adding area admin to agency ID: ${agencyId} with phone: ${phone}`);
+    
+    // Get token from localStorage if in browser
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['x-access-token'] = token;
+    
+    // Format the request body
+    const requestBody = {
+      agencyId,
+      countryCode: "98",
+      phone,
+      message: "Agency has been verified and confirmed"
+    };
+    
+    const response = await api.post(
+      `/admin/agency/add-area_admin`,
+      requestBody,
+      { headers }
+    );
+    
+    console.log(`✅ Add area admin response status: ${response.status}`);
+    console.log(`✅ Add area admin response data:`, response.data);
+
+    // Return the exact response from the API
+    return {
+      success: response.data.success !== undefined ? response.data.success : true,
+      data: response.data,
+      message: response.data.message || "مدیر منطقه با موفقیت اضافه شد",
+      status: response.data.status || response.status
+    };
+  } catch (error: any) {
+    console.error("❌ Error adding area admin:", error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+      
+      // If the error contains a response with a message, use that directly
+      if (error.response.data) {
+        return {
+          success: error.response.data.success !== undefined ? error.response.data.success : false,
+          message: error.response.data.message || "خطا در افزودن مدیر منطقه",
+          status: error.response.data.status || error.response.status,
+          data: error.response.data
+        };
+      }
+    } else if (error.request) {
+      console.error("No response received. Request details:", error.request);
+    } else {
+      console.error("Error message:", error.message);
+    }
+
+    return returnError(error);
+  }
+};
+
+// Remove area admin from an agency
+export const removeAgencyAreaAdmin = async (
+  agencyId: string,
+  adminId: string
+): Promise<ApiResponse> => {
+  try {
+    console.log(`🔍 Removing area admin with ID: ${adminId} from agency ID: ${agencyId}`);
+    
+    // Get token from localStorage if in browser
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['x-access-token'] = token;
+    
+    // Format the request body
+    const requestBody = {
+      agencyId,
+      adminId
+    };
+    
+    const response = await api.delete(
+      `/admin/agency/remove-area_admin`,
+      { 
+        headers,
+        data: requestBody  // For DELETE requests, the body goes in the 'data' property
+      }
+    );
+    
+    console.log(`✅ Remove area admin response status: ${response.status}`);
+    console.log(`✅ Remove area admin response data:`, response.data);
+
+    // Return the exact response from the API
+    return {
+      success: response.data.success !== undefined ? response.data.success : true,
+      data: response.data,
+      message: response.data.message || "مدیر منطقه با موفقیت حذف شد",
+      status: response.data.status || response.status
+    };
+  } catch (error: any) {
+    console.error("❌ Error removing area admin:", error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+      
+      // If the error contains a response with a message, use that directly
+      if (error.response.data) {
+        return {
+          success: error.response.data.success !== undefined ? error.response.data.success : false,
+          message: error.response.data.message || "خطا در حذف مدیر منطقه",
+          status: error.response.data.status || error.response.status,
+          data: error.response.data
+        };
+      }
+    } else if (error.request) {
+      console.error("No response received. Request details:", error.request);
+    } else {
+      console.error("Error message:", error.message);
+    }
+
+    return returnError(error);
+  }
+};
+
+// Add consultant to an agency
+export const addAgencyConsultant = async (
+  agencyId: string,
+  phone: string
+): Promise<ApiResponse> => {
+  try {
+    console.log(`🔍 Adding consultant to agency ID: ${agencyId} with phone: ${phone}`);
+    
+    // Get token from localStorage if in browser
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['x-access-token'] = token;
+    
+    // Format the request body
+    const requestBody = {
+      agencyId,
+      countryCode: "98",
+      phone,
+      message: "Agency has been verified and confirmed"
+    };
+    
+    const response = await api.post(
+      `/admin/agency/add-consultant`,
+      requestBody,
+      { headers }
+    );
+    
+    console.log(`✅ Add consultant response status: ${response.status}`);
+    console.log(`✅ Add consultant response data:`, response.data);
+
+    // Return the exact response from the API
+    return {
+      success: response.data.success !== undefined ? response.data.success : true,
+      data: response.data,
+      message: response.data.message || "مشاور با موفقیت اضافه شد",
+      status: response.data.status || response.status
+    };
+  } catch (error: any) {
+    console.error("❌ Error adding consultant:", error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+      
+      // If the error contains a response with a message, use that directly
+      if (error.response.data) {
+        return {
+          success: error.response.data.success !== undefined ? error.response.data.success : false,
+          message: error.response.data.message || "خطا در افزودن مشاور",
+          status: error.response.data.status || error.response.status,
+          data: error.response.data
+        };
+      }
+    } else if (error.request) {
+      console.error("No response received. Request details:", error.request);
+    } else {
+      console.error("Error message:", error.message);
+    }
+
+    return returnError(error);
+  }
+};
+
+// Remove consultant from an agency
+export const removeAgencyConsultant = async (
+  agencyId: string,
+  consultantId: string
+): Promise<ApiResponse> => {
+  try {
+    console.log(`🔍 Removing consultant with ID: ${consultantId} from agency ID: ${agencyId}`);
+    
+    // Get token from localStorage if in browser
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['x-access-token'] = token;
+    
+    // Format the request body
+    const requestBody = {
+      agencyId,
+      consultantId
+    };
+    
+    const response = await api.delete(
+      `/admin/agency/remove-consultant`,
+      { 
+        headers,
+        data: requestBody  // For DELETE requests, the body goes in the 'data' property
+      }
+    );
+    
+    console.log(`✅ Remove consultant response status: ${response.status}`);
+    console.log(`✅ Remove consultant response data:`, response.data);
+
+    // Return the exact response from the API
+    return {
+      success: response.data.success !== undefined ? response.data.success : true,
+      data: response.data,
+      message: response.data.message || "مشاور با موفقیت حذف شد",
+      status: response.data.status || response.status
+    };
+  } catch (error: any) {
+    console.error("❌ Error removing consultant:", error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+      
+      // If the error contains a response with a message, use that directly
+      if (error.response.data) {
+        return {
+          success: error.response.data.success !== undefined ? error.response.data.success : false,
+          message: error.response.data.message || "خطا در حذف مشاور",
+          status: error.response.data.status || error.response.status,
+          data: error.response.data
+        };
+      }
+    } else if (error.request) {
+      console.error("No response received. Request details:", error.request);
+    } else {
+      console.error("Error message:", error.message);
+    }
+
+    return returnError(error);
+  }
+};
+
+// Get agency verifications with pagination and status filtering
+export const getAgencyVerifications = async (
+  status: string = 'pending',
+  page: number = 1,
+  limit: number = 10
+): Promise<ApiResponse> => {
+  try {
+    console.log(`🔍 Fetching agency verifications with status: ${status}, page: ${page}, limit: ${limit}`);
+    
+    // Get token from localStorage if in browser
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['x-access-token'] = token;
+    
+    const response = await api.get(
+      `/admin/agency/verifications?status=${status}&page=${page}&limit=${limit}`,
+      { headers }
+    );
+    
+    console.log(`✅ Get verifications response status: ${response.status}`);
+    console.log(`✅ Get verifications response data:`, response.data);
+
+    // Return the exact response from the API
+    return {
+      success: response.data.success !== undefined ? response.data.success : true,
+      data: response.data,
+      message: response.data.message || "لیست تأییدیه‌ها با موفقیت دریافت شد",
+      status: response.data.status || response.status
+    };
+  } catch (error: any) {
+    console.error("❌ Error fetching verifications:", error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+      
+      // If the error contains a response with a message, use that directly
+      if (error.response.data) {
+        return {
+          success: error.response.data.success !== undefined ? error.response.data.success : false,
+          message: error.response.data.message || "خطا در دریافت لیست تأییدیه‌ها",
+          status: error.response.data.status || error.response.status,
+          data: error.response.data
+        };
+      }
+    } else if (error.request) {
+      console.error("No response received. Request details:", error.request);
+    } else {
+      console.error("Error message:", error.message);
+    }
+
+    return returnError(error);
+  }
+};
+
+// Get agency verification documents
+export const getAgencyVerificationDocuments = async (id: string): Promise<ApiResponse> => {
+  try {
+    console.log(`🔍 Fetching verification documents for agency ID: ${id}`);
+    
+    // Get token from localStorage if in browser
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['x-access-token'] = token;
+    
+    const response = await api.get(
+      `/admin/agency/verification/documents/${id}`,
+      { headers }
+    );
+    
+    console.log(`✅ Get verification documents response status: ${response.status}`);
+    console.log(`✅ Get verification documents response data:`, response.data);
+
+    // Return the exact response from the API
+    return {
+      success: response.data.success !== undefined ? response.data.success : true,
+      data: response.data,
+      message: response.data.message || "اطلاعات مدارک با موفقیت دریافت شد",
+      status: response.data.status || response.status
+    };
+  } catch (error: any) {
+    console.error("❌ Error fetching verification documents:", error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+      
+      // If the error contains a response with a message, use that directly
+      if (error.response.data) {
+        return {
+          success: error.response.data.success !== undefined ? error.response.data.success : false,
+          message: error.response.data.message || "خطا در دریافت اطلاعات مدارک",
+          status: error.response.data.status || error.response.status,
+          data: error.response.data
+        };
+      }
+    } else if (error.request) {
+      console.error("No response received. Request details:", error.request);
+    } else {
+      console.error("Error message:", error.message);
+    }
+
+    return returnError(error);
+  }
+};
+
+/**
+ * Review agency verification documents
+ * 
+ * This function sends a review action for agency verification documents to the API.
+ * It supports various actions like approve, reject, request_more_info, and review_document.
+ * 
+ * @param reviewData - Object containing review information
+ * @param reviewData.agencyId - ID of the agency being reviewed
+ * @param reviewData.action - Type of review action (approve, reject, request_more_info, review_document)
+ * @param reviewData.documentIds - Single document ID or array of document IDs to review
+ * @param reviewData.rejectionReason - Optional reason for rejection (required for 'reject' action)
+ * @param reviewData.documentNotes - Optional notes about the document review
+ * @returns Promise with API response
+ */
+export const reviewAgencyVerification = async (reviewData: {
+  agencyId: string;
+  action: 'approve' | 'reject' | 'request_more_info' | 'review_document';
+  documentIds: string | string[];
+  rejectionReason?: string;
+  documentNotes?: string;
+}): Promise<ApiResponse> => {
+  try {
+    console.log(`🔍 Reviewing verification documents for agency ID: ${reviewData.agencyId}`);
+    console.log(`🔍 Action: ${reviewData.action}`);
+    
+    // Format document IDs to array if it's a string
+    const documentIds = Array.isArray(reviewData.documentIds) 
+      ? reviewData.documentIds 
+      : [reviewData.documentIds];
+    
+    // Get token from localStorage if in browser
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['x-access-token'] = token;
+    
+    // Prepare request body
+    const requestBody = {
+      agencyId: reviewData.agencyId,
+      action: reviewData.action,
+      documentIds: documentIds,
+      rejectionReason: reviewData.rejectionReason || '',
+      documentNotes: reviewData.documentNotes || ''
+    };
+    
+    console.log(`🔍 Review request body:`, requestBody);
+    
+    const response = await api.post(
+      `/admin/agency/verification/review`,
+      requestBody,
+      { headers }
+    );
+    
+    console.log(`✅ Review documents response status: ${response.status}`);
+    console.log(`✅ Review documents response data:`, response.data);
+
+    // Return the exact response from the API
+    return {
+      success: response.data.success !== undefined ? response.data.success : true,
+      data: response.data,
+      message: response.data.message || "بررسی مدارک با موفقیت انجام شد",
+      status: response.data.status || response.status
+    };
+  } catch (error: any) {
+    console.error("❌ Error reviewing verification documents:", error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+      
+      // If the error contains a response with a message, use that directly
+      if (error.response.data) {
+        return {
+          success: error.response.data.success !== undefined ? error.response.data.success : false,
+          message: error.response.data.message || "خطا در بررسی مدارک",
+          status: error.response.data.status || error.response.status,
+          data: error.response.data
+        };
+      }
+    } else if (error.request) {
+      console.error("No response received. Request details:", error.request);
+    } else {
+      console.error("Error message:", error.message);
+    }
+
+    return returnError(error);
+  }
+};
+
+// Helper function to handle API errors
+const returnError = (error: any): ApiResponse => {
+  if (error.response) {
+    // The request was made and the server responded with a status code outside the 2xx range
     return {
       success: false,
-      message: err.message || "Failed to fetch agency details",
-      status: err.response?.status || 500,
+      message: error.response.data?.message || 'An error occurred with the server response',
+      status: error.response.status,
+      data: error.response.data
+    };
+  } else if (error.request) {
+    // The request was made but no response was received
+    return {
+      success: false,
+      message: 'No response received from server',
+      status: 0
+    };
+  } else {
+    // Something happened in setting up the request that triggered an Error
+    return {
+      success: false,
+      message: error.message || 'An unknown error occurred',
+      status: 500
     };
   }
 };
@@ -2562,8 +3042,8 @@ export const getAdminPropertyType = async (id: string): Promise<any> => {
 
     // Log additional error details
     if (error.response) {
-      console.error("Error response status:", error.response.status);
-      console.error("Error response data:", error.response.data);
+      console.error("Error response status: ", error.response.status);
+      console.error("Error response data: ", error.response.data);
     }
 
     // Try direct axios fallback

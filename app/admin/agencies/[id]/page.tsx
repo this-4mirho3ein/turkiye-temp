@@ -4,6 +4,10 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getAgencyDetails } from "@/controllers/makeRequest";
 import AgencyDetailsCard from "@/components/admin/agencies/details/AgencyDetailsCard";
+import AddAreaAdminModal from "@/components/admin/agencies/details/AddAreaAdminModal";
+import AreaAdminManager from "@/components/admin/agencies/details/AreaAdminManager";
+import ConsultantManager from "@/components/admin/agencies/details/ConsultantManager";
+import AddConsultantModal from "@/components/admin/agencies/details/AddConsultantModal";
 
 interface AgencyDetails {
   _id: string;
@@ -51,6 +55,9 @@ export default function AgencyDetailsPage() {
   const [agency, setAgency] = useState<AgencyDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAgencyOwner, setIsAgencyOwner] = useState<boolean>(true);
+  const [isAreaAdminModalOpen, setIsAreaAdminModalOpen] = useState<boolean>(false);
+  const [isConsultantModalOpen, setIsConsultantModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchAgencyDetails = async () => {
@@ -78,6 +85,21 @@ export default function AgencyDetailsPage() {
       fetchAgencyDetails();
     }
   }, [id]);
+
+  const refreshAgencyDetails = async () => {
+    try {
+      setLoading(true);
+      const response = await getAgencyDetails(id as string);
+      if (response.success && response.data && response.data.data) {
+        setAgency(response.data.data);
+        setError(null);
+      }
+    } catch (err: any) {
+      console.error("Error refreshing agency details:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -116,6 +138,99 @@ export default function AgencyDetailsPage() {
       ) : agency ? (
         <div className="space-y-8">
           <AgencyDetailsCard agency={agency} />
+          
+          {/* Area Admin Section */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-purple-600 ml-2"
+              >
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              مدیر منطقه
+            </h2>
+            
+            {/* Display area admins with delete option if they exist */}
+            <AreaAdminManager
+              agencyId={agency._id}
+              areaAdmins={agency.areaAdmins}
+              isAgencyOwner={isAgencyOwner}
+              onAdminRemoved={refreshAgencyDetails}
+            />
+            
+            {/* Button to add area admin only when there are no area admins */}
+            {agency.areaAdmins.length === 0 && isAgencyOwner && (
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={() => setIsAreaAdminModalOpen(true)}
+                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 shadow-md"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                  افزودن مدیر منطقه
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {/* Consultant Section */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-purple-600 ml-2"
+              >
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              مشاوران
+            </h2>
+            
+            {/* Display consultants with add/delete options */}
+            <ConsultantManager
+              agencyId={agency._id}
+              consultants={agency.consultants || []}
+              isAgencyOwner={isAgencyOwner}
+              onConsultantRemoved={refreshAgencyDetails}
+              onAddConsultant={() => setIsConsultantModalOpen(true)}
+            />
+          </div>
         </div>
       ) : (
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg p-4 text-center">
@@ -127,6 +242,26 @@ export default function AgencyDetailsPage() {
             بازگشت
           </button>
         </div>
+      )}
+      {/* Add Area Admin Modal */}
+      {agency && (
+        <>
+          <AddAreaAdminModal
+            isOpen={isAreaAdminModalOpen}
+            onClose={() => setIsAreaAdminModalOpen(false)}
+            agencyId={agency._id}
+            isAgencyOwner={isAgencyOwner}
+            onSuccess={refreshAgencyDetails}
+          />
+          {/* Add Consultant Modal */}
+          <AddConsultantModal
+            isOpen={isConsultantModalOpen}
+            onClose={() => setIsConsultantModalOpen(false)}
+            agencyId={agency._id}
+            isAgencyOwner={isAgencyOwner}
+            onSuccess={refreshAgencyDetails}
+          />
+        </>
       )}
     </div>
   );
