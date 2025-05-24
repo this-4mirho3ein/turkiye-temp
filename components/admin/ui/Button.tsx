@@ -6,7 +6,7 @@ import { twMerge } from "tailwind-merge";
 
 export interface ButtonProps {
   children: ReactNode;
-  color?: "primary" | "secondary" | "success" | "warning" | "danger" | "info" | "dark";
+  color?: "default" | "primary" | "secondary" | "success" | "warning" | "danger";
   variant?:
     | "solid"
     | "bordered"
@@ -15,7 +15,7 @@ export interface ButtonProps {
     | "faded"
     | "shadow"
     | "ghost";
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg";
   radius?: "none" | "sm" | "md" | "lg" | "full";
   fullWidth?: boolean;
   isLoading?: boolean;
@@ -30,6 +30,12 @@ export interface ButtonProps {
 // Generate color styles using Tailwind classes based on the project's color scheme
 const generateColorStyles = () => {
   return {
+    default: {
+      solid: "bg-gray-500 hover:bg-gray-600 text-white shadow-md hover:shadow-lg",
+      bordered: "border-gray-500 text-gray-700 hover:bg-gray-100",
+      light: "bg-gray-200 text-gray-700 hover:bg-gray-300",
+      ghost: "text-gray-700 hover:bg-gray-100",
+    },
     primary: {
       solid: "bg-primary hover:bg-primary/90 text-white shadow-md hover:shadow-lg",
       bordered: "border-primary text-primary hover:bg-primary/10",
@@ -59,19 +65,7 @@ const generateColorStyles = () => {
       bordered: "border-error text-error hover:bg-error/10",
       light: "bg-error/20 text-error hover:bg-error/30",
       ghost: "text-error hover:bg-error/10",
-    },
-    info: {
-      solid: "bg-primary-light hover:bg-primary-light/90 text-white shadow-md hover:shadow-lg",
-      bordered: "border-primary-light text-primary-light hover:bg-primary-light/10",
-      light: "bg-primary-light/20 text-primary-light hover:bg-primary-light/30",
-      ghost: "text-primary-light hover:bg-primary-light/10",
-    },
-    dark: {
-      solid: "bg-dark hover:bg-dark/90 text-white shadow-md hover:shadow-lg",
-      bordered: "border-dark text-dark hover:bg-muted",
-      light: "bg-muted text-dark hover:bg-muted/80",
-      ghost: "text-dark hover:bg-muted",
-    },
+    }
   };
 };
 
@@ -133,8 +127,14 @@ export default function Button({
     ? colorStyles[color]?.[variant] || ""
     : "";
   
+  // Map our custom color to HeroUI color if needed
+  // HeroUI Button accepts: "default" | "primary" | "secondary" | "success" | "warning" | "danger"
+  // Our Button accepts: "default" | "primary" | "secondary" | "success" | "warning" | "danger"
+  // So we can pass the color directly
+  
   return (
     <HeroButton
+      // Only pass the color if it's one of the allowed values
       color={color}
       variant={variant}
       size={size}

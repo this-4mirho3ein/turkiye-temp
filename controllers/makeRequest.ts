@@ -579,8 +579,6 @@ interface ApiResponse {
   status?: number;
 }
 
-
-
 // Get Agency Members
 export const getAgencyMembers = async (id: string): Promise<ApiResponse> => {
   try {

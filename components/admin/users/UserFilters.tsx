@@ -141,7 +141,7 @@ const UserFilters: React.FC<UserFiltersProps> = ({
     addToast({
       title: "فیلترها پاک شدند",
       description: "تمام فیلترها حذف شدند و لیست کاربران به حالت اولیه بازگشت.",
-      color: "info",
+      color: "primary",
       icon: <FaTrash />,
     });
   };

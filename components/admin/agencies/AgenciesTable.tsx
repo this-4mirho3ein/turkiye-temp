@@ -1,25 +1,30 @@
 import React from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import Button from "@/components/admin/ui/Button";
 import { MoreHorizontal, Edit, Trash, Check, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { formatJalaliDate } from "@/lib/utils";
+import { Badge } from "@heroui/react";
 import Link from "next/link";
+import {
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  DropdownSection,
+} from "@/components/admin/ui/Dropdown";
+
+// Format date to Jalali
+const formatJalaliDate = (dateString: string) => {
+  if (!dateString) return "";
+  try {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("fa-IR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(date);
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return dateString;
+  }
+};
 
 interface Agency {
   _id: string;
@@ -83,120 +88,126 @@ const AgenciesTable: React.FC<AgenciesTableProps> = ({
   }
 
   return (
-    <div className="rounded-md border">
-      <Table dir="rtl">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12 text-right">ردیف</TableHead>
-            <TableHead className="text-right">نام آژانس</TableHead>
-            <TableHead className="text-right">تلفن</TableHead>
-            <TableHead className="text-right">مالک</TableHead>
-            <TableHead className="text-right">تعداد مشاوران</TableHead>
-            <TableHead className="text-right">وضعیت</TableHead>
-            <TableHead className="text-right">تاریخ ایجاد</TableHead>
-            <TableHead className="text-right">عملیات</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+      <table className="w-full text-sm text-right" dir="rtl">
+        <thead className="text-xs text-black uppercase bg-gray-50">
+          <tr>
+            <th className="px-6 py-3.5 w-12 text-right font-semibold">ردیف</th>
+            <th className="px-6 py-3.5 text-right font-semibold">نام آژانس</th>
+            <th className="px-6 py-3.5 text-right font-semibold">تلفن</th>
+            <th className="px-6 py-3.5 text-right font-semibold">مالک</th>
+            <th className="px-6 py-3.5 text-right font-semibold">تعداد مشاوران</th>
+            <th className="px-6 py-3.5 text-right font-semibold">وضعیت</th>
+            <th className="px-6 py-3.5 text-right font-semibold">تاریخ ایجاد</th>
+            <th className="px-6 py-3.5 text-right font-semibold">عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
           {agencies.map((agency, index) => (
-            <TableRow key={agency._id} className="cursor-pointer">
-              <TableCell className="font-medium text-right">
+            <tr key={agency._id} className="cursor-pointer border-b hover:bg-gray-50">
+              <td className="px-6 py-4 font-medium text-right">
                 {(index + 1).toLocaleString("fa-IR")}
-              </TableCell>
-              <TableCell className="text-right">
+              </td>
+              <td className="px-6 py-4 text-right">
                 <Link
                   href={`/admin/agencies/${agency._id}`}
                   className="text-blue-600 hover:underline"
                 >
                   {agency.name}
                 </Link>
-              </TableCell>
-              <TableCell className="text-right">{agency.phone}</TableCell>
-              <TableCell className="text-right">
+              </td>
+              <td className="px-6 py-4 text-right">{agency.phone}</td>
+              <td className="px-6 py-4 text-right">
                 {agency.owner?.firstName} {agency.owner?.lastName}
-              </TableCell>
-              <TableCell className="text-right">
+              </td>
+              <td className="px-6 py-4 text-right">
                 {agency.consultants?.length.toLocaleString("fa-IR") || "۰"}
-              </TableCell>
-              <TableCell className="text-right">
+              </td>
+              <td className="px-6 py-4 text-right">
                 <div className="flex flex-col gap-1">
                   <Badge
-                    variant={agency.isActive ? "success" : "destructive"}
+                    color={agency.isActive ? "success" : "danger"}
+                    variant="flat"
                     className="w-fit"
                   >
                     {agency.isActive ? "فعال" : "غیرفعال"}
                   </Badge>
                   <Badge
-                    variant={agency.isVerified ? "success" : "outline"}
+                    color={agency.isVerified ? "success" : "default"}
+                    variant="flat"
                     className="w-fit"
                   >
                     {agency.isVerified ? "تأیید شده" : "تأیید نشده"}
                   </Badge>
                 </div>
-              </TableCell>
-              <TableCell className="text-right">
+              </td>
+              <td className="px-6 py-4 text-right">
                 {formatJalaliDate(agency.createdAt)}
-              </TableCell>
-              <TableCell>
+              </td>
+              <td className="px-6 py-4">
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                  <DropdownTrigger>
                     <Button variant="ghost" className="h-8 w-8 p-0">
                       <span className="sr-only">باز کردن منو</span>
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>عملیات</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => onEdit?.(agency)}>
-                      <Edit className="ml-2 h-4 w-4" />
-                      ویرایش
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() =>
-                        onToggleActive?.(agency._id, !agency.isActive)
-                      }
-                    >
-                      {agency.isActive ? (
-                        <>
-                          <X className="ml-2 h-4 w-4" />
-                          غیرفعال کردن
-                        </>
-                      ) : (
-                        <>
-                          <Check className="ml-2 h-4 w-4" />
-                          فعال کردن
-                        </>
-                      )}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onVerify?.(agency._id, !agency.isVerified)}
-                    >
-                      {agency.isVerified ? (
-                        <>
-                          <X className="ml-2 h-4 w-4" />
-                          لغو تأیید
-                        </>
-                      ) : (
-                        <>
-                          <Check className="ml-2 h-4 w-4" />
-                          تأیید آژانس
-                        </>
-                      )}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onDelete?.(agency._id)}
-                      className="text-red-600 focus:text-red-600"
-                    >
-                      <Trash className="ml-2 h-4 w-4" />
-                      حذف
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
+                  </DropdownTrigger>
+                  <DropdownMenu>
+                    <DropdownSection title="عملیات">
+                      <DropdownItem key="edit" onClick={() => onEdit?.(agency)}>
+                        <Edit className="ml-2 h-4 w-4" />
+                        ویرایش
+                      </DropdownItem>
+                      <DropdownItem
+                        key="toggle-active"
+                        onClick={() =>
+                          onToggleActive?.(agency._id, !agency.isActive)
+                        }
+                      >
+                        {agency.isActive ? (
+                          <>
+                            <X className="ml-2 h-4 w-4" />
+                            غیرفعال کردن
+                          </>
+                        ) : (
+                          <>
+                            <Check className="ml-2 h-4 w-4" />
+                            فعال کردن
+                          </>
+                        )}
+                      </DropdownItem>
+                      <DropdownItem
+                        key="toggle-verify"
+                        onClick={() => onVerify?.(agency._id, !agency.isVerified)}
+                      >
+                        {agency.isVerified ? (
+                          <>
+                            <X className="ml-2 h-4 w-4" />
+                            لغو تأیید
+                          </>
+                        ) : (
+                          <>
+                            <Check className="ml-2 h-4 w-4" />
+                            تأیید آژانس
+                          </>
+                        )}
+                      </DropdownItem>
+                      <DropdownItem
+                        key="delete"
+                        onClick={() => onDelete?.(agency._id)}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <Trash className="ml-2 h-4 w-4" />
+                        حذف
+                      </DropdownItem>
+                    </DropdownSection>
+                  </DropdownMenu>
                 </DropdownMenu>
-              </TableCell>
-            </TableRow>
+              </td>
+            </tr>
           ))}
-        </TableBody>
-      </Table>
+        </tbody>
+      </table>
     </div>
   );
 };

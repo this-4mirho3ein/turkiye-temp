@@ -125,12 +125,12 @@ const AgenciesPageClient: React.FC<AgenciesPageClientProps> = ({
   
   // Debounce the name input value
 // Custom hook for debouncing values
-const useDebounce = (value: string, delay: number) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
+const useDebounce = (value: string | undefined, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value || "");
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedValue(value);
+      setDebouncedValue(value || "");
     }, delay);
 
     return () => {

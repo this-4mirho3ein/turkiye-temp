@@ -203,7 +203,7 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
                           <Button
                             size="sm"
                             variant="light"
-                            color="default"
+                            color="secondary"
                             onPress={resetFilters}
                             isDisabled={isLoading}
                           >
