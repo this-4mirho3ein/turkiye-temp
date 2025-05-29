@@ -216,7 +216,7 @@ const VerificationList: React.FC<VerificationListProps> = ({
               {agencies.map((agency) => (
                 <tr key={agency._id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 truncate">
-                    {agency.name}
+                    {agency?.name}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 truncate">
                     {agency.ownerName}

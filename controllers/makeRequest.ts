@@ -27,549 +27,6 @@ api.interceptors.request.use(
   }
 );
 
-// //#region Auth
-// export const sendOtpCode = async (
-//   mobile_number: string,
-//   countryCode: string
-// ) => {
-//   try {
-//     const response = await api.post("/login", { mobile_number, countryCode });
-//     return { ...response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const verifyOtp = async (mobile_number: string, active_code: string) => {
-//   try {
-//     const response = await api.post("/login/otp", {
-//       mobile_number,
-//       active_code,
-//     });
-//     return { ...response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-// export const sendInvitation = async (
-//   token: string,
-//   mobile_number: string,
-//   role: string
-// ) => {
-//   try {
-//     // Define modedrole outside the if/else block so it's accessible in the API call
-//     let modedrole = 1; // Default value for "مشاور املاک"
-//     if (role === "مدیر منطقه") {
-//       modedrole = 2;
-//     }
-
-//     // Create headers object
-//     const headers = {
-//       Authorization: `Bearer ${token}`,
-//     };
-
-//     const response = await api.post(
-//       `${mainConfig.apiServer}/send-request`,
-//       {
-//         mobile_number,
-//         role: modedrole,
-//       },
-//       { headers }
-//     );
-
-//     return { ...response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// //#endregion
-
-// //#region Locations
-// export const getCountries = async () => {
-//   try {
-//     const response = await api.get("/list-countries");
-//     return response.data || [];
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-// export const getProvinces = async (countrySlug: string) => {
-//   try {
-//     const response = await api.post("/provinces", { slug: countrySlug });
-//     return response.data || [];
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-// export const getCities = async (provinceSlug: string) => {
-//   try {
-//     const response = await api.post("/cities", { slug: provinceSlug });
-//     return response.data || [];
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-// export const getAreas = async (citySlug: string) => {
-//   try {
-//     const response = await api.post("/neighborhoods", { slug: citySlug });
-//     return response.data || [];
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-// //#endregion
-
-// //#region User
-// export const getUser = async (token: string) => {
-//   try {
-//     const response = await api.get("/getuser", {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-//     return { ...response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const updateUser = async (token: string, data: any) => {
-//   try {
-//     const fullUrl = `${mainConfig.apiServer}/completeprofile`;
-//     const headers = {
-//       Authorization: `Bearer ${token}`,
-//     };
-
-//     console.log("💡 Request headers:", headers);
-//     console.log("💡 Is FormData?", data instanceof FormData);
-
-//     // Log FormData entries
-//     if (data instanceof FormData) {
-//       console.log("💡 FormData contents:");
-//       for (let pair of data.entries()) {
-//         console.log(`   ${pair[0]}: ${pair[1]}`);
-//       }
-//     }
-
-//     console.log("💡 Sending request...");
-
-//     // Don't set Content-Type header for FormData - browser will set it with correct boundary
-//     const response = await api.post("/completeprofile", data, {
-//       headers,
-//     });
-
-//     return { ...response.data, status: response.status };
-//   } catch (error: any) {
-//     console.error("💡 Error in updateUser:", error);
-//     if (error.response) {
-//       console.error("💡 Error response status:", error.response.status);
-//       console.error("💡 Error response data:", error.response.data);
-//     } else if (error.request) {
-//       console.error("💡 No response received. Request:", error.request);
-//     } else {
-//       console.error("💡 Error message:", error.message);
-//     }
-//     return returnError(error);
-//   }
-// };
-// //#endregion
-
-// //#region Categories
-// export const getCategories = async (propertyTypeSlug: string) => {
-//   try {
-//     const response = await api.post("/CategorizedPropertyType", {
-//       slug: propertyTypeSlug,
-//     });
-//     return response.data || [];
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-// //#endregion
-
-// //#region Advertisement
-// export const getAdvertisements = async (
-//   filters: any,
-//   page: number,
-//   limit: number,
-//   token?: string
-// ) => {
-//   console.log("limit", limit);
-
-//   try {
-//     const response = await api.post(
-//       `/filter-elan?page=${page}&limit=${limit}`,
-//       filters
-//     );
-//     return { ...response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const getPropertyFilters = async (slug: string) => {
-//   try {
-//     const response = await api.post(`/Featurerelated`, { slug });
-//     return { data: response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const globalSearch = async (
-//   filterText: string,
-//   signal: GenericAbortSignal | undefined
-// ) => {
-//   try {
-//     const response = await api.post(
-//       `/search`,
-//       { query: filterText },
-//       { signal }
-//     );
-
-//     return { data: response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const fetchTitle = async (slug: string) => {
-//   try {
-//     const response = await api.get(`/FindTitleBySlug?slug=${slug}`);
-//     return response.data.title;
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const getAdvertisement = async (id: string, token?: string) => {
-//   try {
-//     const response = await api.get(`/advertisements/${id}`, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-//     return { data: response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const handleFavorite = async (
-//   id: string,
-//   type: string,
-//   token: string
-// ) => {
-//   try {
-//     const response = await api.post(
-//       `/BookMark`,
-//       { id, type },
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-//     return { data: response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-// //#endregion
-
-// //#region Dashboard
-// export const getLastViewed = async (token: string, page: number = 1) => {
-//   try {
-//     const response = await api.post(
-//       `/UserElanProfile?page=${page}`,
-//       { type: "lastseen" },
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-//     console.log(" data:", response.data, "status : ", response.status);
-//     return { data: response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const getUserAds = async (token: string, page: number = 1) => {
-//   try {
-//     const response = await api.post(
-//       `/UserElanProfile?page=${page}`,
-//       { type: "myestate" },
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-//     return { data: response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const getUserBookmarks = async (token: string, page: number = 1) => {
-//   try {
-//     const response = await api.post(
-//       `/UserElanProfile?page=${page}`,
-//       { type: "bookmark" },
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-//     console.log("getUserBookmarks ------------------", response.data);
-//     return { data: response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-// //#endregion
-
-// //#region Realestate
-// export const getRealestateData = async (id: string) => {
-//   try {
-//     const response = await api.get(`/ShowManagerConsulting/${id}`);
-//     return response.data || [];
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const getCompanyHeader = async () => {
-//   try {
-//     const response = await api.get("/api/company/header");
-//     return { data: response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const getCompanyMembers = async () => {
-//   try {
-//     const response = await api.get("/api/company/members");
-//     return { data: response.data.members, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const getCompanyProperties = async (
-//   page: number = 1,
-//   limit: number = 9
-// ) => {
-//   try {
-//     const response = await api.get(
-//       `/api/properties?page=${page}&limit=${limit}`
-//     );
-//     return { data: response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-// //#endregion
-
-// //#region Support
-// export const submitSupportTicket = async (
-//   token: string,
-//   data: {
-//     title: string;
-//     description: string;
-//     contactEmail?: string;
-//     type: "bug" | "support";
-//   }
-// ) => {
-//   try {
-//     const response = await api.post("/api/support/ticket", data, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-//     return { data: response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const getUserTickets = async (token: string) => {
-//   try {
-//     const response = await api.post("/api/support/ticket", {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-//     return { data: response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-// //#endregion
-
-// export const createAdvertisementStep1 = async (data: any, token: string) => {
-//   try {
-//     const response = await api.post("/AdvertisementCreateStep1APIView", data, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-//     return { ...response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const getFeatureRelatedFields = async (propertyTypeSlug: string) => {
-//   try {
-//     const response = await api.post("/FeatureRelatedAPIViewAddView", {
-//       slug: propertyTypeSlug,
-//     });
-//     return response.data;
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const createAdvertisementStep2 = async (data: any, token: string) => {
-//   try {
-//     const response = await api.post("/AdvertisementCreateStep2APIView", data, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-//     return { ...response.data, status: response.status };
-//   } catch (err) {
-//     return returnError(err);
-//   }
-// };
-
-// export const createAdvertisementStep3 = async (data: any, token: string) => {
-//   try {
-//     console.log("createAdvertisementStep3 function called");
-//     console.log("Using API server:", mainConfig.apiServer);
-
-//     const fullUrl = `${mainConfig.apiServer}/AdvertisementStep3APISimple`;
-//     console.log("Full API URL:", fullUrl);
-
-//     const headers: Record<string, string> = {
-//       "Content-Type": "application/json",
-//     };
-
-//     if (token) {
-//       headers["Authorization"] = `Bearer ${token}`;
-//     }
-
-//     // Import axios directly for this call to bypass Next.js API routes
-//     const axios = (await import("axios")).default;
-
-//     const response = await axios.post(fullUrl, data, {
-//       headers,
-//     });
-
-//     console.log("API response received:", response.status);
-//     return { ...response.data, status: response.status };
-//   } catch (err) {
-//     console.error("Error in createAdvertisementStep3:", err);
-//     return returnError(err);
-//   }
-// };
-
-// export const registerAgency = async (token: string, data: FormData) => {
-//   try {
-//     console.log("🏢 registerAgency function called");
-//     console.log("🏢 API Server URL:", mainConfig.apiServer);
-//     const fullUrl = `${mainConfig.apiServer}/RegisterAgencyView`;
-//     console.log("🏢 Full API URL being called:", fullUrl);
-
-//     console.log(
-//       "🏢 Sending agency registration with token:",
-//       token ? `Token exists (length: ${token.length})` : "No token"
-//     );
-
-//     // Don't set Content-Type header for FormData - browser will set it with correct boundary
-//     const headers = {
-//       Authorization: `Bearer ${token}`,
-//     };
-
-//     console.log("🏢 Request headers:", headers);
-//     console.log("🏢 Is FormData?", data instanceof FormData);
-
-//     // Log FormData entries
-//     if (data instanceof FormData) {
-//       console.log("🏢 FormData contents:");
-//       for (let pair of data.entries()) {
-//         console.log(`   ${pair[0]}: ${pair[1]}`);
-//       }
-//     }
-
-//     console.log("🏢 Sending request...");
-
-//     const response = await api.post("/RegisterAgencyView", data, {
-//       headers,
-//     });
-
-//     return { ...response.data, status: response.status };
-//   } catch (error: any) {
-//     console.error("🏢 Error in registerAgency:", error);
-//     if (error.response) {
-//       console.error("🏢 Error response status:", error.response.status);
-//       console.error("🏢 Error response data:", error.response.data);
-//     } else if (error.request) {
-//       console.error("🏢 No response received. Request:", error.request);
-//     } else {
-//       console.error("🏢 Error message:", error.message);
-//     }
-//     return returnError(error);
-//   }
-// };
-
-// export const getUserNotifications = async (token: string) => {
-//   try {
-//     console.log("Fetching user notifications...");
-//     // Define the correct API endpoint URL
-//     const apiUrl = `${mainConfig.apiServer}/MessageElanProfileView`;
-//     console.log("Using direct API URL:", apiUrl);
-
-//     console.log(
-//       "Authorization token:",
-//       token ? `Token exists (length: ${token.length})` : "No token"
-//     );
-
-//     const headers = {
-//       Authorization: `Bearer ${token}`,
-//     };
-
-//     console.log("Request headers:", headers);
-
-//     // Import axios directly to make the request to the specific endpoint
-//     const axios = (await import("axios")).default;
-//     const response = await axios.get(apiUrl, {
-//       headers,
-//     });
-
-//     console.log("Notifications response status:", response.status);
-//     console.log("Notifications response data:", response.data);
-
-//     return { data: response.data, status: response.status };
-//   } catch (err: any) {
-//     console.error("Error fetching notifications:", err);
-//     if (err.response) {
-//       console.error("Error response status:", err.response.status);
-//       console.error("Error response data:", err.response.data);
-//     } else if (err.request) {
-//       console.error("No response received. Request:", err.request);
-//     } else {
-//       console.error("Error message:", err.message);
-//     }
-//     return returnError(err);
-//   }
-// };
 
 //#region AdminRegions
 interface ApiResponse {
@@ -1439,7 +896,7 @@ export const createAdminCountry = async (data: {
   try {
     const response = await api.post(`/admin/country/create`, data);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "کشور با موفقیت ایجاد شد",
       data: response.data?.data,
     };
@@ -1457,7 +914,7 @@ export const createAdminCountry = async (data: {
       );
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message: directResponse.data?.message || "کشور با موفقیت ایجاد شد",
         data: directResponse.data?.data,
       };
@@ -1487,7 +944,7 @@ export const updateAdminCountry = async (
   try {
     const response = await api.put(`/admin/country/update/${id}`, data);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "کشور با موفقیت به‌روزرسانی شد",
       data: response.data?.data,
     };
@@ -1505,7 +962,7 @@ export const updateAdminCountry = async (
       );
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message:
           directResponse.data?.message || "کشور با موفقیت به‌روزرسانی شد",
         data: directResponse.data?.data,
@@ -1525,7 +982,7 @@ export const deleteAdminCountry = async (id: string): Promise<ApiResponse> => {
   try {
     const response = await api.delete(`/admin/country/delete/${id}`);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "کشور با موفقیت حذف شد",
     };
   } catch (err: any) {
@@ -1541,7 +998,7 @@ export const deleteAdminCountry = async (id: string): Promise<ApiResponse> => {
       );
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message: directResponse.data?.message || "کشور با موفقیت حذف شد",
       };
     } catch (fallbackErr: any) {
@@ -1622,7 +1079,7 @@ export const createAdminProvince = async (
   try {
     const response = await api.post(`/admin/province/create`, data);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "Province created successfully",
       data: response.data?.data,
     };
@@ -1640,7 +1097,7 @@ export const createAdminProvince = async (
       );
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message:
           directResponse.data?.message || "Province created successfully",
         data: directResponse.data?.data,
@@ -1665,7 +1122,7 @@ export const updateAdminProvince = async (
   try {
     const response = await api.put(`/admin/province/update/${id}`, data);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "Province updated successfully",
       data: response.data?.data,
     };
@@ -1683,7 +1140,7 @@ export const updateAdminProvince = async (
       );
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message:
           directResponse.data?.message || "Province updated successfully",
         data: directResponse.data?.data,
@@ -1705,7 +1162,7 @@ export const deleteAdminProvince = async (id: string): Promise<ApiResponse> => {
   try {
     const response = await api.delete(`/admin/province/delete/${id}`);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "Province deleted successfully",
     };
   } catch (err: any) {
@@ -1721,7 +1178,7 @@ export const deleteAdminProvince = async (id: string): Promise<ApiResponse> => {
       );
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message:
           directResponse.data?.message || "Province deleted successfully",
       };
@@ -1803,7 +1260,7 @@ export const createAdminCity = async (
   try {
     const response = await api.post(`/admin/city/create`, data);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "City created successfully",
       data: response.data?.data,
     };
@@ -1821,7 +1278,7 @@ export const createAdminCity = async (
       );
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message: directResponse.data?.message || "City created successfully",
         data: directResponse.data?.data,
       };
@@ -1842,7 +1299,7 @@ export const updateAdminCity = async (
   try {
     const response = await api.put(`/admin/city/update/${id}`, data);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "City updated successfully",
       data: response.data?.data,
     };
@@ -1860,7 +1317,7 @@ export const updateAdminCity = async (
       );
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message: directResponse.data?.message || "City updated successfully",
         data: directResponse.data?.data,
       };
@@ -1878,7 +1335,7 @@ export const deleteAdminCity = async (id: string): Promise<ApiResponse> => {
   try {
     const response = await api.delete(`/admin/city/delete/${id}`);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "City deleted successfully",
     };
   } catch (err: any) {
@@ -1894,7 +1351,7 @@ export const deleteAdminCity = async (id: string): Promise<ApiResponse> => {
       );
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message: directResponse.data?.message || "City deleted successfully",
       };
     } catch (fallbackErr: any) {
@@ -1972,7 +1429,7 @@ export const createAdminArea = async (
   try {
     const response = await api.post(`/admin/area/create`, data);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "Area created successfully",
       data: response.data?.data,
     };
@@ -1990,7 +1447,7 @@ export const createAdminArea = async (
       );
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message: directResponse.data?.message || "Area created successfully",
         data: directResponse.data?.data,
       };
@@ -2011,7 +1468,7 @@ export const updateAdminArea = async (
   try {
     const response = await api.put(`/admin/area/update/${id}`, data);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "Area updated successfully",
       data: response.data?.data,
     };
@@ -2029,7 +1486,7 @@ export const updateAdminArea = async (
       );
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message: directResponse.data?.message || "Area updated successfully",
         data: directResponse.data?.data,
       };
@@ -2047,7 +1504,7 @@ export const deleteAdminArea = async (id: string): Promise<ApiResponse> => {
   try {
     const response = await api.delete(`/admin/area/delete/${id}`);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "Area deleted successfully",
     };
   } catch (err: any) {
@@ -2063,7 +1520,7 @@ export const deleteAdminArea = async (id: string): Promise<ApiResponse> => {
       );
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message: directResponse.data?.message || "Area deleted successfully",
       };
     } catch (fallbackErr: any) {
@@ -2263,7 +1720,7 @@ export const createAdminUser = async (
   try {
     const response = await api.post(`/admin/user/create`, data);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "کاربر با موفقیت ایجاد شد",
       data: response.data?.data,
     };
@@ -2281,7 +1738,7 @@ export const createAdminUser = async (
       );
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message: directResponse.data?.message || "کاربر با موفقیت ایجاد شد",
         data: directResponse.data?.data,
       };
@@ -2319,7 +1776,7 @@ export const updateAdminUser = async (
     console.log(`f504 Update response:`, response.status, response.data);
     console.log(`f504 Response message:`, response.data?.message || 'کاربر با موفقیت به‌روزرسانی شد');
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "کاربر با موفقیت به‌روزرسانی شد",
       data: response.data?.data,
     };
@@ -2361,7 +1818,7 @@ export const updateAdminUser = async (
       );
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message:
           directResponse.data?.message || "کاربر با موفقیت به‌روزرسانی شد",
         data: directResponse.data?.data,
@@ -2395,7 +1852,7 @@ export const deleteAdminUser = async (id: string): Promise<ApiResponse> => {
     console.log(`🗑️ Delete response data:`, response.data);
 
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "کاربر با موفقیت حذف شد",
       data: response.data?.data,
     };
@@ -2421,7 +1878,7 @@ export const deleteAdminUser = async (id: string): Promise<ApiResponse> => {
       console.log(`⚙️ Direct delete response data:`, directResponse.data);
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message: directResponse.data?.message || "کاربر با موفقیت حذف شد",
         data: directResponse.data?.data,
       };
@@ -2456,7 +1913,7 @@ export const restoreAdminUser = async (id: string): Promise<ApiResponse> => {
     console.log(`🔄 Restore response data:`, response.data);
 
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "کاربر با موفقیت بازیابی شد",
       data: response.data?.data,
     };
@@ -2496,7 +1953,7 @@ export const restoreAdminUser = async (id: string): Promise<ApiResponse> => {
       console.log(`⚙️ Direct restore response data:`, directResponse.data);
 
       return {
-        success: directResponse.status >= 200 && directResponse.status < 300,
+        success: directResponse.data.success,
         message: directResponse.data?.message || "کاربر با موفقیت بازیابی شد",
         data: directResponse.data?.data,
       };
@@ -2611,6 +2068,100 @@ export const getAdminUserById = async (id: string): Promise<ApiResponse> => {
 //#endregion
 
 //#region AdminPropertyTypes
+// Get a specific property type by ID
+export const getAdminPropertyType = async (id: string): Promise<any> => {
+  try {
+    console.log(`🔍 Fetching property type details for ID: ${id}`);
+
+    // Get token from localStorage if in browser environment
+    let token = "";
+    if (typeof window !== "undefined") {
+      token = localStorage.getItem("accessToken") || "";
+    }
+
+    // Create headers with authentication token
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    // Make the API request
+    const response = await api.get(
+      `/admin/property-type/get-property-type/${id}`,
+      {
+        headers,
+      }
+    );
+
+    console.log(`🔍 Property type details response status: ${response.status}`);
+
+    return {
+      success: true,
+      data: response.data.data || response.data,
+      message:
+        response.data.message || "اطلاعات نوع کاربری با موفقیت دریافت شد",
+      status: response.status,
+    };
+  } catch (error: any) {
+    console.error(
+      `❌ Error fetching property type details for ID ${id}:`,
+      error
+    );
+
+    // Log additional error details
+    if (error.response) {
+      console.error("Error response status: ", error.response.status);
+      console.error("Error response data: ", error.response.data);
+    }
+
+    // Try direct axios fallback
+    try {
+      console.log(
+        "⚙️ Attempting direct Axios fallback for property type details..."
+      );
+
+      // Get token from localStorage if in browser environment
+      let token = "";
+      if (typeof window !== "undefined") {
+        token = localStorage.getItem("accessToken") || "";
+      }
+
+      // Create headers with authentication token
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const directResponse = await axios.get(
+        `${mainConfig.apiServer}/admin/property-type/get-property-type/${id}`,
+        { headers }
+      );
+
+      return {
+        success: true,
+        data: directResponse.data.data || directResponse.data,
+        message:
+          directResponse.data.message ||
+          "اطلاعات نوع کاربری با موفقیت دریافت شد",
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
+
+      // Return structured error response
+      return {
+        success: false,
+        message:
+          error.response?.data?.message || "خطا در دریافت اطلاعات نوع کاربری",
+        status: error.response?.status,
+      };
+    }
+  }
+};
+
 export const getAdminPropertyTypes = async (
   params: { page?: number; limit?: number; forceRefresh?: boolean } = {}
 ): Promise<any[]> => {
@@ -2679,7 +2230,7 @@ export const createAdminPropertyType = async (
   try {
     const response = await api.post(`/admin/property-type/create`, data);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "نوع کاربری با موفقیت ایجاد شد",
       data: response.data?.data,
     };
@@ -2700,7 +2251,7 @@ export const updateAdminPropertyType = async (
   try {
     const response = await api.put(`/admin/property-type/update/${id}`, data);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "نوع کاربری با موفقیت به‌روزرسانی شد",
       data: response.data?.data,
     };
@@ -2720,7 +2271,7 @@ export const deleteAdminPropertyType = async (
   try {
     const response = await api.delete(`/admin/property-type/delete/${id}`);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "نوع کاربری با موفقیت حذف شد",
     };
   } catch (err: any) {
@@ -2928,7 +2479,7 @@ export const createAdminCategory = async (
   try {
     const response = await api.post(`/admin/category/create`, data);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "دسته‌بندی با موفقیت ایجاد شد",
       data: response.data?.data,
     };
@@ -2948,7 +2499,7 @@ export const updateAdminCategory = async (
   try {
     const response = await api.put(`/admin/category/update/${id}`, data);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "دسته‌بندی با موفقیت به‌روزرسانی شد",
       data: response.data?.data,
     };
@@ -2966,7 +2517,7 @@ export const deleteAdminCategory = async (id: string): Promise<ApiResponse> => {
   try {
     const response = await api.delete(`/admin/category/delete/${id}`);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "دسته‌بندی با موفقیت حذف شد",
     };
   } catch (err: any) {
@@ -2984,7 +2535,7 @@ export const restoreAdminCategory = async (
   try {
     const response = await api.put(`/admin/category/restore/${id}`);
     return {
-      success: response.status >= 200 && response.status < 300,
+      success: response.data.success,
       message: response.data?.message || "دسته‌بندی با موفقیت بازیابی شد",
     };
   } catch (err: any) {
@@ -2998,84 +2549,147 @@ export const restoreAdminCategory = async (
 };
 //#endregion
 
-// Get a specific property type by ID
-export const getAdminPropertyType = async (id: string): Promise<any> => {
+//#region AdminFilters
+export const getAdminFilters = async (
+  params: { page?: number; limit?: number; forceRefresh?: boolean } = {}
+): Promise<any[]> => {
+  const { page = 1, limit = 10, forceRefresh = false } = params;
+
+  // Add cache-busting parameter if forceRefresh is true
+  const cacheParam = forceRefresh ? `&_t=${Date.now()}` : "";
+
   try {
-    console.log(`🔍 Fetching property type details for ID: ${id}`);
-
-    // Get token from localStorage if in browser environment
-    let token = "";
-    if (typeof window !== "undefined") {
-      token = localStorage.getItem("accessToken") || "";
-    }
-
-    // Create headers with authentication token
-    const headers: Record<string, string> = {};
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-
-    // Make the API request
+    console.log(`🔍 Fetching filters (force refresh: ${forceRefresh})...`);
     const response = await api.get(
-      `/admin/property-type/get-property-type/${id}`,
-      {
-        headers,
-      }
+      `/admin/filter/filters?page=${page}&limit=${limit}${cacheParam}`
     );
 
-    console.log(`🔍 Property type details response status: ${response.status}`);
+    console.log("🔍 Filters API response status:", response.status);
+
+    // Handle different possible response structures
+    let data = [];
+    if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
+      data = response.data.data.data;
+      console.log(
+        `🔍 Found ${data.length} filters in response.data.data.data`
+      );
+    } else if (response.data?.data && Array.isArray(response.data.data)) {
+      data = response.data.data;
+      console.log(`🔍 Found ${data.length} filters in response.data.data`);
+    } else if (Array.isArray(response.data)) {
+      data = response.data;
+      console.log(`🔍 Found ${data.length} filters in response.data (array)`);
+    } else {
+      console.warn("⚠️ Unexpected filters response structure:", response.data);
+    }
+
+    // Log sample data to check for isDeleted property
+    if (data.length > 0) {
+      console.log("🔍 Sample filter:", JSON.stringify(data[0], null, 2));
+      const deletedFilters = data.filter(
+        (filter: any) => filter.isDeleted === true
+      );
+      console.log(
+        `🔍 Found ${deletedFilters.length} deleted filters out of ${data.length}`
+      );
+      if (deletedFilters.length > 0) {
+        console.log(
+          "🔍 First deleted filter:",
+          JSON.stringify(deletedFilters[0], null, 2)
+        );
+      }
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error("❌ Error fetching filters:", err);
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log("⚙️ Attempting direct Axios fallback for filters...");
+      const directResponse = await axios.get(
+        `${mainConfig.apiServer}/admin/filter/filters?page=${page}&limit=${limit}${cacheParam}`,
+        {
+          withCredentials: false,
+        }
+      );
+
+      // Handle different possible response structures
+      let directData = [];
+      if (
+        directResponse.data?.data?.data &&
+        Array.isArray(directResponse.data.data.data)
+      ) {
+        directData = directResponse.data.data.data;
+      } else if (
+        directResponse.data?.data &&
+        Array.isArray(directResponse.data.data)
+      ) {
+        directData = directResponse.data.data;
+      } else if (Array.isArray(directResponse.data)) {
+        directData = directResponse.data;
+      }
+      return directData || [];
+    } catch (fallbackErr) {
+      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
+      return [];
+    }
+  }
+};
+
+// Get a specific filter by ID
+export const getAdminFilterById = async (id: string): Promise<ApiResponse> => {
+  try {
+    console.log(`🔍 Fetching filter details for ID: ${id}`);
+
+    // Get token from localStorage if in browser environment
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['x-access-token'] = token;
+
+    // Make the API request
+    const response = await api.get(`/admin/filter/filter/${id}`, { headers });
+
+    console.log(`🔍 Filter details response status: ${response.status}`);
+    console.log(`🔍 Filter details data:`, response.data);
 
     return {
-      success: true,
+      success: response.data.success,
       data: response.data.data || response.data,
-      message:
-        response.data.message || "اطلاعات نوع کاربری با موفقیت دریافت شد",
+      message: response.data.message || "اطلاعات فیلتر با موفقیت دریافت شد",
       status: response.status,
     };
   } catch (error: any) {
-    console.error(
-      `❌ Error fetching property type details for ID ${id}:`,
-      error
-    );
+    console.error(`❌ Error fetching filter details for ID ${id}:`, error);
 
     // Log additional error details
     if (error.response) {
-      console.error("Error response status: ", error.response.status);
-      console.error("Error response data: ", error.response.data);
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
     }
 
     // Try direct axios fallback
     try {
-      console.log(
-        "⚙️ Attempting direct Axios fallback for property type details..."
-      );
+      console.log("⚙️ Attempting direct Axios fallback for filter details...");
 
-      // Get token from localStorage if in browser environment
-      let token = "";
-      if (typeof window !== "undefined") {
-        token = localStorage.getItem("accessToken") || "";
-      }
-
-      // Create headers with authentication token
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
-
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
+      if (token) headers['x-access-token'] = token;
 
       const directResponse = await axios.get(
-        `${mainConfig.apiServer}/admin/property-type/get-property-type/${id}`,
+        `${mainConfig.apiServer}/admin/filter/filter/${id}`,
         { headers }
       );
 
+      console.log(`⚙️ Direct fallback response status: ${directResponse.status}`);
+      console.log(`⚙️ Direct fallback data:`, directResponse.data);
+
       return {
-        success: true,
+        success: directResponse.data.success,
         data: directResponse.data.data || directResponse.data,
-        message:
-          directResponse.data.message ||
-          "اطلاعات نوع کاربری با موفقیت دریافت شد",
+        message: directResponse.data.message || "اطلاعات فیلتر با موفقیت دریافت شد",
         status: directResponse.status,
       };
     } catch (fallbackErr: any) {
@@ -3084,10 +2698,266 @@ export const getAdminPropertyType = async (id: string): Promise<any> => {
       // Return structured error response
       return {
         success: false,
-        message:
-          error.response?.data?.message || "خطا در دریافت اطلاعات نوع کاربری",
+        message: error.response?.data?.message || "خطا در دریافت اطلاعات فیلتر",
         status: error.response?.status,
       };
     }
   }
 };
+
+export const createAdminFilter = async (
+  data: Record<string, any>
+): Promise<ApiResponse> => {
+  try {
+    console.log(`🔍 Creating filter with data:`, JSON.stringify(data, null, 2));
+    
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['x-access-token'] = token;
+
+    const response = await api.post(`/admin/filter/create`, data, { headers });
+    
+    console.log(`✅ Create filter response status: ${response.status}`);
+    console.log(`✅ Create filter response data:`, response.data);
+
+    return {
+      success: response.data.success,
+      message: response.data?.message || "فیلتر با موفقیت ایجاد شد",
+      data: response.data?.data,
+      status: response.status,
+    };
+  } catch (error: any) {
+    console.error("❌ Error creating filter:", error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+    }
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log("⚙️ Attempting direct Axios fallback for filter creation...");
+      
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers['x-access-token'] = token;
+
+      const directResponse = await axios.post(
+        `${mainConfig.apiServer}/admin/filter/create`,
+        data,
+        { headers }
+      );
+
+      return {
+        success: directResponse.data.success,
+        message: directResponse.data?.message || "فیلتر با موفقیت ایجاد شد",
+        data: directResponse.data?.data,
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      console.error("❌ Direct filter creation fallback also failed:", fallbackErr);
+      
+      return {
+        success: false,
+        message: error.response?.data?.message || "ایجاد فیلتر با خطا مواجه شد",
+        status: error.response?.status,
+      };
+    }
+  }
+};
+
+export const updateAdminFilter = async (
+  id: string,
+  data: Record<string, any>
+): Promise<ApiResponse> => {
+  try {
+    console.log(`🔍 Updating filter ID: ${id} with data:`, JSON.stringify(data, null, 2));
+    
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['x-access-token'] = token;
+
+    const response = await api.put(`/admin/filter/update/${id}`, data, { headers });
+    
+    console.log(`✅ Update filter response status: ${response.status}`);
+    console.log(`✅ Update filter response data:`, response.data);
+
+    return {
+      success: response.data.success,
+      message: response.data?.message || "فیلتر با موفقیت به‌روزرسانی شد",
+      data: response.data?.data,
+      status: response.status,
+    };
+  } catch (error: any) {
+    console.error(`❌ Error updating filter ${id}:`, error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+    }
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log(`⚙️ Attempting direct Axios fallback for filter update...`);
+      
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers['x-access-token'] = token;
+
+      const directResponse = await axios.put(
+        `${mainConfig.apiServer}/admin/filter/update/${id}`,
+        data,
+        { headers }
+      );
+
+      return {
+        success: directResponse.data.success,
+        message: directResponse.data?.message || "فیلتر با موفقیت به‌روزرسانی شد",
+        data: directResponse.data?.data,
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      console.error("❌ Direct filter update fallback also failed:", fallbackErr);
+      
+      return {
+        success: false,
+        message: error.response?.data?.message || "به‌روزرسانی فیلتر با خطا مواجه شد",
+        status: error.response?.status,
+      };
+    }
+  }
+};
+
+export const deleteAdminFilter = async (id: string): Promise<ApiResponse> => {
+  try {
+    console.log(`🗑️ Deleting filter with ID: ${id}`);
+    
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['x-access-token'] = token;
+
+    const response = await api.delete(`/admin/filter/delete/${id}`, { headers });
+    
+    console.log(`✅ Delete filter response status: ${response.status}`);
+    console.log(`✅ Delete filter response data:`, response.data);
+
+    return {
+      success: response.data.success,
+      message: response.data?.message || "فیلتر با موفقیت حذف شد",
+      data: response.data?.data,
+      status: response.status,
+    };
+  } catch (error: any) {
+    console.error(`❌ Error deleting filter ${id}:`, error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+    }
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log(`⚙️ Attempting direct Axios fallback for filter deletion...`);
+      
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers['x-access-token'] = token;
+
+      const directResponse = await axios.delete(
+        `${mainConfig.apiServer}/admin/filter/delete/${id}`,
+        { headers }
+      );
+
+      return {
+        success: directResponse.data.success,
+        message: directResponse.data?.message || "فیلتر با موفقیت حذف شد",
+        data: directResponse.data?.data,
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      console.error("❌ Direct filter deletion fallback also failed:", fallbackErr);
+      
+      return {
+        success: false,
+        message: error.response?.data?.message || "حذف فیلتر با خطا مواجه شد",
+        status: error.response?.status,
+      };
+    }
+  }
+};
+
+export const restoreAdminFilter = async (id: string): Promise<ApiResponse> => {
+  try {
+    console.log(`🔄 Restoring filter with ID: ${id}`);
+    
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['x-access-token'] = token;
+
+    const response = await api.put(`/admin/filter/restore/${id}`, {}, { headers });
+    
+    console.log(`✅ Restore filter response status: ${response.status}`);
+    console.log(`✅ Restore filter response data:`, response.data);
+
+    return {
+      success: response.data.success,
+      message: response.data?.message || "فیلتر با موفقیت بازیابی شد",
+      data: response.data?.data,
+      status: response.status,
+    };
+  } catch (error: any) {
+    console.error(`❌ Error restoring filter ${id}:`, error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+    }
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log(`⚙️ Attempting direct Axios fallback for filter restoration...`);
+      
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers['x-access-token'] = token;
+
+      const directResponse = await axios.put(
+        `${mainConfig.apiServer}/admin/filter/restore/${id}`,
+        {},
+        { headers }
+      );
+
+      return {
+        success: directResponse.data.success,
+        message: directResponse.data?.message || "فیلتر با موفقیت بازیابی شد",
+        data: directResponse.data?.data,
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      console.error("❌ Direct filter restoration fallback also failed:", fallbackErr);
+      
+      return {
+        success: false,
+        message: error.response?.data?.message || "بازیابی فیلتر با خطا مواجه شد",
+        status: error.response?.status,
+      };
+    }
+  }
+};
+
+//#endregion
+
+
+

@@ -102,12 +102,12 @@ const PropertyTypeTable: React.FC<PropertyTypeTableProps> = ({
             >
               وضعیت
             </th>
-            <th
+            {/* <th
               scope="col"
               className="px-6 py-3.5 text-right text-xs font-semibold text-black uppercase tracking-wider"
             >
               تاریخ ایجاد
-            </th>
+            </th> */}
             <th
               scope="col"
               className="px-6 py-3.5 text-center text-xs font-semibold text-black uppercase tracking-wider w-24"
@@ -155,9 +155,9 @@ const PropertyTypeTable: React.FC<PropertyTypeTableProps> = ({
                   </span>
                 )}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+              {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                 {formatDate(propertyType.createdAt)}
-              </td>
+              </td> */}
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                 <span className="px-2.5 py-1 bg-blue-50 text-blue-800 rounded-full text-xs font-medium">
                   {propertyType.adCount}

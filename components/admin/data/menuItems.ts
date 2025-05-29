@@ -10,6 +10,7 @@ import {
   FaTag,
   FaLayerGroup,
   FaCheckCircle,
+  FaFilter,
 } from "react-icons/fa";
 
 export interface MenuItem {
@@ -27,6 +28,7 @@ const mainMenuItems: MenuItem[] = [
   { name: "نوع کاربری", href: "/admin/fields_type", icon: FaTag },
   { name: "دسته‌بندی‌ها", href: "/admin/categories", icon: FaLayerGroup },
   { name: "مناطق", href: "/admin/regions", icon: FaMapMarkerAlt },
+  { name: "فیلترها", href: "/admin/filters", icon: FaFilter },
   { name: "آمار و گزارشات", href: "/admin/reports", icon: FaChartBar },
   // { name: "پیام‌ها", href: "/admin/messages", icon: FaComments },
 ];

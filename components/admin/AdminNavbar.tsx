@@ -23,6 +23,7 @@ import {
   FaCrown,
   FaUserShield,
   FaUserCog,
+  FaFilter,
 } from "react-icons/fa";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -234,6 +235,15 @@ export default function AdminNavbar() {
             >
               <FaCog className="ml-3 text-primary" />
               تنظیمات
+            </Link>
+          </NavbarMenuItem>
+          <NavbarMenuItem>
+            <Link
+              href="/admin/filters"
+              className="w-full py-3 px-3 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg transition-colors flex items-center"
+            >
+              <FaFilter className="ml-3 text-primary" />
+              فیلترها
             </Link>
           </NavbarMenuItem>
         </NavbarMenu>

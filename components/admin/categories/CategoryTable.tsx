@@ -180,9 +180,9 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
             <th className="px-6 py-3.5 text-right text-xs font-semibold text-black uppercase tracking-wider">
               وضعیت
             </th>
-            <th className="px-6 py-3.5 text-right text-xs font-semibold text-black uppercase tracking-wider">
+            {/* <th className="px-6 py-3.5 text-right text-xs font-semibold text-black uppercase tracking-wider">
               تاریخ ایجاد
-            </th>
+            </th> */}
             <th className="px-6 py-3.5 text-center text-xs font-semibold text-black uppercase tracking-wider">
               عملیات
             </th>
@@ -228,9 +228,9 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
                   </span>
                 )}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {formatDate(category.createdAt)}
-              </td>
+              </td> */}
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center justify-center gap-3">
                   {category.isDeleted ? (

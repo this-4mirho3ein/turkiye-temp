@@ -1,5 +1,5 @@
 import { JSX } from "react";
-import { HeroUiColors, Premium, Roles } from "./enums";
+import { HeroUiColors, Premium, Roles, FilterTypeEnum } from "./enums";
 
 //#region auth
 export interface LoginTypes {
@@ -63,6 +63,39 @@ export interface CustomSelectProps<T> {
   itemLabel: keyof T;
   classNames?: string;
 }
+
+// Admin Filter Management Types
+export interface AdminFilter {
+  _id: string;
+  name: string;
+  enName: string;
+  adInputType: FilterTypeEnum;
+  userFilterType: FilterTypeEnum;
+  options: string[];
+  isRequired: boolean;
+  isMain: boolean;
+  row: number;
+  categories: string[];
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateFilterData {
+  name: string;
+  enName: string;
+  adInputType: FilterTypeEnum;
+  userFilterType: FilterTypeEnum;
+  options?: string[];
+  isRequired?: boolean;
+  isMain?: boolean;
+  row?: number;
+  categories?: string[];
+}
+
+export interface UpdateFilterData extends Partial<CreateFilterData> {}
+
+// Existing Filter interface for frontend use
 export interface Filter {
   id: string;
   title: string;
@@ -72,6 +105,7 @@ export interface Filter {
   min?: number;
   max?: number;
 }
+
 export interface DynamicFiltersProps {
   filters: Filter[];
   selectedFilters: Record<string, string | string[] | number | number[]>;

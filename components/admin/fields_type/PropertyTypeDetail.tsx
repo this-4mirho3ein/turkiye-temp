@@ -446,7 +446,7 @@ const PropertyTypeDetail: React.FC<PropertyTypeDetailProps> = ({ id }) => {
                   </div>
                 </motion.div>
 
-                <motion.div
+                {/* <motion.div
                   variants={fadeInVariants}
                   className="bg-gradient-to-br from-slate-50 to-blue-50 p-6 rounded-xl border border-slate-200 shadow-sm"
                 >
@@ -462,7 +462,7 @@ const PropertyTypeDetail: React.FC<PropertyTypeDetailProps> = ({ id }) => {
                       {formatDate(propertyType.createdAt)}
                     </span>
                   </div>
-                </motion.div>
+                </motion.div> */}
 
                 <motion.div
                   variants={fadeInVariants}

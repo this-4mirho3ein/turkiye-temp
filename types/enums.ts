@@ -30,3 +30,11 @@ export enum Roles {
   Consultor = "consultor",
   User = "user",
 }
+
+export enum FilterTypeEnum {
+  STRING = "string",
+  NUMBER = "number",
+  BOOLEAN = "boolean",
+  ENUM = "enum",
+  RANGE = "range",
+}
