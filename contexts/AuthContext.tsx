@@ -13,7 +13,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   accessToken: string | null;
   user: any;
-  login: (token: string, userData: any) => void;
+  hasAdminRole: boolean;
+  login: (token: string, userData: any) => boolean;
   logout: () => void;
   setAuthHeader: (headers: Record<string, string>) => Record<string, string>;
 }
@@ -29,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [hasAdminRole, setHasAdminRole] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [disableRedirects, setDisableRedirects] = useState(false);
   const [pendingAuth, setPendingAuth] = useState(false);
@@ -41,18 +43,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (token) {
         setAccessToken(token);
-        setIsAuthenticated(true);
+        let parsedUserData = null;
+
         if (userData) {
           try {
-            setUser(JSON.parse(userData));
+            parsedUserData = JSON.parse(userData);
+            setUser(parsedUserData);
           } catch (e) {
             console.error("Error parsing user data from localStorage", e);
           }
+        }
+
+        // Check if user has admin role
+        const hasAdmin = checkAdminRole(parsedUserData);
+        setHasAdminRole(hasAdmin);
+
+        if (hasAdmin) {
+          setIsAuthenticated(true);
+        } else {
+          // User doesn't have admin role - clear auth data
+          console.log("User doesn't have admin role, clearing auth data");
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(USER_DATA_KEY);
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("userId");
+          localStorage.removeItem("sessionId");
+          localStorage.removeItem("roles");
+          setAccessToken(null);
+          setUser(null);
+          setIsAuthenticated(false);
+          setHasAdminRole(false);
         }
       }
       setIsLoading(false);
     }
   }, []);
+
+  // Helper function to check if user has admin role
+  const checkAdminRole = (userData: any) => {
+    if (!userData) return false;
+
+    // Check roles from userData
+    if (userData.roles && Array.isArray(userData.roles)) {
+      return userData.roles.includes("admin");
+    }
+
+    // Also check localStorage for roles (backup check)
+    const storedRoles = localStorage.getItem("roles");
+    if (storedRoles) {
+      try {
+        const roles = JSON.parse(storedRoles);
+        return Array.isArray(roles) && roles.includes("admin");
+      } catch (e) {
+        console.error("Error parsing roles from localStorage", e);
+      }
+    }
+
+    return false;
+  };
 
   // Protect admin routes
   useEffect(() => {
@@ -87,19 +135,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (isAdminRoute && !isAuthenticated) {
-      // User is trying to access a protected route without authentication
-      console.log("AuthContext: Not authenticated, redirecting to login", {
-        pathname,
-        isAuthenticated,
-      });
+    if (isAdminRoute && (!isAuthenticated || !hasAdminRole)) {
+      // User is trying to access a protected route without authentication or admin role
+      console.log(
+        "AuthContext: Not authenticated or no admin role, redirecting to login",
+        {
+          pathname,
+          isAuthenticated,
+          hasAdminRole,
+        }
+      );
       router.replace("/admin/login");
-    } else if (isLoginRoute && isAuthenticated && !pendingAuth) {
-      // User is authenticated but on login page - redirect to admin
-      console.log("AuthContext: Already authenticated, redirecting to admin", {
-        pathname,
-        isAuthenticated,
-      });
+    } else if (
+      isLoginRoute &&
+      isAuthenticated &&
+      hasAdminRole &&
+      !pendingAuth
+    ) {
+      // User is authenticated with admin role but on login page - redirect to admin
+      console.log(
+        "AuthContext: Already authenticated with admin role, redirecting to admin",
+        {
+          pathname,
+          isAuthenticated,
+          hasAdminRole,
+        }
+      );
       router.replace("/admin");
     }
   }, [
@@ -109,6 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     disableRedirects,
     router,
     pendingAuth,
+    hasAdminRole,
   ]);
 
   // Login function to store token and user data
@@ -119,6 +181,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       "and userData:",
       !!userData
     );
+
+    // Check if user has admin role before proceeding
+    const hasAdmin = checkAdminRole(userData);
+
+    if (!hasAdmin) {
+      console.log("Login denied: User does not have admin role");
+      return false; // Return false to indicate failed login
+    }
 
     // Set pending auth to prevent immediate redirects
     setPendingAuth(true);
@@ -134,12 +204,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccessToken(token);
     setUser(userData);
     setIsAuthenticated(true);
+    setHasAdminRole(true); // We already verified this above
 
     // Re-enable redirects after state is updated
     setTimeout(() => {
       setDisableRedirects(false);
       setPendingAuth(false);
     }, 2000); // Wait 2 seconds before re-enabling redirects
+
+    return true; // Return true to indicate successful login
   };
 
   // Logout function
@@ -160,6 +233,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccessToken(null);
     setUser(null);
     setIsAuthenticated(false);
+    setHasAdminRole(false);
 
     // Use window.location for a more reliable redirect
     window.location.href = "/admin/login";
@@ -182,6 +256,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         accessToken,
         user,
+        hasAdminRole,
         login,
         logout,
         setAuthHeader,

@@ -57,14 +57,41 @@ const VerificationContainer = () => {
       console.log("Login API response:", response);
 
       if (response.success && response.data && response.data.accessToken) {
+        // Extract token and user data from response
+        const { accessToken, userId, roles, refreshToken, sessionId } =
+          response.data;
+
+        // Check if user has admin role
+        if (!roles || !Array.isArray(roles) || !roles.includes("admin")) {
+          // User doesn't have admin role - deny access
+          console.log("Access denied - user does not have admin role:", roles);
+
+          showToast({
+            message: "شما مجوز دسترسی به پنل مدیریت را ندارید",
+            type: "error",
+            duration: 5000,
+          });
+
+          // Clear any stored authentication data
+          sessionStorage.removeItem("loginPhone");
+          sessionStorage.removeItem("isAuthenticating");
+
+          // Redirect back to login page
+          setTimeout(() => {
+            router.replace("/admin/login");
+          }, 2000);
+
+          setIsLoading(false);
+          return;
+        }
+
+        console.log("Access granted - user has admin role:", roles);
+
         // Set authenticating state to true to show loading screen
         setIsAuthenticating(true);
 
         // Set a flag in sessionStorage to prevent redirect loops during authentication
         sessionStorage.setItem("isAuthenticating", "true");
-
-        // Extract token and user data from response
-        const { accessToken, userId, roles, refreshToken, sessionId } = response.data;
 
         // Store tokens in localStorage
         localStorage.setItem("accessToken", accessToken);
@@ -92,7 +119,38 @@ const VerificationContainer = () => {
         };
 
         // Call the AuthContext login to sync both auth systems
-        login(accessToken, userData);
+        const loginResult = login(accessToken, userData);
+
+        // Check if login was successful (user has admin role)
+        if (!loginResult) {
+          // Login failed due to role validation - this should not happen since we already checked
+          // but adding as a safety measure
+          console.log("AuthContext login failed - role validation failed");
+
+          showToast({
+            message: "شما مجوز دسترسی به پنل مدیریت را ندارید",
+            type: "error",
+            duration: 5000,
+          });
+
+          // Clear any stored authentication data
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("userId");
+          localStorage.removeItem("sessionId");
+          localStorage.removeItem("roles");
+          sessionStorage.removeItem("loginPhone");
+          sessionStorage.removeItem("isAuthenticating");
+
+          // Redirect back to login page
+          setTimeout(() => {
+            router.replace("/admin/login");
+          }, 2000);
+
+          setIsLoading(false);
+          setIsAuthenticating(false);
+          return;
+        }
 
         // Show success toast
         showToast({
@@ -109,7 +167,7 @@ const VerificationContainer = () => {
           // Use window.location for a more reliable redirect that forces a full page reload
           // This ensures all authentication states are properly synchronized
           window.location.href = "/admin";
-          
+
           // We don't need to manually remove the authenticating flag as the page will reload
         }, 1500);
       } else {

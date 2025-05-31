@@ -14,9 +14,7 @@ import {
 import { FaArrowLeft, FaEdit, FaTrash, FaUndo } from "react-icons/fa";
 import { AdminFilter } from "@/types/interfaces";
 import { FilterTypeEnum } from "@/types/enums";
-import {
-  getAdminFilterById,
-} from "@/controllers/makeRequest";
+import { getAdminFilterById } from "@/controllers/makeRequest";
 import { useToast } from "@/components/admin/ui/ToastProvider";
 
 interface FilterDetailProps {
@@ -26,7 +24,7 @@ interface FilterDetailProps {
 const FilterDetail: React.FC<FilterDetailProps> = ({ filterId }) => {
   const router = useRouter();
   const { showToast } = useToast();
-  
+
   const [filter, setFilter] = useState<AdminFilter | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -133,17 +131,23 @@ const FilterDetail: React.FC<FilterDetailProps> = ({ filterId }) => {
           <Divider />
           <CardBody className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-600">نام فیلتر</label>
+              <label className="text-sm font-medium text-gray-600">
+                نام فیلتر
+              </label>
               <p className="text-lg">{filter.name}</p>
             </div>
-            
+
             <div>
-              <label className="text-sm font-medium text-gray-600">نام انگلیسی</label>
+              <label className="text-sm font-medium text-gray-600">
+                نام انگلیسی
+              </label>
               <p className="text-lg font-mono">{filter.enName}</p>
             </div>
-            
+
             <div>
-              <label className="text-sm font-medium text-gray-600">ردیف نمایش</label>
+              <label className="text-sm font-medium text-gray-600">
+                ردیف نمایش
+              </label>
               <p className="text-lg">{filter.row}</p>
             </div>
           </CardBody>
@@ -157,7 +161,9 @@ const FilterDetail: React.FC<FilterDetailProps> = ({ filterId }) => {
           <Divider />
           <CardBody className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-600">نوع ورودی آگهی</label>
+              <label className="text-sm font-medium text-gray-600">
+                نوع ورودی آگهی
+              </label>
               <div className="mt-1">
                 <Chip
                   size="md"
@@ -168,9 +174,11 @@ const FilterDetail: React.FC<FilterDetailProps> = ({ filterId }) => {
                 </Chip>
               </div>
             </div>
-            
+
             <div>
-              <label className="text-sm font-medium text-gray-600">نوع فیلتر کاربر</label>
+              <label className="text-sm font-medium text-gray-600">
+                نوع فیلتر کاربر
+              </label>
               <div className="mt-1">
                 <Chip
                   size="md"
@@ -192,7 +200,9 @@ const FilterDetail: React.FC<FilterDetailProps> = ({ filterId }) => {
           <Divider />
           <CardBody className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-gray-600">فیلتر اصلی</label>
+              <label className="text-sm font-medium text-gray-600">
+                فیلتر اصلی
+              </label>
               <Chip
                 size="sm"
                 color={filter.isMain ? "success" : "default"}
@@ -201,9 +211,11 @@ const FilterDetail: React.FC<FilterDetailProps> = ({ filterId }) => {
                 {filter.isMain ? "بله" : "خیر"}
               </Chip>
             </div>
-            
+
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-gray-600">اجباری</label>
+              <label className="text-sm font-medium text-gray-600">
+                اجباری
+              </label>
               <Chip
                 size="sm"
                 color={filter.isRequired ? "warning" : "default"}
@@ -238,4 +250,4 @@ const FilterDetail: React.FC<FilterDetailProps> = ({ filterId }) => {
   );
 };
 
-export default FilterDetail; 
+export default FilterDetail;

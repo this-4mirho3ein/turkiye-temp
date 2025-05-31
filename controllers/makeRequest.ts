@@ -5,28 +5,73 @@ import axios from "axios";
 const api = axios.create({
   baseURL: mainConfig.apiServer,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
   withCredentials: false,
 });
 
 // Add request interceptor to include auth token
 api.interceptors.request.use(
-  (config) => {
+  (config: any) => {
     // Get token from localStorage if we're in the browser
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('accessToken');
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("accessToken");
       if (token) {
-        config.headers['x-access-token'] = token;
+        config.headers["x-access-token"] = token;
       }
     }
     return config;
   },
-  (error) => {
+  (error: any) => {
     return Promise.reject(error);
   }
 );
 
+// Add response interceptor to handle 401 errors
+api.interceptors.response.use(
+  (response: any) => {
+    // Return successful responses as-is
+    return response;
+  },
+  (error: any) => {
+    // Handle authentication error (401)
+    if (error.response?.status === 401) {
+      // Only clear tokens and redirect if we're in a browser
+      if (typeof window !== "undefined") {
+        console.log(
+          "🔐 Authentication failed (401), clearing tokens and redirecting to login"
+        );
+
+        // Clear all authentication data
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("sessionId");
+        localStorage.removeItem("roles");
+        localStorage.removeItem("userData");
+
+        // Clear session storage flags
+        sessionStorage.removeItem("isAuthenticating");
+        sessionStorage.removeItem("loginPhone");
+
+        // Clear any cookies
+        if (typeof document !== "undefined") {
+          // Simple cookie clearing - set expiry to past date
+          document.cookie =
+            "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        }
+
+        // Redirect to login page if we're not already there
+        if (!window.location.pathname.includes("/admin/login")) {
+          window.location.href = "/admin/login";
+        }
+      }
+    }
+
+    // Always reject the promise to let the calling code handle the error
+    return Promise.reject(error);
+  }
+);
 
 //#region AdminRegions
 interface ApiResponse {
@@ -36,21 +81,60 @@ interface ApiResponse {
   status?: number;
 }
 
+// Helper function to handle 401 redirects
+const handle401Redirect = () => {
+  // Only clear tokens and redirect if we're in a browser
+  if (typeof window !== "undefined") {
+    console.log(
+      "🔐 Authentication failed (401), clearing tokens and redirecting to login"
+    );
+
+    // Clear all authentication data
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("sessionId");
+    localStorage.removeItem("roles");
+    localStorage.removeItem("userData");
+
+    // Clear session storage flags
+    sessionStorage.removeItem("isAuthenticating");
+    sessionStorage.removeItem("loginPhone");
+
+    // Clear any cookies
+    if (typeof document !== "undefined") {
+      // Simple cookie clearing - set expiry to past date
+      document.cookie =
+        "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    }
+
+    // Redirect to login page if we're not already there
+    if (!window.location.pathname.includes("/admin/login")) {
+      window.location.href = "/admin/login";
+    }
+  }
+};
+
 // Get Agency Members
 export const getAgencyMembers = async (id: string): Promise<ApiResponse> => {
   try {
     console.log(`🔍 Fetching agency members for ID: ${id}`);
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
     const headers: Record<string, string> = {};
-    if (token) headers['x-access-token'] = token;
+    if (token) headers["x-access-token"] = token;
 
-    const response = await api.get(`/admin/agency/get-members/${id}`, { headers });
+    const response = await api.get(`/admin/agency/get-members/${id}`, {
+      headers,
+    });
     console.log(`✅ Agency members response:`, response.data);
-    
-    return { 
+
+    return {
       success: true,
       data: response.data,
-      status: response.status 
+      status: response.status,
     };
   } catch (error: any) {
     console.error(`❌ Error fetching agency members for ID ${id}:`, error);
@@ -68,36 +152,42 @@ export const addAgencyAreaAdmin = async (
   phone: string
 ): Promise<ApiResponse> => {
   try {
-    console.log(`🔍 Adding area admin to agency ID: ${agencyId} with phone: ${phone}`);
-    
+    console.log(
+      `🔍 Adding area admin to agency ID: ${agencyId} with phone: ${phone}`
+    );
+
     // Get token from localStorage if in browser
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
     const headers: Record<string, string> = {};
-    if (token) headers['x-access-token'] = token;
-    
+    if (token) headers["x-access-token"] = token;
+
     // Format the request body
     const requestBody = {
       agencyId,
       countryCode: "98",
       phone,
-      message: "Agency has been verified and confirmed"
+      message: "Agency has been verified and confirmed",
     };
-    
+
     const response = await api.post(
       `/admin/agency/add-area_admin`,
       requestBody,
       { headers }
     );
-    
+
     console.log(`✅ Add area admin response status: ${response.status}`);
     console.log(`✅ Add area admin response data:`, response.data);
 
     // Return the exact response from the API
     return {
-      success: response.data.success !== undefined ? response.data.success : true,
+      success:
+        response.data.success !== undefined ? response.data.success : true,
       data: response.data,
       message: response.data.message || "مدیر منطقه با موفقیت اضافه شد",
-      status: response.data.status || response.status
+      status: response.data.status || response.status,
     };
   } catch (error: any) {
     console.error("❌ Error adding area admin:", error);
@@ -106,14 +196,22 @@ export const addAgencyAreaAdmin = async (
     if (error.response) {
       console.error("Error response status:", error.response.status);
       console.error("Error response data:", error.response.data);
-      
+
+      // Check for 401 unauthorized and handle redirect
+      if (error.response.status === 401) {
+        handle401Redirect();
+      }
+
       // If the error contains a response with a message, use that directly
       if (error.response.data) {
         return {
-          success: error.response.data.success !== undefined ? error.response.data.success : false,
-          message: error.response.data.message || "خطا در افزودن مدیر منطقه",
+          success:
+            error.response.data.success !== undefined
+              ? error.response.data.success
+              : false,
+          message: error.response.data.message || "خطا در حذف مدیر منطقه",
           status: error.response.data.status || error.response.status,
-          data: error.response.data
+          data: error.response.data,
         };
       }
     } else if (error.request) {
@@ -132,36 +230,39 @@ export const removeAgencyAreaAdmin = async (
   adminId: string
 ): Promise<ApiResponse> => {
   try {
-    console.log(`🔍 Removing area admin with ID: ${adminId} from agency ID: ${agencyId}`);
-    
+    console.log(
+      `🔍 Removing area admin with ID: ${adminId} from agency ID: ${agencyId}`
+    );
+
     // Get token from localStorage if in browser
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
     const headers: Record<string, string> = {};
-    if (token) headers['x-access-token'] = token;
-    
+    if (token) headers["x-access-token"] = token;
+
     // Format the request body
     const requestBody = {
       agencyId,
-      adminId
+      adminId,
     };
-    
-    const response = await api.delete(
-      `/admin/agency/remove-area_admin`,
-      { 
-        headers,
-        data: requestBody  // For DELETE requests, the body goes in the 'data' property
-      }
-    );
-    
+
+    const response = await api.delete(`/admin/agency/remove-area_admin`, {
+      headers,
+      data: requestBody, // For DELETE requests, the body goes in the 'data' property
+    });
+
     console.log(`✅ Remove area admin response status: ${response.status}`);
     console.log(`✅ Remove area admin response data:`, response.data);
 
     // Return the exact response from the API
     return {
-      success: response.data.success !== undefined ? response.data.success : true,
+      success:
+        response.data.success !== undefined ? response.data.success : true,
       data: response.data,
       message: response.data.message || "مدیر منطقه با موفقیت حذف شد",
-      status: response.data.status || response.status
+      status: response.data.status || response.status,
     };
   } catch (error: any) {
     console.error("❌ Error removing area admin:", error);
@@ -170,14 +271,22 @@ export const removeAgencyAreaAdmin = async (
     if (error.response) {
       console.error("Error response status:", error.response.status);
       console.error("Error response data:", error.response.data);
-      
+
+      // Check for 401 unauthorized and handle redirect
+      if (error.response.status === 401) {
+        handle401Redirect();
+      }
+
       // If the error contains a response with a message, use that directly
       if (error.response.data) {
         return {
-          success: error.response.data.success !== undefined ? error.response.data.success : false,
+          success:
+            error.response.data.success !== undefined
+              ? error.response.data.success
+              : false,
           message: error.response.data.message || "خطا در حذف مدیر منطقه",
           status: error.response.data.status || error.response.status,
-          data: error.response.data
+          data: error.response.data,
         };
       }
     } else if (error.request) {
@@ -196,36 +305,42 @@ export const addAgencyConsultant = async (
   phone: string
 ): Promise<ApiResponse> => {
   try {
-    console.log(`🔍 Adding consultant to agency ID: ${agencyId} with phone: ${phone}`);
-    
+    console.log(
+      `🔍 Adding consultant to agency ID: ${agencyId} with phone: ${phone}`
+    );
+
     // Get token from localStorage if in browser
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
     const headers: Record<string, string> = {};
-    if (token) headers['x-access-token'] = token;
-    
+    if (token) headers["x-access-token"] = token;
+
     // Format the request body
     const requestBody = {
       agencyId,
       countryCode: "98",
       phone,
-      message: "Agency has been verified and confirmed"
+      message: "Agency has been verified and confirmed",
     };
-    
+
     const response = await api.post(
       `/admin/agency/add-consultant`,
       requestBody,
       { headers }
     );
-    
+
     console.log(`✅ Add consultant response status: ${response.status}`);
     console.log(`✅ Add consultant response data:`, response.data);
 
     // Return the exact response from the API
     return {
-      success: response.data.success !== undefined ? response.data.success : true,
+      success:
+        response.data.success !== undefined ? response.data.success : true,
       data: response.data,
       message: response.data.message || "مشاور با موفقیت اضافه شد",
-      status: response.data.status || response.status
+      status: response.data.status || response.status,
     };
   } catch (error: any) {
     console.error("❌ Error adding consultant:", error);
@@ -234,14 +349,17 @@ export const addAgencyConsultant = async (
     if (error.response) {
       console.error("Error response status:", error.response.status);
       console.error("Error response data:", error.response.data);
-      
+
       // If the error contains a response with a message, use that directly
       if (error.response.data) {
         return {
-          success: error.response.data.success !== undefined ? error.response.data.success : false,
+          success:
+            error.response.data.success !== undefined
+              ? error.response.data.success
+              : false,
           message: error.response.data.message || "خطا در افزودن مشاور",
           status: error.response.data.status || error.response.status,
-          data: error.response.data
+          data: error.response.data,
         };
       }
     } else if (error.request) {
@@ -260,36 +378,39 @@ export const removeAgencyConsultant = async (
   consultantId: string
 ): Promise<ApiResponse> => {
   try {
-    console.log(`🔍 Removing consultant with ID: ${consultantId} from agency ID: ${agencyId}`);
-    
+    console.log(
+      `🔍 Removing consultant with ID: ${consultantId} from agency ID: ${agencyId}`
+    );
+
     // Get token from localStorage if in browser
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
     const headers: Record<string, string> = {};
-    if (token) headers['x-access-token'] = token;
-    
+    if (token) headers["x-access-token"] = token;
+
     // Format the request body
     const requestBody = {
       agencyId,
-      consultantId
+      consultantId,
     };
-    
-    const response = await api.delete(
-      `/admin/agency/remove-consultant`,
-      { 
-        headers,
-        data: requestBody  // For DELETE requests, the body goes in the 'data' property
-      }
-    );
-    
+
+    const response = await api.delete(`/admin/agency/remove-consultant`, {
+      headers,
+      data: requestBody, // For DELETE requests, the body goes in the 'data' property
+    });
+
     console.log(`✅ Remove consultant response status: ${response.status}`);
     console.log(`✅ Remove consultant response data:`, response.data);
 
     // Return the exact response from the API
     return {
-      success: response.data.success !== undefined ? response.data.success : true,
+      success:
+        response.data.success !== undefined ? response.data.success : true,
       data: response.data,
       message: response.data.message || "مشاور با موفقیت حذف شد",
-      status: response.data.status || response.status
+      status: response.data.status || response.status,
     };
   } catch (error: any) {
     console.error("❌ Error removing consultant:", error);
@@ -298,14 +419,17 @@ export const removeAgencyConsultant = async (
     if (error.response) {
       console.error("Error response status:", error.response.status);
       console.error("Error response data:", error.response.data);
-      
+
       // If the error contains a response with a message, use that directly
       if (error.response.data) {
         return {
-          success: error.response.data.success !== undefined ? error.response.data.success : false,
+          success:
+            error.response.data.success !== undefined
+              ? error.response.data.success
+              : false,
           message: error.response.data.message || "خطا در حذف مشاور",
           status: error.response.data.status || error.response.status,
-          data: error.response.data
+          data: error.response.data,
         };
       }
     } else if (error.request) {
@@ -320,32 +444,38 @@ export const removeAgencyConsultant = async (
 
 // Get agency verifications with pagination and status filtering
 export const getAgencyVerifications = async (
-  status: string = 'pending',
+  status: string = "pending",
   page: number = 1,
   limit: number = 10
 ): Promise<ApiResponse> => {
   try {
-    console.log(`🔍 Fetching agency verifications with status: ${status}, page: ${page}, limit: ${limit}`);
-    
+    console.log(
+      `🔍 Fetching agency verifications with status: ${status}, page: ${page}, limit: ${limit}`
+    );
+
     // Get token from localStorage if in browser
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
     const headers: Record<string, string> = {};
-    if (token) headers['x-access-token'] = token;
-    
+    if (token) headers["x-access-token"] = token;
+
     const response = await api.get(
       `/admin/agency/verifications?status=${status}&page=${page}&limit=${limit}`,
       { headers }
     );
-    
+
     console.log(`✅ Get verifications response status: ${response.status}`);
     console.log(`✅ Get verifications response data:`, response.data);
 
     // Return the exact response from the API
     return {
-      success: response.data.success !== undefined ? response.data.success : true,
+      success:
+        response.data.success !== undefined ? response.data.success : true,
       data: response.data,
       message: response.data.message || "لیست تأییدیه‌ها با موفقیت دریافت شد",
-      status: response.data.status || response.status
+      status: response.data.status || response.status,
     };
   } catch (error: any) {
     console.error("❌ Error fetching verifications:", error);
@@ -354,14 +484,18 @@ export const getAgencyVerifications = async (
     if (error.response) {
       console.error("Error response status:", error.response.status);
       console.error("Error response data:", error.response.data);
-      
+
       // If the error contains a response with a message, use that directly
       if (error.response.data) {
         return {
-          success: error.response.data.success !== undefined ? error.response.data.success : false,
-          message: error.response.data.message || "خطا در دریافت لیست تأییدیه‌ها",
+          success:
+            error.response.data.success !== undefined
+              ? error.response.data.success
+              : false,
+          message:
+            error.response.data.message || "خطا در دریافت لیست تأییدیه‌ها",
           status: error.response.data.status || error.response.status,
-          data: error.response.data
+          data: error.response.data,
         };
       }
     } else if (error.request) {
@@ -375,29 +509,37 @@ export const getAgencyVerifications = async (
 };
 
 // Get agency verification documents
-export const getAgencyVerificationDocuments = async (id: string): Promise<ApiResponse> => {
+export const getAgencyVerificationDocuments = async (
+  id: string
+): Promise<ApiResponse> => {
   try {
     console.log(`🔍 Fetching verification documents for agency ID: ${id}`);
-    
+
     // Get token from localStorage if in browser
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
     const headers: Record<string, string> = {};
-    if (token) headers['x-access-token'] = token;
-    
+    if (token) headers["x-access-token"] = token;
+
     const response = await api.get(
       `/admin/agency/verification/documents/${id}`,
       { headers }
     );
-    
-    console.log(`✅ Get verification documents response status: ${response.status}`);
+
+    console.log(
+      `✅ Get verification documents response status: ${response.status}`
+    );
     console.log(`✅ Get verification documents response data:`, response.data);
 
     // Return the exact response from the API
     return {
-      success: response.data.success !== undefined ? response.data.success : true,
+      success:
+        response.data.success !== undefined ? response.data.success : true,
       data: response.data,
       message: response.data.message || "اطلاعات مدارک با موفقیت دریافت شد",
-      status: response.data.status || response.status
+      status: response.data.status || response.status,
     };
   } catch (error: any) {
     console.error("❌ Error fetching verification documents:", error);
@@ -406,14 +548,17 @@ export const getAgencyVerificationDocuments = async (id: string): Promise<ApiRes
     if (error.response) {
       console.error("Error response status:", error.response.status);
       console.error("Error response data:", error.response.data);
-      
+
       // If the error contains a response with a message, use that directly
       if (error.response.data) {
         return {
-          success: error.response.data.success !== undefined ? error.response.data.success : false,
+          success:
+            error.response.data.success !== undefined
+              ? error.response.data.success
+              : false,
           message: error.response.data.message || "خطا در دریافت اطلاعات مدارک",
           status: error.response.data.status || error.response.status,
-          data: error.response.data
+          data: error.response.data,
         };
       }
     } else if (error.request) {
@@ -428,10 +573,10 @@ export const getAgencyVerificationDocuments = async (id: string): Promise<ApiRes
 
 /**
  * Review agency verification documents
- * 
+ *
  * This function sends a review action for agency verification documents to the API.
  * It supports various actions like approve, reject, request_more_info, and review_document.
- * 
+ *
  * @param reviewData - Object containing review information
  * @param reviewData.agencyId - ID of the agency being reviewed
  * @param reviewData.action - Type of review action (approve, reject, request_more_info, review_document)
@@ -442,51 +587,57 @@ export const getAgencyVerificationDocuments = async (id: string): Promise<ApiRes
  */
 export const reviewAgencyVerification = async (reviewData: {
   agencyId: string;
-  action: 'approve' | 'reject' | 'request_more_info' | 'review_document';
+  action: "approve" | "reject" | "request_more_info" | "review_document";
   documentIds: string | string[];
   rejectionReason?: string;
   documentNotes?: string;
 }): Promise<ApiResponse> => {
   try {
-    console.log(`🔍 Reviewing verification documents for agency ID: ${reviewData.agencyId}`);
+    console.log(
+      `🔍 Reviewing verification documents for agency ID: ${reviewData.agencyId}`
+    );
     console.log(`🔍 Action: ${reviewData.action}`);
-    
+
     // Format document IDs to array if it's a string
-    const documentIds = Array.isArray(reviewData.documentIds) 
-      ? reviewData.documentIds 
+    const documentIds = Array.isArray(reviewData.documentIds)
+      ? reviewData.documentIds
       : [reviewData.documentIds];
-    
+
     // Get token from localStorage if in browser
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
     const headers: Record<string, string> = {};
-    if (token) headers['x-access-token'] = token;
-    
+    if (token) headers["x-access-token"] = token;
+
     // Prepare request body
     const requestBody = {
       agencyId: reviewData.agencyId,
       action: reviewData.action,
       documentIds: documentIds,
-      rejectionReason: reviewData.rejectionReason || '',
-      documentNotes: reviewData.documentNotes || ''
+      rejectionReason: reviewData.rejectionReason || "",
+      documentNotes: reviewData.documentNotes || "",
     };
-    
+
     console.log(`🔍 Review request body:`, requestBody);
-    
+
     const response = await api.post(
       `/admin/agency/verification/review`,
       requestBody,
       { headers }
     );
-    
+
     console.log(`✅ Review documents response status: ${response.status}`);
     console.log(`✅ Review documents response data:`, response.data);
 
     // Return the exact response from the API
     return {
-      success: response.data.success !== undefined ? response.data.success : true,
+      success:
+        response.data.success !== undefined ? response.data.success : true,
       data: response.data,
       message: response.data.message || "بررسی مدارک با موفقیت انجام شد",
-      status: response.data.status || response.status
+      status: response.data.status || response.status,
     };
   } catch (error: any) {
     console.error("❌ Error reviewing verification documents:", error);
@@ -495,14 +646,17 @@ export const reviewAgencyVerification = async (reviewData: {
     if (error.response) {
       console.error("Error response status:", error.response.status);
       console.error("Error response data:", error.response.data);
-      
+
       // If the error contains a response with a message, use that directly
       if (error.response.data) {
         return {
-          success: error.response.data.success !== undefined ? error.response.data.success : false,
+          success:
+            error.response.data.success !== undefined
+              ? error.response.data.success
+              : false,
           message: error.response.data.message || "خطا در بررسی مدارک",
           status: error.response.data.status || error.response.status,
-          data: error.response.data
+          data: error.response.data,
         };
       }
     } else if (error.request) {
@@ -518,26 +672,33 @@ export const reviewAgencyVerification = async (reviewData: {
 // Helper function to handle API errors
 const returnError = (error: any): ApiResponse => {
   if (error.response) {
+    // Check for 401 status code and handle redirect
+    if (error.response.status === 401) {
+      handle401Redirect();
+    }
+
     // The request was made and the server responded with a status code outside the 2xx range
     return {
       success: false,
-      message: error.response.data?.message || 'An error occurred with the server response',
+      message:
+        error.response.data?.message ||
+        "An error occurred with the server response",
       status: error.response.status,
-      data: error.response.data
+      data: error.response.data,
     };
   } else if (error.request) {
     // The request was made but no response was received
     return {
       success: false,
-      message: 'No response received from server',
-      status: 0
+      message: "No response received from server",
+      status: 0,
     };
   } else {
     // Something happened in setting up the request that triggered an Error
     return {
       success: false,
-      message: error.message || 'An unknown error occurred',
-      status: 500
+      message: error.message || "An unknown error occurred",
+      status: 500,
     };
   }
 };
@@ -1556,20 +1717,21 @@ export const getAdminUsers = async (
     isActive,
     isBanned,
     isProfileComplete,
-    search
+    search,
   } = params;
 
   // Add cache-busting parameter if forceRefresh is true
   const cacheParam = forceRefresh ? `&_t=${Date.now()}` : "";
-  
+
   // Build query parameters for filters
   let queryParams = `page=${page}&limit=${limit}${cacheParam}`;
-  
+
   // Add filter parameters if they exist
   if (roles) queryParams += `&roles=${roles}`;
   if (isActive !== undefined) queryParams += `&isActive=${isActive}`;
   if (isBanned !== undefined) queryParams += `&isBanned=${isBanned}`;
-  if (isProfileComplete !== undefined) queryParams += `&isProfileComplete=${isProfileComplete}`;
+  if (isProfileComplete !== undefined)
+    queryParams += `&isProfileComplete=${isProfileComplete}`;
   if (search) queryParams += `&search=${encodeURIComponent(search)}`;
 
   try {
@@ -1581,7 +1743,7 @@ export const getAdminUsers = async (
       isActive,
       isBanned,
       isProfileComplete,
-      search
+      search,
     });
     console.log(`🔍 API request URL: /admin/user/get-users?${queryParams}`);
 
@@ -1597,20 +1759,21 @@ export const getAdminUsers = async (
       headers["x-access-token"] = token;
     }
 
-    const response = await api.get(
-      `/admin/user/get-users?${queryParams}`,
-      { headers }
-    );
+    const response = await api.get(`/admin/user/get-users?${queryParams}`, {
+      headers,
+    });
 
     console.log("🔍 Admin users API response status:", response.status);
-    
+
     // Log the filtered results count
     if (response.data?.data && Array.isArray(response.data.data)) {
-      console.log(`🔍 Filtered results: ${response.data.data.length} users found`);
+      console.log(
+        `🔍 Filtered results: ${response.data.data.length} users found`
+      );
     } else if (Array.isArray(response.data)) {
       console.log(`🔍 Filtered results: ${response.data.length} users found`);
     }
-    
+
     console.log(
       "🔍 Admin users API response data:",
       JSON.stringify(response.data, null, 2)
@@ -1756,9 +1919,9 @@ export const updateAdminUser = async (
   id: string,
   data: Record<string, any>
 ): Promise<ApiResponse> => {
-  console.log('updateAdminUser function called with id:', id);
-  console.log('updateAdminUser data:', JSON.stringify(data, null, 2));
-  
+  console.log("updateAdminUser function called with id:", id);
+  console.log("updateAdminUser data:", JSON.stringify(data, null, 2));
+
   try {
     // Ensure the ID is included in the data object
     const requestData = { ...data, id };
@@ -1770,11 +1933,14 @@ export const updateAdminUser = async (
     // The endpoint doesn't need the ID as part of the URL - it's in the request body
     console.log(`Attempting PUT request to /admin/user/update-user`);
     console.log(`Full URL: ${mainConfig.apiServer}/admin/user/update-user`);
-    
+
     const response = await api.put(`/admin/user/update-user`, requestData);
     console.log(`PUT request successful with status: ${response.status}`);
     console.log(`f504 Update response:`, response.status, response.data);
-    console.log(`f504 Response message:`, response.data?.message || 'کاربر با موفقیت به‌روزرسانی شد');
+    console.log(
+      `f504 Response message:`,
+      response.data?.message || "کاربر با موفقیت به‌روزرسانی شد"
+    );
     return {
       success: response.data.success,
       message: response.data?.message || "کاربر با موفقیت به‌روزرسانی شد",
@@ -2570,9 +2736,7 @@ export const getAdminFilters = async (
     let data = [];
     if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
       data = response.data.data.data;
-      console.log(
-        `🔍 Found ${data.length} filters in response.data.data.data`
-      );
+      console.log(`🔍 Found ${data.length} filters in response.data.data.data`);
     } else if (response.data?.data && Array.isArray(response.data.data)) {
       data = response.data.data;
       console.log(`🔍 Found ${data.length} filters in response.data.data`);
@@ -2643,9 +2807,12 @@ export const getAdminFilterById = async (id: string): Promise<ApiResponse> => {
     console.log(`🔍 Fetching filter details for ID: ${id}`);
 
     // Get token from localStorage if in browser environment
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
     const headers: Record<string, string> = {};
-    if (token) headers['x-access-token'] = token;
+    if (token) headers["x-access-token"] = token;
 
     // Make the API request
     const response = await api.get(`/admin/filter/filter/${id}`, { headers });
@@ -2672,24 +2839,30 @@ export const getAdminFilterById = async (id: string): Promise<ApiResponse> => {
     try {
       console.log("⚙️ Attempting direct Axios fallback for filter details...");
 
-      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
-      if (token) headers['x-access-token'] = token;
+      if (token) headers["x-access-token"] = token;
 
       const directResponse = await axios.get(
         `${mainConfig.apiServer}/admin/filter/filter/${id}`,
         { headers }
       );
 
-      console.log(`⚙️ Direct fallback response status: ${directResponse.status}`);
+      console.log(
+        `⚙️ Direct fallback response status: ${directResponse.status}`
+      );
       console.log(`⚙️ Direct fallback data:`, directResponse.data);
 
       return {
         success: directResponse.data.success,
         data: directResponse.data.data || directResponse.data,
-        message: directResponse.data.message || "اطلاعات فیلتر با موفقیت دریافت شد",
+        message:
+          directResponse.data.message || "اطلاعات فیلتر با موفقیت دریافت شد",
         status: directResponse.status,
       };
     } catch (fallbackErr: any) {
@@ -2710,13 +2883,16 @@ export const createAdminFilter = async (
 ): Promise<ApiResponse> => {
   try {
     console.log(`🔍 Creating filter with data:`, JSON.stringify(data, null, 2));
-    
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
     const headers: Record<string, string> = {};
-    if (token) headers['x-access-token'] = token;
+    if (token) headers["x-access-token"] = token;
 
     const response = await api.post(`/admin/filter/create`, data, { headers });
-    
+
     console.log(`✅ Create filter response status: ${response.status}`);
     console.log(`✅ Create filter response data:`, response.data);
 
@@ -2738,12 +2914,15 @@ export const createAdminFilter = async (
     // Fallback to direct Axios call if the api instance fails
     try {
       console.log("⚙️ Attempting direct Axios fallback for filter creation...");
-      
-      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
-      if (token) headers['x-access-token'] = token;
+      if (token) headers["x-access-token"] = token;
 
       const directResponse = await axios.post(
         `${mainConfig.apiServer}/admin/filter/create`,
@@ -2758,8 +2937,11 @@ export const createAdminFilter = async (
         status: directResponse.status,
       };
     } catch (fallbackErr: any) {
-      console.error("❌ Direct filter creation fallback also failed:", fallbackErr);
-      
+      console.error(
+        "❌ Direct filter creation fallback also failed:",
+        fallbackErr
+      );
+
       return {
         success: false,
         message: error.response?.data?.message || "ایجاد فیلتر با خطا مواجه شد",
@@ -2774,14 +2956,22 @@ export const updateAdminFilter = async (
   data: Record<string, any>
 ): Promise<ApiResponse> => {
   try {
-    console.log(`🔍 Updating filter ID: ${id} with data:`, JSON.stringify(data, null, 2));
-    
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    const headers: Record<string, string> = {};
-    if (token) headers['x-access-token'] = token;
+    console.log(
+      `🔍 Updating filter ID: ${id} with data:`,
+      JSON.stringify(data, null, 2)
+    );
 
-    const response = await api.put(`/admin/filter/update/${id}`, data, { headers });
-    
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const response = await api.put(`/admin/filter/update/${id}`, data, {
+      headers,
+    });
+
     console.log(`✅ Update filter response status: ${response.status}`);
     console.log(`✅ Update filter response data:`, response.data);
 
@@ -2803,12 +2993,15 @@ export const updateAdminFilter = async (
     // Fallback to direct Axios call if the api instance fails
     try {
       console.log(`⚙️ Attempting direct Axios fallback for filter update...`);
-      
-      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
-      if (token) headers['x-access-token'] = token;
+      if (token) headers["x-access-token"] = token;
 
       const directResponse = await axios.put(
         `${mainConfig.apiServer}/admin/filter/update/${id}`,
@@ -2818,16 +3011,21 @@ export const updateAdminFilter = async (
 
       return {
         success: directResponse.data.success,
-        message: directResponse.data?.message || "فیلتر با موفقیت به‌روزرسانی شد",
+        message:
+          directResponse.data?.message || "فیلتر با موفقیت به‌روزرسانی شد",
         data: directResponse.data?.data,
         status: directResponse.status,
       };
     } catch (fallbackErr: any) {
-      console.error("❌ Direct filter update fallback also failed:", fallbackErr);
-      
+      console.error(
+        "❌ Direct filter update fallback also failed:",
+        fallbackErr
+      );
+
       return {
         success: false,
-        message: error.response?.data?.message || "به‌روزرسانی فیلتر با خطا مواجه شد",
+        message:
+          error.response?.data?.message || "به‌روزرسانی فیلتر با خطا مواجه شد",
         status: error.response?.status,
       };
     }
@@ -2837,13 +3035,18 @@ export const updateAdminFilter = async (
 export const deleteAdminFilter = async (id: string): Promise<ApiResponse> => {
   try {
     console.log(`🗑️ Deleting filter with ID: ${id}`);
-    
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    const headers: Record<string, string> = {};
-    if (token) headers['x-access-token'] = token;
 
-    const response = await api.delete(`/admin/filter/delete/${id}`, { headers });
-    
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const response = await api.delete(`/admin/filter/delete/${id}`, {
+      headers,
+    });
+
     console.log(`✅ Delete filter response status: ${response.status}`);
     console.log(`✅ Delete filter response data:`, response.data);
 
@@ -2865,12 +3068,15 @@ export const deleteAdminFilter = async (id: string): Promise<ApiResponse> => {
     // Fallback to direct Axios call if the api instance fails
     try {
       console.log(`⚙️ Attempting direct Axios fallback for filter deletion...`);
-      
-      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
-      if (token) headers['x-access-token'] = token;
+      if (token) headers["x-access-token"] = token;
 
       const directResponse = await axios.delete(
         `${mainConfig.apiServer}/admin/filter/delete/${id}`,
@@ -2884,8 +3090,11 @@ export const deleteAdminFilter = async (id: string): Promise<ApiResponse> => {
         status: directResponse.status,
       };
     } catch (fallbackErr: any) {
-      console.error("❌ Direct filter deletion fallback also failed:", fallbackErr);
-      
+      console.error(
+        "❌ Direct filter deletion fallback also failed:",
+        fallbackErr
+      );
+
       return {
         success: false,
         message: error.response?.data?.message || "حذف فیلتر با خطا مواجه شد",
@@ -2898,13 +3107,20 @@ export const deleteAdminFilter = async (id: string): Promise<ApiResponse> => {
 export const restoreAdminFilter = async (id: string): Promise<ApiResponse> => {
   try {
     console.log(`🔄 Restoring filter with ID: ${id}`);
-    
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    const headers: Record<string, string> = {};
-    if (token) headers['x-access-token'] = token;
 
-    const response = await api.put(`/admin/filter/restore/${id}`, {}, { headers });
-    
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const response = await api.put(
+      `/admin/filter/restore/${id}`,
+      {},
+      { headers }
+    );
+
     console.log(`✅ Restore filter response status: ${response.status}`);
     console.log(`✅ Restore filter response data:`, response.data);
 
@@ -2925,13 +3141,18 @@ export const restoreAdminFilter = async (id: string): Promise<ApiResponse> => {
 
     // Fallback to direct Axios call if the api instance fails
     try {
-      console.log(`⚙️ Attempting direct Axios fallback for filter restoration...`);
-      
-      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      console.log(
+        `⚙️ Attempting direct Axios fallback for filter restoration...`
+      );
+
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
-      if (token) headers['x-access-token'] = token;
+      if (token) headers["x-access-token"] = token;
 
       const directResponse = await axios.put(
         `${mainConfig.apiServer}/admin/filter/restore/${id}`,
@@ -2946,11 +3167,15 @@ export const restoreAdminFilter = async (id: string): Promise<ApiResponse> => {
         status: directResponse.status,
       };
     } catch (fallbackErr: any) {
-      console.error("❌ Direct filter restoration fallback also failed:", fallbackErr);
-      
+      console.error(
+        "❌ Direct filter restoration fallback also failed:",
+        fallbackErr
+      );
+
       return {
         success: false,
-        message: error.response?.data?.message || "بازیابی فیلتر با خطا مواجه شد",
+        message:
+          error.response?.data?.message || "بازیابی فیلتر با خطا مواجه شد",
         status: error.response?.status,
       };
     }
@@ -2958,6 +3183,3 @@ export const restoreAdminFilter = async (id: string): Promise<ApiResponse> => {
 };
 
 //#endregion
-
-
-

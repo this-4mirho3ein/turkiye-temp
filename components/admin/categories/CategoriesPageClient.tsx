@@ -64,27 +64,30 @@ function CategoriesPageClientInner() {
   } = useApi<Category[]>(
     "admin-categories",
     fetchers,
-    { 
-      page: 1, 
-      limit: 100, 
+    {
+      page: 1,
+      limit: 100,
       forceRefresh: refreshTrigger > 0,
-      ...(searchTerm && { search: searchTerm })
+      ...(searchTerm && { search: searchTerm }),
     },
     true
   );
 
   // Apply client-side filtering for categories
-  const displayCategories = categories.filter(category => {
+  const displayCategories = categories.filter((category) => {
     // Filter by deleted status
     if (!showDeletedItems && category.isDeleted) {
       return false;
     }
-    
+
     // Apply search term filter (client-side fallback)
-    if (searchTerm && !category.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+    if (
+      searchTerm &&
+      !category.name.toLowerCase().includes(searchTerm.toLowerCase())
+    ) {
       return false;
     }
-    
+
     return true;
   });
 
@@ -323,12 +326,12 @@ function CategoriesPageClientInner() {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         onSearch={() => {
-          console.log('Searching for:', searchTerm);
-          setRefreshTrigger(prev => prev + 1);
+          console.log("Searching for:", searchTerm);
+          setRefreshTrigger((prev) => prev + 1);
         }}
         isLoading={isLoading}
       />
-      
+
       {/* فیلترها */}
       <div className="bg-white p-4 rounded-lg shadow-sm border-t-4 border-purple-500">
         <div className="font-bold text-gray-700 mb-3 flex items-center">
@@ -338,7 +341,9 @@ function CategoriesPageClientInner() {
         <div className="flex items-center">
           <Checkbox
             checked={showDeletedItems}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setShowDeletedItems(e.target.checked)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setShowDeletedItems(e.target.checked)
+            }
             className="ml-2 text-purple-500"
           />
           <label className="mb-0 text-sm cursor-pointer">
@@ -379,7 +384,6 @@ function CategoriesPageClientInner() {
       />
     </div>
   );
-
 }
 
 // Wrapper component that provides QueryClient context

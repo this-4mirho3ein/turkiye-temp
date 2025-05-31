@@ -141,30 +141,35 @@ export default function RegionsList({
   // Debug parent filter
   useEffect(() => {
     if (selectedParentId) {
-      console.log('Selected parent ID:', selectedParentId);
-      console.log('Region type:', type);
-      console.log('Total regions:', regions.length);
-      
+      console.log("Selected parent ID:", selectedParentId);
+      console.log("Region type:", type);
+      console.log("Total regions:", regions.length);
+
       // Log the structure of a sample region to debug
       if (regions.length > 0) {
-        console.log('Sample region structure:', JSON.stringify(regions[0], null, 2));
+        console.log(
+          "Sample region structure:",
+          JSON.stringify(regions[0], null, 2)
+        );
       }
     }
   }, [selectedParentId, regions, type]);
 
   // Client-side filtering based on search input and parent filter
-  const filteredRegions = regions.filter(region => {
+  const filteredRegions = regions.filter((region) => {
     // Apply search filter
-    if (search.trim() && 
-        !region.name.toLowerCase().includes(search.toLowerCase()) && 
-        !region.slug.toLowerCase().includes(search.toLowerCase())) {
+    if (
+      search.trim() &&
+      !region.name.toLowerCase().includes(search.toLowerCase()) &&
+      !region.slug.toLowerCase().includes(search.toLowerCase())
+    ) {
       return false;
     }
-    
+
     // Apply parent filter based on region type
-    if (selectedParentId && selectedParentId !== '') {
+    if (selectedParentId && selectedParentId !== "") {
       switch (type) {
-        case 'provinces': {
+        case "provinces": {
           // For provinces, filter by country ID
           // The country field in the API response contains the country ID
           const countryId = region.parent?.originalId;
@@ -173,7 +178,7 @@ export default function RegionsList({
           }
           break;
         }
-        case 'cities': {
+        case "cities": {
           // For cities, filter by province ID
           // The province field in the API response contains the province ID
           const provinceId = region.parent?.originalId;
@@ -182,7 +187,7 @@ export default function RegionsList({
           }
           break;
         }
-        case 'areas': {
+        case "areas": {
           // For areas, filter by city ID
           // The city field in the API response contains the city object with _id
           const cityId = region.parent?.originalId;
@@ -193,15 +198,15 @@ export default function RegionsList({
         }
       }
     }
-    
+
     // Show only non-deleted items unless showDeletedItems is true
     if (!showDeletedItems && region.isDeleted) {
       return false;
     }
-    
+
     return true;
   });
-  
+
   // Log filtered results for debugging
   useEffect(() => {
     if (selectedParentId) {
@@ -480,11 +485,6 @@ export default function RegionsList({
         // Invalidate cache to ensure fresh data on next query
         await invalidateCache();
 
-        // Notify parent component that data has changed
-        if (onDataChange) {
-          onDataChange();
-        }
-
         // Show a success toast with the API message if available
         if (type === "countries" && !selectedRegion && response.data) {
           // For newly created countries, show the auto-generated code
@@ -569,6 +569,11 @@ export default function RegionsList({
                     : region
                 )
               );
+
+              // Notify parent component for updates to existing regions
+              if (onDataChange) {
+                onDataChange();
+              }
             } else {
               // Add new region based on API response
               const newRegion: Region = {
@@ -596,6 +601,7 @@ export default function RegionsList({
               }
 
               setRegions((prev) => [...prev, newRegion]);
+              // No onDataChange() call for new items to prevent duplication
             }
           } catch (error) {
             console.error("Error processing API data for UI update:", error);
@@ -729,6 +735,11 @@ export default function RegionsList({
           return item;
         })
       );
+
+      // Notify parent component for updates to existing regions
+      if (onDataChange) {
+        onDataChange();
+      }
     } else {
       // Add new item
       // Generate unique id for the new region - combine timestamp with random for uniqueness
@@ -764,6 +775,7 @@ export default function RegionsList({
 
       // Add the new item to our state
       setRegions((prev) => [...prev, newRegion]);
+      // No onDataChange() call for new items to prevent duplication
     }
   };
 
@@ -812,47 +824,29 @@ export default function RegionsList({
   const invalidateCache = async () => {
     try {
       console.log(`Invalidating cache for ${type}...`);
-      // First, invalidate the appropriate React Query cache
+      // Only invalidate the appropriate React Query cache, don't force immediate refetch
       switch (type) {
         case "countries":
           await queryClient.invalidateQueries({
             queryKey: ["admin-countries"],
           });
-          // Also attempt a forced refresh
-          await getAdminCountries({ page: 1, limit: 100, forceRefresh: true });
           break;
         case "provinces":
           await queryClient.invalidateQueries({
             queryKey: ["admin-provinces"],
           });
-          // Also attempt a forced refresh
-          await getAdminProvinces({ page: 1, limit: 100, forceRefresh: true });
           break;
         case "cities":
           await queryClient.invalidateQueries({ queryKey: ["admin-cities"] });
-          // Also attempt a forced refresh
-          await getAdminCities({ page: 1, limit: 100, forceRefresh: true });
           break;
         case "areas":
           await queryClient.invalidateQueries({ queryKey: ["admin-areas"] });
-          // Also attempt a forced refresh
-          await getAdminAreas({ page: 1, limit: 100, forceRefresh: true });
           break;
       }
 
-      // Force a refresh of the current data
-      console.log(`Forcing refetch of ${type}...`);
-      queryClient.refetchQueries({
-        queryKey: [
-          type === "countries"
-            ? "admin-countries"
-            : type === "provinces"
-            ? "admin-provinces"
-            : type === "cities"
-            ? "admin-cities"
-            : "admin-areas",
-        ],
-      });
+      console.log(
+        `Cache invalidated for ${type} - data will be fresh on next fetch`
+      );
     } catch (error) {
       console.error("Failed to invalidate cache:", error);
     }
@@ -908,7 +902,7 @@ export default function RegionsList({
         onAdd={() => handleAddEdit()}
         typeTitle={getTypeTitle()}
       />
-      
+
       {/* Parent Filter */}
       {type !== "countries" && parentRegions.length > 0 && (
         <RegionParentFilter
@@ -918,7 +912,7 @@ export default function RegionsList({
           onParentChange={setSelectedParentId}
         />
       )}
-      
+
       <RegionsTable
         regions={filteredRegions}
         type={type}

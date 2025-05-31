@@ -2,15 +2,17 @@ import React from "react";
 import FilterDetail from "@/components/admin/filters/FilterDetail";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function Page({ params }: PageProps) {
+export default async function Page({ params }: PageProps) {
+  const { id } = await params;
+
   return (
     <div className="p-6">
-      <FilterDetail filterId={params.id} />
+      <FilterDetail filterId={id} />
     </div>
   );
-} 
+}

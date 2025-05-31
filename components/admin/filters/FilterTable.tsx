@@ -43,7 +43,7 @@ const FilterTable: React.FC<FilterTableProps> = ({
       [FilterTypeEnum.NUMBER]: "عدد",
       [FilterTypeEnum.ENUM]: "انتخابی",
       [FilterTypeEnum.BOOLEAN]: "بولین",
-      [FilterTypeEnum.RANGE]: "محدوده"
+      [FilterTypeEnum.RANGE]: "محدوده",
     };
     return labels[type] || type;
   };
@@ -82,7 +82,9 @@ const FilterTable: React.FC<FilterTableProps> = ({
         );
       case "enName":
         return (
-          <span className="text-sm text-gray-600 font-mono">{filter.enName}</span>
+          <span className="text-sm text-gray-600 font-mono">
+            {filter.enName}
+          </span>
         );
       case "adInputType":
         return (
@@ -175,7 +177,7 @@ const FilterTable: React.FC<FilterTableProps> = ({
                 <FaEye />
               </Button>
             </Tooltip>
-            
+
             {!filter.isDeleted ? (
               <>
                 <Tooltip content="ویرایش">
@@ -263,4 +265,4 @@ const FilterTable: React.FC<FilterTableProps> = ({
   );
 };
 
-export default FilterTable; 
+export default FilterTable;

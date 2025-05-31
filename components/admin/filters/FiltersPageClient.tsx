@@ -64,9 +64,9 @@ function FiltersPageClientInner() {
   } = useApi<AdminFilter[]>(
     "admin-filters",
     fetchers,
-    { 
-      page: 1, 
-      limit: 100, 
+    {
+      page: 1,
+      limit: 100,
       forceRefresh: refreshTrigger > 0,
       ...(searchTerm && { search: searchTerm }),
     },
@@ -74,18 +74,21 @@ function FiltersPageClientInner() {
   );
 
   // Apply client-side filtering for filters
-  const displayFilters = filters.filter(filter => {
+  const displayFilters = filters.filter((filter) => {
     // Filter by deleted status
     if (!showDeletedItems && filter.isDeleted) {
       return false;
     }
-    
+
     // Apply search term filter (client-side fallback)
-    if (searchTerm && !filter.name.toLowerCase().includes(searchTerm.toLowerCase()) && 
-        !filter.enName.toLowerCase().includes(searchTerm.toLowerCase())) {
+    if (
+      searchTerm &&
+      !filter.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      !filter.enName.toLowerCase().includes(searchTerm.toLowerCase())
+    ) {
       return false;
     }
-    
+
     return true;
   });
 
@@ -267,7 +270,7 @@ function FiltersPageClientInner() {
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
           />
-          
+
           <div className="flex items-center gap-4">
             <Checkbox
               isSelected={showDeletedItems}
@@ -327,4 +330,4 @@ export default function FiltersPageClient() {
       <FiltersPageClientInner />
     </QueryClientProvider>
   );
-} 
+}

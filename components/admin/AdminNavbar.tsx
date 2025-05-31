@@ -125,16 +125,7 @@ export default function AdminNavbar() {
         </NavbarContent>
 
         <NavbarContent justify="end" className="gap-5">
-          <motion.div variants={itemVariants}>
-            <NavbarItem>
-              <button className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-300 relative">
-                <FaBell className="text-gray-600" />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center">
-                  ۳
-                </span>
-              </button>
-            </NavbarItem>
-          </motion.div>
+
 
           <motion.div variants={itemVariants}>
             <NavbarItem>

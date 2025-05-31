@@ -1,6 +1,9 @@
 import { getUsers } from "@/components/admin/data/actions";
 import UserManagement from "@/components/admin/users/UserManagement";
 
+// Force this page to be dynamic to avoid static generation issues with cookies
+export const dynamic = "force-dynamic";
+
 export default async function UsersPage() {
   // Fetch initial users data from the server action (fallback)
   try {

@@ -29,4 +29,4 @@ const FilterSearch: React.FC<FilterSearchProps> = ({
   );
 };
 
-export default FilterSearch; 
+export default FilterSearch;
