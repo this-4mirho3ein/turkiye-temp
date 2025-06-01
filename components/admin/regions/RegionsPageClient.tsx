@@ -44,11 +44,32 @@ interface ApiRegion {
   enName?: string;
   code?: string;
   phoneCode?: string;
+  country?:
+    | string
+    | {
+        _id: string;
+        name: string;
+        enName?: string;
+        code?: string;
+        [key: string]: any;
+      }; // Can be ID or full object
+  province?:
+    | string
+    | {
+        _id: string;
+        name: string;
+        enName?: string;
+        code?: string;
+        [key: string]: any;
+      }; // Can be ID or full object
+  city?: { _id: string; name: string; enName?: string; [key: string]: any }; // Full object
   parent?: {
     _id?: string;
     id?: string | number;
     name: string;
   };
+  isActive?: boolean;
+  isDeleted?: boolean;
   [key: string]: any; // For any other properties
 }
 
@@ -235,26 +256,81 @@ function RegionsPageClientInner() {
         slug: item.slug,
         originalId: item._id, // Store original string ID
         isDeleted: !!item.isDeleted, // Ensure boolean conversion with double negation
+        enName: item.enName || "", // Add enName for all types
+      };
+
+      // Helper function to get parent name by ID
+      const getParentNameById = (
+        parentId: string,
+        parentType: string
+      ): string => {
+        try {
+          let parentData: ApiRegion[] = [];
+
+          // Get the appropriate parent data based on current type
+          if (parentType === "countries") {
+            parentData = countriesData || [];
+          } else if (parentType === "provinces") {
+            parentData = provincesData || [];
+          } else if (parentType === "cities") {
+            parentData = citiesData || [];
+          }
+
+          // Find parent by ID
+          const parent = parentData.find((p) => p._id === parentId);
+          return parent?.name || "";
+        } catch (error) {
+          console.error("Error getting parent name:", error);
+          return "";
+        }
       };
 
       // Handle parent info based on region type
       if (type === "provinces") {
         // For provinces, the parent is the country field
         if (item.country) {
-          result.parent = {
-            id: createNumericId(item.country.toString()),
-            name: "", // We don't have the name in this API response
-            originalId: item.country.toString(),
-          };
+          if (typeof item.country === "object" && item.country._id) {
+            // Country is a full object
+            result.parent = {
+              id: createNumericId(item.country._id.toString()),
+              name: item.country.name || "",
+              originalId: item.country._id.toString(),
+            };
+          } else if (typeof item.country === "string") {
+            // Country is just an ID, look it up
+            const parentName = getParentNameById(
+              item.country.toString(),
+              "countries"
+            );
+            result.parent = {
+              id: createNumericId(item.country.toString()),
+              name: parentName,
+              originalId: item.country.toString(),
+            };
+          }
         }
       } else if (type === "cities") {
-        // For cities, the parent is the province field
+        // For cities, the parent is the province object (full object included in response)
         if (item.province) {
-          result.parent = {
-            id: createNumericId(item.province.toString()),
-            name: "", // We don't have the name in this API response
-            originalId: item.province.toString(),
-          };
+          if (typeof item.province === "object" && item.province._id) {
+            // Province is a full object
+            result.parent = {
+              id: createNumericId(item.province._id.toString()),
+              name: item.province.name || "",
+              originalId: item.province._id.toString(),
+            };
+          } else if (typeof item.province === "string") {
+            // Province is just an ID, look it up
+            const parentName = getParentNameById(
+              item.province.toString(),
+              "provinces"
+            );
+            result.parent = {
+              id: createNumericId(item.province.toString()),
+              name: parentName,
+              originalId: item.province.toString(),
+            };
+          }
         }
       } else if (type === "areas") {
         // For areas, the parent is the city object
@@ -277,9 +353,8 @@ function RegionsPageClientInner() {
         }
       }
 
-      // Add type-specific properties
+      // Add type-specific properties for countries
       if (type === "countries" || !type) {
-        result.enName = item.enName || "";
         result.code = item.code || "";
         result.phoneCode = item.phoneCode || "";
       }
@@ -320,17 +395,17 @@ function RegionsPageClientInner() {
 
   const mappedProvinces = useMemo(
     () => mapToRegions(provincesData, "provinces"),
-    [provincesData]
+    [provincesData, countriesData]
   );
 
   const mappedCities = useMemo(
     () => mapToRegions(citiesData, "cities"),
-    [citiesData]
+    [citiesData, provincesData]
   );
 
   const mappedAreas = useMemo(
     () => mapToRegions(areasData, "areas"),
-    [areasData]
+    [areasData, citiesData]
   );
 
   // Refetch all data when tab changes to ensure fresh data

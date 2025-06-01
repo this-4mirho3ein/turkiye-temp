@@ -12,12 +12,12 @@ import {
   Select,
   SelectItem,
   Checkbox,
-  Textarea,
   Chip,
+  Divider,
 } from "@heroui/react";
 import { AdminFilter } from "@/types/interfaces";
 import { FilterTypeEnum } from "@/types/enums";
-import { FaPlus, FaTimes } from "react-icons/fa";
+import { FaPlus, FaTimes, FaFilter, FaTag, FaCog } from "react-icons/fa";
 import { getAdminCategories } from "@/controllers/makeRequest";
 
 interface FilterFormModalProps {
@@ -127,7 +127,8 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
     }));
   };
 
-  const handleCategoryChange = (selectedKeys: Set<string>) => {
+  const handleCategoryChange = (value: string) => {
+    const selectedKeys = new Set([value]);
     setFormData((prev) => ({
       ...prev,
       categories: Array.from(selectedKeys),
@@ -156,184 +157,285 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size="2xl"
+      size="3xl"
       scrollBehavior="inside"
       classNames={{
-        base: "max-h-[90vh]",
-        body: "py-6",
+        base: "max-h-[95vh]",
+        header:
+          "border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50",
+        body: "py-6 px-6",
+        footer: "border-t border-gray-200 bg-gray-50",
       }}
     >
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1">
-          {filter ? "ویرایش فیلتر" : "افزودن فیلتر جدید"}
+        <ModalHeader className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <FaFilter className="text-blue-600 text-lg" />
+            <span className="text-lg font-bold">
+              {filter ? "ویرایش فیلتر" : "افزودن فیلتر جدید"}
+            </span>
+          </div>
         </ModalHeader>
+
         <ModalBody>
-          <div className="space-y-4">
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="نام فیلتر"
-                placeholder="نام فیلتر را وارد کنید"
-                value={formData.name || ""}
-                onValueChange={(value) => handleInputChange("name", value)}
-                isRequired
-              />
-              <Input
-                label="نام انگلیسی"
-                placeholder="نام انگلیسی فیلتر را وارد کنید"
-                value={formData.enName || ""}
-                onValueChange={(value) => handleInputChange("enName", value)}
-                isRequired
-              />
+          <div className="space-y-6">
+            {/* Basic Information Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">
+                <FaTag className="text-blue-500" />
+                اطلاعات پایه
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="نام فیلتر"
+                  placeholder="نام فیلتر را وارد کنید"
+                  value={formData.name || ""}
+                  onValueChange={(value) => handleInputChange("name", value)}
+                  isRequired
+                  variant="bordered"
+                  classNames={{
+                    input: "text-right",
+                    label: "text-right",
+                  }}
+                />
+                <Input
+                  label="نام انگلیسی"
+                  placeholder="English filter name"
+                  value={formData.enName || ""}
+                  onValueChange={(value) => handleInputChange("enName", value)}
+                  isRequired
+                  variant="bordered"
+                  classNames={{
+                    input: "text-left font-mono",
+                    label: "text-right",
+                  }}
+                />
+              </div>
             </div>
 
-            {/* Filter Types */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <select
-                value={formData.adInputType}
-                onChange={(e) =>
-                  handleInputChange(
-                    "adInputType",
-                    e.target.value as FilterTypeEnum
-                  )
-                }
-                className={`w-full rounded-md border p-2 pr-10 focus:outline-none focus:border-primary focus:ring-primary ${
-                  formData.adInputType ? "border-red-500" : "border-gray-300"
-                }`}
-                disabled={isSubmitting}
-              >
-                <option value="">انتخاب نوع فیلتر در ایجاد آگهی</option>
-                {filterTypeOptions.map((option) => (
-                  <option key={option.key} value={option.key}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-          
-              <select
-                value={formData.userFilterType}
-                onChange={(e) =>
-                  handleInputChange(
-                    "userFilterType",
-                    e.target.value as FilterTypeEnum
-                  )
-                }
-                className={`w-full rounded-md border p-2 pr-10 focus:outline-none focus:border-primary focus:ring-primary ${
-                  formData.userFilterType ? "border-red-500" : "border-gray-300"
-                }`}
-                disabled={isSubmitting}
-              >
-                <option value="">انتخاب نوع فیلتر در صفحه جستجو</option>
-                {filterTypeOptions.map((option) => (
-                  <option key={option.key} value={option.key}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+            <Divider />
+
+            {/* Filter Types Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">
+                <FaCog className="text-green-500" />
+                انواع فیلتر
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Select
+                  label="نوع ورودی در ایجاد آگهی"
+                  placeholder="انتخاب کنید"
+                  selectedKeys={
+                    formData.adInputType ? [formData.adInputType] : []
+                  }
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as FilterTypeEnum;
+                    handleInputChange("adInputType", value);
+                  }}
+                  variant="bordered"
+                  classNames={{
+                    label: "text-right",
+                    trigger: "text-right",
+                  }}
+                >
+                  {filterTypeOptions.map((option) => (
+                    <SelectItem key={option.key}>{option.label}</SelectItem>
+                  ))}
+                </Select>
+
+                <Select
+                  label="نوع فیلتر در صفحه جستجو"
+                  placeholder="انتخاب کنید"
+                  selectedKeys={
+                    formData.userFilterType ? [formData.userFilterType] : []
+                  }
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as FilterTypeEnum;
+                    handleInputChange("userFilterType", value);
+                  }}
+                  variant="bordered"
+                  classNames={{
+                    label: "text-right",
+                    trigger: "text-right",
+                  }}
+                >
+                  {filterTypeOptions.map((option) => (
+                    <SelectItem key={option.key}>{option.label}</SelectItem>
+                  ))}
+                </Select>
+              </div>
             </div>
 
-            {/* Row and Settings */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Input
-                type="number"
-                label="ردیف"
-                placeholder="ردیف نمایش"
-                value={formData.row?.toString() || "0"}
-                onValueChange={(value) =>
-                  handleInputChange("row", parseInt(value) || 0)
-                }
-              />
-              <div className="flex flex-col gap-2">
-                <Checkbox
-                  isSelected={formData.isRequired || false}
-                  onValueChange={(checked) =>
-                    handleInputChange("isRequired", checked)
-                  }
-                >
-                  فیلتر اجباری
-                </Checkbox>
-                <Checkbox
-                  isSelected={formData.isMain || false}
-                  onValueChange={(checked) =>
-                    handleInputChange("isMain", checked)
-                  }
-                >
-                  فیلتر اصلی
-                </Checkbox>
+            <Divider />
+
+            {/* Settings Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">
+                <FaCog className="text-purple-500" />
+                تنظیمات
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <Input
+                    type="number"
+                    label="ردیف نمایش"
+                    placeholder="0"
+                    value={formData.row?.toString() || "0"}
+                    onValueChange={(value) =>
+                      handleInputChange("row", parseInt(value) || 0)
+                    }
+                    variant="bordered"
+                    classNames={{
+                      input: "text-center",
+                      label: "text-right",
+                    }}
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-3">
+                    <Checkbox
+                      isSelected={formData.isRequired || false}
+                      onValueChange={(checked) =>
+                        handleInputChange("isRequired", checked)
+                      }
+                      color="warning"
+                      className="text-right"
+                    >
+                      <span className="text-sm font-medium">فیلتر اجباری</span>
+                    </Checkbox>
+
+                    <Checkbox
+                      isSelected={formData.isMain || false}
+                      onValueChange={(checked) =>
+                        handleInputChange("isMain", checked)
+                      }
+                      color="success"
+                      className="text-right"
+                    >
+                      <span className="text-sm font-medium">
+                        فیلتر اصلی (برای همه دسته‌ها)
+                      </span>
+                    </Checkbox>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Categories Selection (only if not main filter) */}
             {!formData.isMain && (
-              <select
-                value={formData.categories}
-                onChange={(e) => handleCategoryChange(new Set(e.target.value))}
-                className={`w-full rounded-md border p-2 pr-10 focus:outline-none focus:border-primary focus:ring-primary ${
-                  formData.categories && formData.categories.length > 0
-                    ? "border-red-500"
-                    : "border-gray-300"
-                }`}
-                disabled={isSubmitting}
-              >
-                <option value="">انتخاب دسته‌بندی</option>
-                {categories.map((category) => (
-                  <option key={category._id} value={category._id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
+              <>
+                <Divider />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">
+                    <FaTag className="text-orange-500" />
+                    دسته‌بندی
+                  </div>
+
+                  <Select
+                    label="انتخاب دسته‌بندی"
+                    placeholder="دسته‌بندی مورد نظر را انتخاب کنید"
+                    selectedKeys={formData.categories || []}
+                    onSelectionChange={(keys) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        categories: Array.from(keys) as string[],
+                      }));
+                    }}
+                    variant="bordered"
+                    isLoading={loadingCategories}
+                    selectionMode="multiple"
+                    classNames={{
+                      label: "text-right",
+                      trigger: "text-right",
+                    }}
+                  >
+                    {categories.map((category) => (
+                      <SelectItem key={category._id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                </div>
+              </>
             )}
 
             {/* Options (for ENUM type) */}
             {(formData.adInputType === FilterTypeEnum.ENUM ||
               formData.userFilterType === FilterTypeEnum.ENUM) && (
-              <div className="space-y-3">
-                <label className="text-sm font-medium">گزینه‌های فیلتر</label>
-
-                {/* Add new option */}
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="گزینه جدید را وارد کنید"
-                    value={newOption}
-                    onValueChange={setNewOption}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleAddOption();
-                      }
-                    }}
-                    className="flex-1"
-                  />
-                  <Button
-                    color="primary"
-                    onPress={handleAddOption}
-                    isDisabled={!newOption.trim()}
-                    startContent={<FaPlus />}
-                  >
-                    افزودن
-                  </Button>
-                </div>
-
-                {/* Display existing options */}
-                {formData.options && formData.options.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {formData.options.map((option, index) => (
-                      <Chip
-                        key={index}
-                        onClose={() => handleRemoveOption(option)}
-                        variant="flat"
-                        color="primary"
-                      >
-                        {option}
-                      </Chip>
-                    ))}
+              <>
+                <Divider />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">
+                    <FaPlus className="text-green-500" />
+                    گزینه‌های فیلتر
                   </div>
-                )}
-              </div>
+
+                  {/* Add new option */}
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="گزینه جدید را وارد کنید"
+                      value={newOption}
+                      onValueChange={setNewOption}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          handleAddOption();
+                        }
+                      }}
+                      variant="bordered"
+                      className="flex-1"
+                      classNames={{
+                        input: "text-right",
+                      }}
+                    />
+                    <Button
+                      color="primary"
+                      onPress={handleAddOption}
+                      isDisabled={!newOption.trim()}
+                      startContent={<FaPlus />}
+                      className="bg-blue-500 hover:bg-blue-600"
+                    >
+                      افزودن
+                    </Button>
+                  </div>
+
+                  {/* Display existing options */}
+                  {formData.options && formData.options.length > 0 && (
+                    <div className="space-y-2">
+                      <span className="text-sm text-gray-600">
+                        گزینه‌های موجود:
+                      </span>
+                      <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg">
+                        {formData.options.map((option, index) => (
+                          <Chip
+                            key={index}
+                            onClose={() => handleRemoveOption(option)}
+                            variant="flat"
+                            color="primary"
+                            className="text-right"
+                          >
+                            {option}
+                          </Chip>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </ModalBody>
-        <ModalFooter>
-          <Button variant="light" onPress={onClose} isDisabled={isSubmitting}>
+
+        <ModalFooter className="flex justify-end gap-3">
+          <Button
+            variant="bordered"
+            onPress={onClose}
+            isDisabled={isSubmitting}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50"
+          >
             انصراف
           </Button>
           <Button
@@ -341,8 +443,9 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
             onPress={handleSubmit}
             isLoading={isSubmitting}
             isDisabled={!isFormValid}
+            className="bg-blue-500 hover:bg-blue-600 text-white"
           >
-            {filter ? "به‌روزرسانی" : "ایجاد"}
+            {filter ? "به‌روزرسانی فیلتر" : "ایجاد فیلتر"}
           </Button>
         </ModalFooter>
       </ModalContent>

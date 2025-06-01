@@ -10,9 +10,5 @@ interface PageProps {
 export default async function Page({ params }: PageProps) {
   const { id } = await params;
 
-  return (
-    <div className="p-6">
-      <FilterDetail filterId={id} />
-    </div>
-  );
+  return <FilterDetail filterId={id} />;
 }

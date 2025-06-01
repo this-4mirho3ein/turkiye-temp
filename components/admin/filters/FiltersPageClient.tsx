@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Card from "@/components/admin/ui/Card";
+import Card, { CardBody } from "@/components/admin/ui/Card";
 import FilterTable, { AdminFilter } from "./FilterTable";
 import FilterFormModal from "./FilterFormModal";
 import DeleteFilterModal from "./DeleteFilterModal";
 import FilterSearch from "./FilterSearch";
 import { Button, Checkbox } from "@heroui/react";
-import { FaPlus, FaSync } from "react-icons/fa";
+import { FaFilter, FaPlus, FaSync, FaListAlt } from "react-icons/fa";
 import {
   getAdminFilters,
   createAdminFilter,
@@ -239,63 +239,80 @@ function FiltersPageClientInner() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">مدیریت فیلترها</h1>
-        <div className="flex gap-3">
-          <Button
-            color="primary"
-            startContent={<FaPlus />}
-            onPress={() => handleAddEdit()}
-            isDisabled={isSubmitting}
-          >
-            افزودن فیلتر جدید
-          </Button>
-          <Button
-            color="default"
-            variant="bordered"
-            startContent={<FaSync />}
-            onPress={refreshData}
-            isDisabled={isSubmitting}
-          >
-            به‌روزرسانی
-          </Button>
-        </div>
-      </div>
-
-      {/* Search and Filters */}
-      <Card>
-        <div className="p-4 space-y-4">
-          <FilterSearch
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-          />
-
-          <div className="flex items-center gap-4">
-            <Checkbox
-              isSelected={showDeletedItems}
-              onValueChange={setShowDeletedItems}
+      <div className="flex flex-col gap-4">
+        {/* Header with title and refresh button */}
+        <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+          <div className="flex items-center">
+            <FaListAlt className="text-primary ml-3 text-xl" />
+            <h1 className="text-xl md:text-2xl font-bold">مدیریت فیلترها</h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              color="primary"
+              startContent={<FaPlus />}
+              onPress={() => handleAddEdit()}
+              isDisabled={isSubmitting}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
             >
-              نمایش فیلترهای حذف شده
-            </Checkbox>
-            <span className="text-sm text-gray-500">
-              {displayFilters.length} فیلتر یافت شد
-            </span>
+              <span className="hidden md:inline">افزودن فیلتر جدید</span>
+              <span className="md:hidden">افزودن</span>
+            </Button>
+            <button
+              onClick={refreshData}
+              disabled={isSubmitting}
+              className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <FaSync className="text-primary" />
+              <span className="hidden md:inline">به‌روزرسانی</span>
+            </button>
           </div>
         </div>
-      </Card>
 
-      {/* Filters Table */}
-      <Card>
-        <FilterTable
-          filters={displayFilters}
-          isLoading={isLoading}
-          onEdit={handleAddEdit}
-          onDelete={handleDelete}
-          onRestore={handleRestore}
-          isSubmitting={isSubmitting}
-        />
-      </Card>
+        {/* Search and Filters */}
+        <div className="bg-white p-4 rounded-lg shadow-sm border-t-4 border-purple-500">
+          <div className="font-bold text-gray-700 mb-3 flex items-center">
+            <FaFilter className="ml-2 text-purple-500" />
+            جستجو و فیلترها
+          </div>
+
+          <div className="space-y-4">
+            <FilterSearch
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+            />
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Checkbox
+                  isSelected={showDeletedItems}
+                  onValueChange={setShowDeletedItems}
+                  className="ml-2 text-purple-500"
+                />
+                <label className="mb-0 text-sm cursor-pointer">
+                  نمایش فیلترهای حذف شده
+                </label>
+              </div>
+              <span className="text-sm text-gray-500">
+                {displayFilters.length} فیلتر یافت شد
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters Table */}
+        <Card shadow="sm" className="bg-white rounded-lg shadow-sm">
+          <CardBody>
+            <FilterTable
+              filters={displayFilters}
+              isLoading={isLoading}
+              onEdit={handleAddEdit}
+              onDelete={handleDelete}
+              onRestore={handleRestore}
+              isSubmitting={isSubmitting}
+            />
+          </CardBody>
+        </Card>
+      </div>
 
       {/* Form Modal */}
       <FilterFormModal
