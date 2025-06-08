@@ -6,7 +6,14 @@ export function middleware(request: NextRequest) {
 
   console.log("🔐 Middleware running for path:", pathname);
 
-  // Only run this middleware for admin routes
+  // Redirect root path to admin
+  if (pathname === "/") {
+    console.log("🔐 Redirecting root path to /admin");
+    const adminUrl = new URL("/admin", request.url);
+    return NextResponse.redirect(adminUrl);
+  }
+
+  // Only run authentication middleware for admin routes
   if (pathname.startsWith("/admin")) {
     // Don't check token for login route and its subroutes
     if (pathname.startsWith("/admin/login")) {
@@ -49,6 +56,6 @@ export function middleware(request: NextRequest) {
 
 // Define which routes this middleware should run on
 export const config = {
-  // Only apply to admin routes
-  matcher: ["/admin", "/admin/:path*"],
+  // Apply to root and admin routes
+  matcher: ["/", "/admin", "/admin/:path*"],
 };

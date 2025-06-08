@@ -2,10 +2,8 @@
 
 import React, { useState } from "react";
 import { FaSync } from "react-icons/fa";
-import ReportsStats from "./ReportsStats";
 import ReportDataFetcher, { ReportData } from "./ReportDataFetcher";
 import ReportsDetails from "./ReportsDetails";
-import { StatItem } from "../data/stats";
 import Button from "../ui/Button";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -23,14 +21,12 @@ const queryClient = new QueryClient({
 // Inner component that uses React Query
 function ReportsPageClientInner() {
   const [reportData, setReportData] = useState<ReportData | null>(null);
-  const [stats, setStats] = useState<StatItem[]>([]);
   const [forceRefresh, setForceRefresh] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Handle data loaded from the fetcher
-  const handleDataLoaded = (data: ReportData, statsData: StatItem[]) => {
+  const handleDataLoaded = (data: ReportData) => {
     setReportData(data);
-    setStats(statsData);
     setIsLoading(false);
     setForceRefresh(false); // Reset forceRefresh flag after data is loaded
   };
@@ -63,26 +59,18 @@ function ReportsPageClientInner() {
         forceRefresh={forceRefresh}
       />
 
-      {/* Stats Section */}
-      <div className="bg-white rounded-lg p-6 shadow-sm">
-        <h2 className="text-xl font-semibold mb-4">خلاصه آمار</h2>
-        {isLoading ? (
-          <div className="p-8 text-center text-gray-500">
-            در حال بارگذاری داده‌ها...
-          </div>
-        ) : (
-          <ReportsStats stats={stats} />
-        )}
-      </div>
-
-      {/* Detailed Stats Sections */}
+      {/* Detailed Reports */}
       {isLoading ? (
         <div className="bg-white rounded-lg p-8 text-center text-gray-500 shadow-sm">
-          در حال بارگذاری جزئیات...
+          در حال بارگذاری گزارش‌ها...
         </div>
       ) : reportData ? (
         <ReportsDetails data={reportData} />
-      ) : null}
+      ) : (
+        <div className="bg-white rounded-lg p-8 text-center text-gray-500 shadow-sm">
+          هیچ داده‌ای برای نمایش وجود ندارد
+        </div>
+      )}
     </div>
   );
 }
