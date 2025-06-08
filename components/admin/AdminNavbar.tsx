@@ -95,6 +95,10 @@ export default function AdminNavbar() {
     }
   };
 
+  const handleProfileClick = () => {
+    router.push("/admin/profile");
+  };
+
   return (
     <motion.div initial="hidden" animate="visible" variants={navbarVariants}>
       <Navbar
@@ -125,8 +129,6 @@ export default function AdminNavbar() {
         </NavbarContent>
 
         <NavbarContent justify="end" className="gap-5">
-
-
           <motion.div variants={itemVariants}>
             <NavbarItem>
               <Dropdown>
@@ -152,6 +154,7 @@ export default function AdminNavbar() {
                   <DropdownItem
                     key="profile"
                     startContent={<FaUser size={16} className="text-primary" />}
+                    onClick={handleProfileClick}
                   >
                     پروفایل
                   </DropdownItem>
@@ -235,6 +238,15 @@ export default function AdminNavbar() {
             >
               <FaFilter className="ml-3 text-primary" />
               فیلترها
+            </Link>
+          </NavbarMenuItem>
+          <NavbarMenuItem>
+            <Link
+              href="/admin/profile"
+              className="w-full py-3 px-3 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg transition-colors flex items-center"
+            >
+              <FaUser className="ml-3 text-primary" />
+              پروفایل
             </Link>
           </NavbarMenuItem>
         </NavbarMenu>

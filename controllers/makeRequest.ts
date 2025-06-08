@@ -2236,6 +2236,102 @@ export const getAdminUserById = async (id: string): Promise<ApiResponse> => {
     };
   }
 };
+
+// Get current user profile by ID
+export const getCurrentUserProfile = async (
+  userId: string
+): Promise<ApiResponse> => {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+
+    if (!token) {
+      return {
+        success: false,
+        message: "توکن احراز هویت یافت نشد",
+      };
+    }
+
+    console.log(`🔍 Fetching current user profile for ID: ${userId}`);
+
+    const response = await api.get(`/admin/user/get-user/${userId}`, {
+      headers: {
+        "x-access-token": token,
+      },
+    });
+
+    console.log(
+      `🔍 Current user profile response:`,
+      response.status,
+      response.data
+    );
+
+    return {
+      success: true,
+      data: response.data.data || response.data,
+      message: response.data.message || "اطلاعات پروفایل با موفقیت دریافت شد",
+      status: response.status,
+    };
+  } catch (error: any) {
+    console.error("Error fetching current user profile:", error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+    }
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log(
+        "⚙️ Attempting direct Axios fallback for current user profile..."
+      );
+
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+
+      const directResponse = await axios.get(
+        `${mainConfig.apiServer}/admin/user/get-user/${userId}`,
+        {
+          headers: {
+            "x-access-token": token || "",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log(
+        `⚙️ Direct current user profile response:`,
+        directResponse.status,
+        directResponse.data
+      );
+
+      return {
+        success: true,
+        data: directResponse.data.data || directResponse.data,
+        message:
+          directResponse.data.message || "اطلاعات پروفایل با موفقیت دریافت شد",
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      console.error(
+        "❌ Direct current user profile fallback also failed:",
+        fallbackErr
+      );
+
+      return {
+        success: false,
+        message:
+          error.response?.data?.message || "خطا در دریافت اطلاعات پروفایل",
+        status: error.response?.status,
+      };
+    }
+  }
+};
 //#endregion
 
 //#region AdminPropertyTypes
