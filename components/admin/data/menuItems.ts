@@ -11,6 +11,7 @@ import {
   FaLayerGroup,
   FaCheckCircle,
   FaFilter,
+  FaMoneyBill,
 } from "react-icons/fa";
 
 export interface MenuItem {
@@ -30,6 +31,7 @@ const mainMenuItems: MenuItem[] = [
   { name: "مناطق", href: "/admin/regions", icon: FaMapMarkerAlt },
   { name: "فیلترها", href: "/admin/filters", icon: FaFilter },
   { name: "آمار و گزارشات", href: "/admin/reports", icon: FaChartBar },
+  { name: "پلن ها", href: "/admin/plans", icon: FaMoneyBill },
   // { name: "پیام‌ها", href: "/admin/messages", icon: FaComments },
 ];
 

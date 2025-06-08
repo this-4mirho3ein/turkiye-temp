@@ -1,3 +1,8 @@
+import { PlanListItem } from "@/components/admin/plans/Plan";
+import {
+  CreatePlanPayload,
+  UpdatePlanPayload,
+} from "@/components/admin/plans/PlansList";
 import mainConfig from "@/configs/mainConfig";
 import axios from "axios";
 
@@ -3182,4 +3187,143 @@ export const restoreAdminFilter = async (id: string): Promise<ApiResponse> => {
   }
 };
 
-//#endregion
+// Plan types
+export type PlanType = "free" | "premium" | "business" | "enterprise";
+
+// Plan list item type
+
+// Create plan payload
+// API functions
+export async function getPlans(showDeleted?: boolean): Promise<PlanListItem[]> {
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+  const headers: Record<string, string> = {};
+  if (token) headers["x-access-token"] = token;
+
+  let url = `${mainConfig.apiServer}/admin/plan/get`;
+  if (typeof showDeleted === "boolean") {
+    url += `?isDeleted=${showDeleted}`;
+  }
+
+  const res = await axios.get(url, {
+    headers,
+  });
+  return res.data.data;
+}
+
+export async function createPlan(payload: CreatePlanPayload) {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const res = await api.post(
+      `${mainConfig.apiServer}/admin/plan/create`,
+      payload,
+      { headers }
+    );
+    return {
+      success: res.data.success,
+      message: res.data?.message || "پلن با موفقیت ایجاد شد",
+      data: res.data?.data,
+      status: res.status,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || " ایجاد پلن با خطا مواجه شد",
+      status: error.response?.status,
+    };
+  }
+}
+
+export async function updatePlan(id: string, payload: UpdatePlanPayload) {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const res = await api.put(
+      `${mainConfig.apiServer}/admin/plan/update/${id}`,
+      payload,
+      { headers }
+    );
+    return {
+      success: res.data.success,
+      message: res.data?.message || "پلن با موفقیت ویرایش شد",
+      data: res.data?.data,
+      status: res.status,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || " ویرایش پلن با خطا مواجه شد",
+      status: error.response?.status,
+    };
+  }
+}
+
+export async function deletePlan(id: string) {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const res = await api.delete(
+      `${mainConfig.apiServer}/admin/plan/delete/${id}`,
+      {
+        headers,
+      }
+    );
+    return {
+      success: res.data.success,
+      message: res.data?.message || "پلن با موفقیت حدف شد",
+      data: res.data?.data,
+      status: res.status,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || " حذف پلن با خطا مواجه شد",
+      status: error.response?.status,
+    };
+  }
+}
+
+export async function restorePlan(id: string) {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const res = await axios.put(
+      `${mainConfig.apiServer}/admin/plan/restore/${id}`,
+      {},
+      { headers }
+    );
+    return {
+      success: res.data.success,
+      message: res.data?.message || "پلن با موفقیت حدف شد",
+      data: res.data?.data,
+      status: res.status,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || " حذف پلن با خطا مواجه شد",
+      status: error.response?.status,
+    };
+  }
+}

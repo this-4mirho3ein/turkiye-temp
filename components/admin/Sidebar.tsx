@@ -77,16 +77,14 @@ export default function Sidebar() {
               >
                 <Link
                   href={item.href}
-                  className={`flex items-center px-4 py-3 text-sm rounded-lg transition-all duration-300 ${
-                    isActive
-                      ? "bg-gradient-to-r from-primary-600 to-primary text-white shadow-md"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
+                  className={`flex items-center px-4 py-3 text-sm rounded-lg transition-all duration-300 ${isActive
+                    ? "bg-gradient-to-r from-primary-600 to-primary text-white shadow-md"
+                    : "text-gray-700 hover:bg-gray-100"
+                    }`}
                 >
                   <item.icon
-                    className={`ml-3 ${
-                      isActive ? "text-white" : "text-gray-500"
-                    }`}
+                    className={`ml-3 ${isActive ? "text-white" : "text-gray-500"
+                      }`}
                     size={18}
                   />
                   <span className="font-medium">{item.name}</span>
@@ -108,7 +106,7 @@ export default function Sidebar() {
             variant="light"
             size="sm"
             color="primary"
-            onPress={() => {}}
+            onPress={() => { }}
             className="text-xs hover:bg-primary/10"
           >
             راهنما
