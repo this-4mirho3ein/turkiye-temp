@@ -15,7 +15,7 @@ import {
   Chip,
   Divider,
 } from "@heroui/react";
-import { AdminFilter } from "@/types/interfaces";
+import { AdminFilter, FilterOption } from "@/types/interfaces";
 import { FilterTypeEnum } from "@/types/enums";
 import { FaPlus, FaTimes, FaFilter, FaTag, FaCog } from "react-icons/fa";
 import { getAdminCategories } from "@/controllers/makeRequest";
@@ -38,8 +38,9 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
   const [formData, setFormData] = useState<Partial<AdminFilter>>({
     name: "",
     enName: "",
-    adInputType: FilterTypeEnum.STRING,
-    userFilterType: FilterTypeEnum.STRING,
+    adInputType: FilterTypeEnum.NUMBER,
+    userFilterType: FilterTypeEnum.ENUM,
+    adSellType: "both",
     options: [],
     isRequired: false,
     isMain: false,
@@ -47,7 +48,7 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
     categories: [],
   });
 
-  const [newOption, setNewOption] = useState("");
+  const [newOption, setNewOption] = useState({ label: "", value: "" });
   const [categories, setCategories] = useState<any[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
 
@@ -77,8 +78,9 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
         setFormData({
           name: filter.name || "",
           enName: filter.enName || "",
-          adInputType: filter.adInputType || FilterTypeEnum.STRING,
-          userFilterType: filter.userFilterType || FilterTypeEnum.STRING,
+          adInputType: filter.adInputType || FilterTypeEnum.NUMBER,
+          userFilterType: filter.userFilterType || FilterTypeEnum.ENUM,
+          adSellType: filter.adSellType || "both",
           options: filter.options || [],
           isRequired: filter.isRequired || false,
           isMain: filter.isMain || false,
@@ -89,8 +91,9 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
         setFormData({
           name: "",
           enName: "",
-          adInputType: FilterTypeEnum.STRING,
-          userFilterType: FilterTypeEnum.STRING,
+          adInputType: FilterTypeEnum.NUMBER,
+          userFilterType: FilterTypeEnum.ENUM,
+          adSellType: "both",
           options: [],
           isRequired: false,
           isMain: false,
@@ -98,7 +101,7 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
           categories: [],
         });
       }
-      setNewOption("");
+      setNewOption({ label: "", value: "" });
     }
   }, [isOpen, filter]);
 
@@ -110,20 +113,29 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
   };
 
   const handleAddOption = () => {
-    if (newOption.trim() && !formData.options?.includes(newOption.trim())) {
+    if (
+      newOption.label.trim() &&
+      newOption.value.trim() &&
+      !formData.options?.some((opt) => opt.value === newOption.value.trim())
+    ) {
       setFormData((prev) => ({
         ...prev,
-        options: [...(prev.options || []), newOption.trim()],
+        options: [
+          ...(prev.options || []),
+          { label: newOption.label.trim(), value: newOption.value.trim() },
+        ],
       }));
-      setNewOption("");
+      setNewOption({ label: "", value: "" });
     }
   };
 
-  const handleRemoveOption = (optionToRemove: string) => {
+  const handleRemoveOption = (optionToRemove: FilterOption) => {
     setFormData((prev) => ({
       ...prev,
       options:
-        prev.options?.filter((option) => option !== optionToRemove) || [],
+        prev.options?.filter(
+          (option) => option.value !== optionToRemove.value
+        ) || [],
     }));
   };
 
@@ -139,11 +151,17 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
     onSave(formData);
   };
 
-  const filterTypeOptions = [
-    { key: FilterTypeEnum.STRING, label: "متن" },
+  // Restricted options for adInputType: "number", "boolean", "enum", "range"
+  const adInputTypeOptions = [
     { key: FilterTypeEnum.NUMBER, label: "عدد" },
-    { key: FilterTypeEnum.ENUM, label: "انتخابی" },
     { key: FilterTypeEnum.BOOLEAN, label: "بولین" },
+    { key: FilterTypeEnum.ENUM, label: "انتخابی" },
+    { key: FilterTypeEnum.RANGE, label: "محدوده" },
+  ];
+
+  // Restricted options for userFilterType: "enum", "range"
+  const userFilterTypeOptions = [
+    { key: FilterTypeEnum.ENUM, label: "انتخابی" },
     { key: FilterTypeEnum.RANGE, label: "محدوده" },
   ];
 
@@ -223,7 +241,7 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
                 انواع فیلتر
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Select
                   label="نوع ورودی در ایجاد آگهی"
                   placeholder="انتخاب کنید"
@@ -240,7 +258,7 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
                     trigger: "text-right",
                   }}
                 >
-                  {filterTypeOptions.map((option) => (
+                  {adInputTypeOptions.map((option) => (
                     <SelectItem key={option.key}>{option.label}</SelectItem>
                   ))}
                 </Select>
@@ -261,9 +279,33 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
                     trigger: "text-right",
                   }}
                 >
-                  {filterTypeOptions.map((option) => (
+                  {userFilterTypeOptions.map((option) => (
                     <SelectItem key={option.key}>{option.label}</SelectItem>
                   ))}
+                </Select>
+
+                <Select
+                  label="نوع آگهی"
+                  placeholder="انتخاب کنید"
+                  selectedKeys={
+                    formData.adSellType ? [formData.adSellType] : []
+                  }
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as
+                      | "both"
+                      | "sale"
+                      | "rent";
+                    handleInputChange("adSellType", value);
+                  }}
+                  variant="bordered"
+                  classNames={{
+                    label: "text-right",
+                    trigger: "text-right",
+                  }}
+                >
+                  <SelectItem key="both">هر دو (فروش و اجاره)</SelectItem>
+                  <SelectItem key="sale">فروش</SelectItem>
+                  <SelectItem key="rent">اجاره</SelectItem>
                 </Select>
               </div>
             </div>
@@ -375,50 +417,89 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
                   </div>
 
                   {/* Add new option */}
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="گزینه جدید را وارد کنید"
-                      value={newOption}
-                      onValueChange={setNewOption}
-                      onKeyPress={(e) => {
-                        if (e.key === "Enter") {
-                          handleAddOption();
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <Input
+                        label="برچسب گزینه"
+                        placeholder="نام نمایشی گزینه"
+                        value={newOption.label}
+                        onValueChange={(value) =>
+                          setNewOption((prev) => ({ ...prev, label: value }))
                         }
-                      }}
-                      variant="bordered"
-                      className="flex-1"
-                      classNames={{
-                        input: "text-right",
-                      }}
-                    />
+                        variant="bordered"
+                        classNames={{
+                          input: "text-right",
+                          label: "text-right",
+                        }}
+                      />
+                      <Input
+                        label="مقدار گزینه"
+                        placeholder="مقدار انگلیسی گزینه"
+                        value={newOption.value}
+                        onValueChange={(value) =>
+                          setNewOption((prev) => ({ ...prev, value: value }))
+                        }
+                        variant="bordered"
+                        classNames={{
+                          input: "text-left font-mono",
+                          label: "text-right",
+                        }}
+                      />
+                    </div>
                     <Button
                       color="primary"
                       onPress={handleAddOption}
-                      isDisabled={!newOption.trim()}
+                      isDisabled={
+                        !newOption.label.trim() || !newOption.value.trim()
+                      }
                       startContent={<FaPlus />}
-                      className="bg-blue-500 hover:bg-blue-600"
+                      className="bg-blue-500 hover:bg-blue-600 w-full"
                     >
-                      افزودن
+                      افزودن گزینه
                     </Button>
                   </div>
 
                   {/* Display existing options */}
                   {formData.options && formData.options.length > 0 && (
-                    <div className="space-y-2">
-                      <span className="text-sm text-gray-600">
+                    <div className="space-y-3">
+                      <span className="text-sm text-gray-600 font-medium">
                         گزینه‌های موجود:
                       </span>
-                      <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg">
+                      <div className="space-y-2 p-4 bg-gray-50 rounded-lg border">
                         {formData.options.map((option, index) => (
-                          <Chip
+                          <div
                             key={index}
-                            onClose={() => handleRemoveOption(option)}
-                            variant="flat"
-                            color="primary"
-                            className="text-right"
+                            className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 shadow-sm"
                           >
-                            {option}
-                          </Chip>
+                            <div className="flex-1 grid grid-cols-2 gap-4">
+                              <div className="text-right">
+                                <span className="text-xs text-gray-500 block mb-1">
+                                  برچسب:
+                                </span>
+                                <span className="text-sm font-medium text-gray-800">
+                                  {option.label}
+                                </span>
+                              </div>
+                              <div className="text-left">
+                                <span className="text-xs text-gray-500 block mb-1">
+                                  مقدار:
+                                </span>
+                                <span className="text-sm font-mono text-gray-800 bg-gray-100 px-2 py-1 rounded">
+                                  {option.value}
+                                </span>
+                              </div>
+                            </div>
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              color="danger"
+                              variant="light"
+                              onPress={() => handleRemoveOption(option)}
+                              className="mr-3"
+                            >
+                              <FaTimes />
+                            </Button>
+                          </div>
                         ))}
                       </div>
                     </div>

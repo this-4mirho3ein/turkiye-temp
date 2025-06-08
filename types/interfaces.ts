@@ -71,7 +71,8 @@ export interface AdminFilter {
   enName: string;
   adInputType: FilterTypeEnum;
   userFilterType: FilterTypeEnum;
-  options: string[];
+  adSellType: "both" | "sale" | "rent";
+  options: FilterOption[];
   isRequired: boolean;
   isMain: boolean;
   row: number;
@@ -81,12 +82,19 @@ export interface AdminFilter {
   updatedAt?: string;
 }
 
+// Filter option interface for key-value pairs
+export interface FilterOption {
+  label: string;
+  value: string;
+}
+
 export interface CreateFilterData {
   name: string;
   enName: string;
   adInputType: FilterTypeEnum;
   userFilterType: FilterTypeEnum;
-  options?: string[];
+  adSellType: "both" | "sale" | "rent";
+  options?: FilterOption[];
   isRequired?: boolean;
   isMain?: boolean;
   row?: number;
@@ -291,4 +299,3 @@ export type AdNavbarProps = {
   isSingle?: boolean;
 };
 //#endregion
-
