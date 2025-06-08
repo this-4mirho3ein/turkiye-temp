@@ -3,7 +3,7 @@
 import React from "react";
 import Button from "@/components/admin/ui/Button";
 import { FaEdit, FaTrash, FaUndo, FaEye } from "react-icons/fa";
-import { AdminFilter } from "@/types/interfaces";
+import { AdminFilter, FilterOption } from "@/types/interfaces";
 import { FilterTypeEnum } from "@/types/enums";
 import Link from "next/link";
 
@@ -56,6 +56,7 @@ const FilterTable: React.FC<FilterTableProps> = ({
             <th className="px-6 py-3.5 text-center font-semibold">#</th>
             <th className="px-6 py-3.5 font-semibold">نام فیلتر</th>
             <th className="px-6 py-3.5 font-semibold">نام انگلیسی</th>
+            <th className="px-6 py-3.5 font-semibold">نوع آگهی</th>
             <th className="px-6 py-3.5 font-semibold">نوع ورودی آگهی</th>
             <th className="px-6 py-3.5 font-semibold">نوع فیلتر کاربر</th>
             <th className="px-6 py-3.5 font-semibold">ویژگی‌ها</th>
@@ -70,7 +71,7 @@ const FilterTable: React.FC<FilterTableProps> = ({
         <tbody>
           {isLoading ? (
             <tr className="bg-white border-b">
-              <td colSpan={10} className="px-6 py-4 text-center text-gray-500">
+              <td colSpan={11} className="px-6 py-4 text-center text-gray-500">
                 <div className="flex justify-center items-center py-4">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                   <span className="mr-2">در حال بارگذاری...</span>
@@ -99,6 +100,23 @@ const FilterTable: React.FC<FilterTableProps> = ({
                 <td className="px-6 py-4">
                   <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
                     {filter.enName}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <span
+                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      filter.adSellType === "both"
+                        ? "bg-blue-100 text-blue-800"
+                        : filter.adSellType === "sale"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-orange-100 text-orange-800"
+                    }`}
+                  >
+                    {filter.adSellType === "both"
+                      ? "هر دو"
+                      : filter.adSellType === "sale"
+                      ? "فروش"
+                      : "اجاره"}
                   </span>
                 </td>
                 <td className="px-6 py-4">
@@ -223,7 +241,7 @@ const FilterTable: React.FC<FilterTableProps> = ({
             ))
           ) : (
             <tr className="bg-white border-b">
-              <td colSpan={10} className="px-6 py-4 text-center text-gray-500">
+              <td colSpan={11} className="px-6 py-4 text-center text-gray-500">
                 هیچ فیلتری یافت نشد
               </td>
             </tr>

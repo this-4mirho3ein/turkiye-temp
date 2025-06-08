@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Card, { CardBody, CardHeader } from "@/components/admin/ui/Card";
 import Button from "@/components/admin/ui/Button";
-import { AdminFilter } from "@/types/interfaces";
+import { AdminFilter, FilterOption } from "@/types/interfaces";
 import { FilterTypeEnum } from "@/types/enums";
 import { getAdminFilterById } from "@/controllers/makeRequest";
 import { useToast } from "@/components/admin/ui/ToastProvider";
@@ -317,6 +317,27 @@ const FilterDetail: React.FC<FilterDetailProps> = ({ filterId }) => {
                   {getFilterTypeLabel(filter.userFilterType)}
                 </span>
               </div>
+
+              <div className="bg-gray-50 rounded-lg p-3">
+                <label className="text-xs font-medium text-gray-600 block mb-2">
+                  نوع آگهی
+                </label>
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${
+                    filter.adSellType === "both"
+                      ? "bg-blue-100 text-blue-800 border-blue-200"
+                      : filter.adSellType === "sale"
+                      ? "bg-green-100 text-green-800 border-green-200"
+                      : "bg-orange-100 text-orange-800 border-orange-200"
+                  }`}
+                >
+                  {filter.adSellType === "both"
+                    ? "هر دو (فروش و اجاره)"
+                    : filter.adSellType === "sale"
+                    ? "فروش"
+                    : "اجاره"}
+                </span>
+              </div>
             </CardBody>
           </Card>
         </motion.div>
@@ -391,14 +412,31 @@ const FilterDetail: React.FC<FilterDetailProps> = ({ filterId }) => {
                 </div>
               </CardHeader>
               <CardBody className="p-4">
-                <div className="flex flex-wrap gap-1.5">
+                <div className="space-y-2">
                   {filter.options.map((option, index) => (
-                    <span
+                    <div
                       key={index}
-                      className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 hover:bg-blue-200 transition-colors"
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
                     >
-                      {option}
-                    </span>
+                      <div className="flex-1 grid grid-cols-2 gap-4">
+                        <div className="text-right">
+                          <span className="text-xs text-gray-500 block mb-1">
+                            برچسب:
+                          </span>
+                          <span className="text-sm font-medium text-gray-800">
+                            {typeof option === "string" ? option : option.label}
+                          </span>
+                        </div>
+                        <div className="text-left">
+                          <span className="text-xs text-gray-500 block mb-1">
+                            مقدار:
+                          </span>
+                          <span className="text-sm font-mono text-gray-800 bg-white px-2 py-1 rounded border">
+                            {typeof option === "string" ? option : option.value}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </CardBody>

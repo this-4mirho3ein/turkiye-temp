@@ -11,16 +11,6 @@ import {
   getAdminAreas,
   getAdminPropertyTypes,
 } from "@/controllers/makeRequest";
-import {
-  FaUsers,
-  FaUserCheck,
-  FaUserTimes,
-  FaTag,
-  FaMapMarkedAlt,
-  FaCity,
-  FaBuilding,
-} from "react-icons/fa";
-import { StatItem } from "../data/stats";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Interface for the fetched data structure
@@ -48,7 +38,7 @@ export interface ReportData {
 }
 
 interface ReportDataFetcherProps {
-  onDataLoaded: (data: ReportData, stats: StatItem[]) => void;
+  onDataLoaded: (data: ReportData) => void;
   forceRefresh: boolean;
 }
 
@@ -259,70 +249,8 @@ export default function ReportDataFetcher({
       },
     };
 
-    // Create stats items for display
-    const stats: StatItem[] = [
-      {
-        title: "موارد حذف شده",
-        value: (
-          deletedUsers +
-          deletedCategories +
-          deletedRegions +
-          deletedPropertyTypes
-        ).toLocaleString("fa-IR"),
-        change: "+۵%",
-        trend: "up",
-        icon: FaUserTimes,
-        color: "danger",
-      },
-      {
-        title: "موارد فعال",
-        value: (
-          activeUsers +
-          activeCategories +
-          activeRegions +
-          activePropertyTypes
-        ).toLocaleString("fa-IR"),
-        change: "+۸%",
-        trend: "up",
-        icon: FaUserCheck,
-        color: "success",
-      },
-      {
-        title: "کل کاربران",
-        value: totalUsers.toLocaleString("fa-IR"),
-        change: "+۳%",
-        trend: "up",
-        icon: FaUsers,
-        color: "secondary",
-      },
-      {
-        title: "کل دسته‌بندی‌ها",
-        value: totalCategories.toLocaleString("fa-IR"),
-        change: "+۲%",
-        trend: "up",
-        icon: FaTag,
-        color: "primary",
-      },
-      {
-        title: "کل مناطق",
-        value: totalRegions.toLocaleString("fa-IR"),
-        change: "+۴%",
-        trend: "up",
-        icon: FaMapMarkedAlt,
-        color: "warning",
-      },
-      {
-        title: "انواع ملک",
-        value: totalPropertyTypes.toLocaleString("fa-IR"),
-        change: "+۰%",
-        trend: "up",
-        icon: FaBuilding,
-        color: "primary",
-      },
-    ];
-
     // Pass the data to the parent component
-    onDataLoaded(reportData, stats);
+    onDataLoaded(reportData);
   }, [
     users,
     categories,
@@ -332,6 +260,7 @@ export default function ReportDataFetcher({
     areas,
     propertyTypes,
     isLoading,
+    onDataLoaded,
   ]);
 
   // Handle forced refresh

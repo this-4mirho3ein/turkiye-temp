@@ -2889,6 +2889,25 @@ export const createAdminFilter = async (
   try {
     console.log(`🔍 Creating filter with data:`, JSON.stringify(data, null, 2));
 
+    // Transform the data to match the backend expected structure
+    const transformedData = {
+      categories: data.categories || [],
+      adSellType: data.adSellType || "both",
+      name: data.name,
+      enName: data.enName,
+      adInputType: data.adInputType,
+      userFilterType: data.userFilterType,
+      options: data.options || [], // This will now be key-value pairs
+      isRequired: data.isRequired || false,
+      isMain: data.isMain || false,
+      row: data.row || 0,
+    };
+
+    console.log(
+      `🔍 Transformed data for backend:`,
+      JSON.stringify(transformedData, null, 2)
+    );
+
     const token =
       typeof window !== "undefined"
         ? localStorage.getItem("accessToken")
@@ -2896,7 +2915,9 @@ export const createAdminFilter = async (
     const headers: Record<string, string> = {};
     if (token) headers["x-access-token"] = token;
 
-    const response = await api.post(`/admin/filter/create`, data, { headers });
+    const response = await api.post(`/admin/filter/create`, transformedData, {
+      headers,
+    });
 
     console.log(`✅ Create filter response status: ${response.status}`);
     console.log(`✅ Create filter response data:`, response.data);
@@ -2929,9 +2950,23 @@ export const createAdminFilter = async (
       };
       if (token) headers["x-access-token"] = token;
 
+      // Transform the data for fallback as well
+      const transformedData = {
+        categories: data.categories || [],
+        adSellType: data.adSellType || "both",
+        name: data.name,
+        enName: data.enName,
+        adInputType: data.adInputType,
+        userFilterType: data.userFilterType,
+        options: data.options || [],
+        isRequired: data.isRequired || false,
+        isMain: data.isMain || false,
+        row: data.row || 0,
+      };
+
       const directResponse = await axios.post(
         `${mainConfig.apiServer}/admin/filter/create`,
-        data,
+        transformedData,
         { headers }
       );
 
@@ -2966,6 +3001,25 @@ export const updateAdminFilter = async (
       JSON.stringify(data, null, 2)
     );
 
+    // Transform the data to match the backend expected structure
+    const transformedData = {
+      categories: data.categories || [],
+      adSellType: data.adSellType || "both",
+      name: data.name,
+      enName: data.enName,
+      adInputType: data.adInputType,
+      userFilterType: data.userFilterType,
+      options: data.options || [], // This will now be key-value pairs
+      isRequired: data.isRequired || false,
+      isMain: data.isMain || false,
+      row: data.row || 0,
+    };
+
+    console.log(
+      `🔍 Transformed data for backend:`,
+      JSON.stringify(transformedData, null, 2)
+    );
+
     const token =
       typeof window !== "undefined"
         ? localStorage.getItem("accessToken")
@@ -2973,9 +3027,13 @@ export const updateAdminFilter = async (
     const headers: Record<string, string> = {};
     if (token) headers["x-access-token"] = token;
 
-    const response = await api.put(`/admin/filter/update/${id}`, data, {
-      headers,
-    });
+    const response = await api.put(
+      `/admin/filter/update/${id}`,
+      transformedData,
+      {
+        headers,
+      }
+    );
 
     console.log(`✅ Update filter response status: ${response.status}`);
     console.log(`✅ Update filter response data:`, response.data);
@@ -3008,9 +3066,23 @@ export const updateAdminFilter = async (
       };
       if (token) headers["x-access-token"] = token;
 
+      // Transform the data for fallback as well
+      const transformedData = {
+        categories: data.categories || [],
+        adSellType: data.adSellType || "both",
+        name: data.name,
+        enName: data.enName,
+        adInputType: data.adInputType,
+        userFilterType: data.userFilterType,
+        options: data.options || [],
+        isRequired: data.isRequired || false,
+        isMain: data.isMain || false,
+        row: data.row || 0,
+      };
+
       const directResponse = await axios.put(
         `${mainConfig.apiServer}/admin/filter/update/${id}`,
-        data,
+        transformedData,
         { headers }
       );
 
