@@ -2,7 +2,7 @@
 
 import React from "react";
 import { UserProfile } from "./types";
-import { User, Shield, CheckCircle, XCircle, Calendar } from "lucide-react";
+import { User, CheckCircle, XCircle, Calendar } from "lucide-react";
 import Badge from "./Badge";
 import Card, { CardBody } from "@/components/admin/ui/Card";
 
@@ -29,28 +29,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
     if (isBanned) return "مسدود شده";
     if (isActive) return "فعال";
     return "غیرفعال";
-  };
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case "admin":
-        return "destructive";
-      case "customer":
-        return "default";
-      default:
-        return "secondary";
-    }
-  };
-
-  const getRoleText = (role: string) => {
-    switch (role) {
-      case "admin":
-        return "مدیر";
-      case "customer":
-        return "مشتری";
-      default:
-        return role;
-    }
   };
 
   return (
@@ -104,7 +82,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
                 </div>
               </div>
 
-              {/* Status and Roles */}
+              {/* Status */}
               <div className="flex flex-wrap gap-2">
                 <Badge
                   variant={getStatusColor(profile.isActive, profile.isBanned)}
@@ -117,17 +95,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
                   )}
                   {getStatusText(profile.isActive, profile.isBanned)}
                 </Badge>
-
-                {profile.roles.map((role, index) => (
-                  <Badge
-                    key={index}
-                    variant={getRoleColor(role)}
-                    className="flex items-center gap-1"
-                  >
-                    <Shield className="w-3 h-3" />
-                    {getRoleText(role)}
-                  </Badge>
-                ))}
 
                 {profile.isProfileComplete && (
                   <Badge variant="outline" className="flex items-center gap-1">

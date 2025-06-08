@@ -36,39 +36,39 @@
   .rtl-pagination {
     direction: ltr;
   }
-  
+
   /* Reorder pagination items to put next on left and prev on right */
   .rtl-pagination > div {
     display: flex;
     flex-direction: row;
   }
-  
+
   /* Move next button to the left side */
   .rtl-pagination [class*="pagination-next"] {
     order: 3;
     transform: rotate(180deg);
   }
-  
+
   /* Keep page numbers in the middle */
   .rtl-pagination ul {
     order: 2;
   }
-  
+
   /* Move previous button to the right side */
   .rtl-pagination [class*="pagination-prev"] {
     order: 1;
     transform: rotate(180deg);
   }
-  
+
   /* Fix the text direction for page numbers */
   .rtl-pagination [class*="pagination-item"] {
     transform: scaleX(-1);
   }
-  
+
   .rtl-pagination [class*="pagination-item"] span {
     transform: scaleX(-1);
   }
-  
+
   .container {
     margin-inline: auto;
     padding-inline: 1rem;

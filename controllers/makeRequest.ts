@@ -775,11 +775,43 @@ export const getAdminAgencies = async (
       console.error("🏢 Error response status:", err.response.status);
       console.error("🏢 Error response data:", err.response.data);
     }
-    return {
-      success: false,
-      message: err.message || "Failed to fetch agencies",
-      status: err.response?.status || 500,
-    };
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log("⚙️ Attempting direct Axios fallback for agencies...");
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers["x-access-token"] = token;
+
+      const directResponse = await axios.get(
+        `${mainConfig.apiServer}/admin/agency/get-all-agencies?${queryParams}${cacheParam}`,
+        {
+          headers,
+          withCredentials: false,
+        }
+      );
+
+      console.log("⚙️ Direct agencies request status:", directResponse.status);
+      console.log("⚙️ Direct agencies request data:", directResponse.data);
+
+      return {
+        success: true,
+        data: directResponse.data,
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
+      return {
+        success: false,
+        message: err.message || "Failed to fetch agencies",
+        status: err.response?.status || 500,
+      };
+    }
   }
 };
 
@@ -3495,3 +3527,274 @@ export async function restorePlan(id: string) {
     };
   }
 }
+
+// Create agency
+export const createAgency = async (agencyData: {
+  name: string;
+  phone: string;
+  description: string;
+  agencyOwnerId: string;
+  address: {
+    country: string;
+    province: string;
+    city: string;
+    area: string;
+    location: {
+      coordinates: [number, number];
+    };
+    fullAddress: string;
+  };
+  isPhoneShow: boolean;
+  isAddressShow: boolean;
+  logoFileName: string;
+}): Promise<ApiResponse> => {
+  try {
+    console.log(`🏢 Creating new agency:`, agencyData);
+
+    // Get token from localStorage if in browser
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const response = await api.post(`/admin/agency/create-agency`, agencyData, {
+      headers,
+    });
+
+    console.log(`✅ Create agency response status: ${response.status}`);
+    console.log(`✅ Create agency response data:`, response.data);
+
+    // Return the exact response from the API
+    return {
+      success:
+        response.data.success !== undefined ? response.data.success : true,
+      data: response.data,
+      message: response.data.message || "آژانس با موفقیت ایجاد شد",
+      status: response.data.status || response.status,
+    };
+  } catch (error: any) {
+    console.error("❌ Error creating agency:", error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+
+      // Check for 401 unauthorized and handle redirect
+      if (error.response.status === 401) {
+        handle401Redirect();
+      }
+
+      // If the error contains a response with a message, use that directly
+      if (error.response.data) {
+        return {
+          success:
+            error.response.data.success !== undefined
+              ? error.response.data.success
+              : false,
+          message: error.response.data.message || "خطا در ایجاد آژانس",
+          status: error.response.data.status || error.response.status,
+          data: error.response.data,
+        };
+      }
+    } else if (error.request) {
+      console.error("No response received. Request details:", error.request);
+    } else {
+      console.error("Error message:", error.message);
+    }
+
+    return returnError(error);
+  }
+};
+
+// File Upload Functions
+
+// Step 1: Get upload URL
+export const getUploadUrl = async (
+  entityType: string,
+  fileType: string,
+  extension: string
+): Promise<ApiResponse> => {
+  try {
+    console.log(
+      `📤 Getting upload URL for ${entityType} with extension ${extension}`
+    );
+
+    // Get token from localStorage if in browser
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const response = await api.get(
+      `/api/upload/get-upload-url?entityType=${entityType}&fileType=${fileType}&extension=${extension}`,
+      { headers }
+    );
+
+    console.log(`✅ Upload URL response:`, response.data);
+
+    return {
+      success:
+        response.data.success !== undefined ? response.data.success : true,
+      data: response.data.data,
+      message: response.data.message || "آدرس آپلود دریافت شد",
+      status: response.data.status || response.status,
+    };
+  } catch (error: any) {
+    console.error("❌ Error getting upload URL:", error);
+    return returnError(error);
+  }
+};
+
+// Step 2: Upload file to signed URL
+export const uploadFileToSignedUrl = async (
+  signedUrl: string,
+  file: File
+): Promise<ApiResponse> => {
+  try {
+    console.log(`📤 Uploading file to signed URL:`, signedUrl);
+
+    const response = await axios.put(signedUrl, file, {
+      headers: {
+        "Content-Type": file.type,
+      },
+    });
+
+    console.log(`✅ File upload response status:`, response.status);
+
+    return {
+      success: response.status === 200,
+      message: "فایل با موفقیت آپلود شد",
+      status: response.status,
+    };
+  } catch (error: any) {
+    console.error("❌ Error uploading file:", error);
+    return returnError(error);
+  }
+};
+
+// Step 3: Complete upload
+export const completeUpload = async (
+  fileName: string,
+  fileType: string,
+  entityType: string,
+  originalName: string
+): Promise<ApiResponse> => {
+  try {
+    console.log(`📤 Completing upload for file:`, fileName);
+
+    // Get token from localStorage if in browser
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const requestBody = {
+      fileName,
+      fileType,
+      entityType,
+      originalName,
+    };
+
+    const response = await api.post(
+      `/api/upload/complete-upload`,
+      requestBody,
+      {
+        headers,
+      }
+    );
+
+    console.log(`✅ Complete upload response:`, response.data);
+
+    return {
+      success:
+        response.data.success !== undefined ? response.data.success : true,
+      data: response.data.data,
+      message: response.data.message || "فایل با موفقیت آپلود شد",
+      status: response.data.status || response.status,
+    };
+  } catch (error: any) {
+    console.error("❌ Error completing upload:", error);
+    return returnError(error);
+  }
+};
+
+// End user session
+export const endUserSession = async (
+  sessionId: string,
+  endAllSessions: boolean = false
+): Promise<ApiResponse> => {
+  try {
+    console.log(
+      `🔚 Ending session with ID: ${sessionId}, endAll: ${endAllSessions}`
+    );
+
+    // Get token from localStorage if in browser
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    // Format the request body
+    const requestBody = {
+      sessionId,
+      endAllSessions,
+    };
+
+    const response = await api.post(`/api/auth/end-session`, requestBody, {
+      headers,
+    });
+
+    console.log(`✅ End session response status: ${response.status}`);
+    console.log(`✅ End session response data:`, response.data);
+
+    // Return the exact response from the API
+    return {
+      success:
+        response.data.success !== undefined ? response.data.success : true,
+      data: response.data,
+      message: response.data.message || "جلسه با موفقیت پایان یافت",
+      status: response.data.status || response.status,
+    };
+  } catch (error: any) {
+    console.error("❌ Error ending session:", error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+
+      // Check for 401 unauthorized and handle redirect
+      if (error.response.status === 401) {
+        handle401Redirect();
+      }
+
+      // If the error contains a response with a message, use that directly
+      if (error.response.data) {
+        return {
+          success:
+            error.response.data.success !== undefined
+              ? error.response.data.success
+              : false,
+          message: error.response.data.message || "خطا در پایان دادن جلسه",
+          status: error.response.data.status || error.response.status,
+          data: error.response.data,
+        };
+      }
+    } else if (error.request) {
+      console.error("No response received. Request details:", error.request);
+    } else {
+      console.error("Error message:", error.message);
+    }
+
+    return returnError(error);
+  }
+};

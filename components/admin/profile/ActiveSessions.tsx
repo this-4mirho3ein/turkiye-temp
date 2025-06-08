@@ -1,16 +1,27 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { ActiveSession } from "./types";
-import { Monitor, Smartphone, Globe, Clock } from "lucide-react";
+import { Monitor, Smartphone, Globe, Clock, Trash2, X } from "lucide-react";
 import Card, { CardBody, CardHeader } from "@/components/admin/ui/Card";
-import Badge from "./Badge";
+import Button from "@/components/admin/ui/Button";
+import { endUserSession } from "@/controllers/makeRequest";
+import { useToast } from "@/components/admin/ui/ToastProvider";
 
 interface ActiveSessionsProps {
   sessions: ActiveSession[];
+  onRefresh?: () => Promise<void>;
 }
 
-const ActiveSessions: React.FC<ActiveSessionsProps> = ({ sessions }) => {
+const ActiveSessions: React.FC<ActiveSessionsProps> = ({
+  sessions,
+  onRefresh,
+}) => {
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(
+    null
+  );
+  const { showToast } = useToast();
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("fa-IR", {
       year: "numeric",
@@ -19,6 +30,47 @@ const ActiveSessions: React.FC<ActiveSessionsProps> = ({ sessions }) => {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handleDeleteSession = async (
+    sessionId: string,
+    endAll: boolean = false
+  ) => {
+    try {
+      setDeletingSessionId(sessionId);
+
+      const response = await endUserSession(sessionId, endAll);
+
+      if (response.success) {
+        showToast({
+          title: "موفقیت",
+          message: endAll
+            ? "تمام جلسات با موفقیت پایان یافت"
+            : "جلسه با موفقیت پایان یافت",
+          type: "success",
+        });
+
+        // Refresh the profile data
+        if (onRefresh) {
+          await onRefresh();
+        }
+      } else {
+        showToast({
+          title: "خطا",
+          message: response.message || "خطا در پایان دادن جلسه",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error ending session:", error);
+      showToast({
+        title: "خطا",
+        message: "خطا در برقراری ارتباط با سرور",
+        type: "error",
+      });
+    } finally {
+      setDeletingSessionId(null);
+    }
   };
 
   const getDeviceIcon = (device: string) => {
@@ -80,12 +132,29 @@ const ActiveSessions: React.FC<ActiveSessionsProps> = ({ sessions }) => {
             <Globe className="w-5 h-5" />
             جلسات فعال
           </h3>
-          <Badge variant="secondary" className="px-2 py-1 text-sm">
+          <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-800 bg-gray-100 border border-gray-200 rounded-md">
             {sessions.length}
-          </Badge>
+          </span>
         </div>
       </CardHeader>
       <CardBody className="flex flex-col h-full p-4 pt-0">
+        {/* Delete All Sessions Button */}
+        {sessions.length > 1 && (
+          <div className="mb-3">
+            <Button
+              onPress={() => handleDeleteSession("", true)}
+              variant="bordered"
+              color="danger"
+              size="sm"
+              className="w-full"
+              isLoading={deletingSessionId === ""}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              پایان تمام جلسات
+            </Button>
+          </div>
+        )}
+
         <div className="flex-1 pr-1 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
           {sessions.length === 0 ? (
             <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
@@ -94,6 +163,8 @@ const ActiveSessions: React.FC<ActiveSessionsProps> = ({ sessions }) => {
           ) : (
             sessions.map((session, index) => {
               const DeviceIcon = getDeviceIcon(session.device);
+              const isDeleting = deletingSessionId === session.sessionId;
+
               return (
                 <div
                   key={session.sessionId}
@@ -104,21 +175,36 @@ const ActiveSessions: React.FC<ActiveSessionsProps> = ({ sessions }) => {
                       <DeviceIcon className="w-3 h-3" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-black truncate">
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="font-medium text-black truncate">
                           {getDeviceType(session.device)}
                         </span>
-                        <span className="text-xs text-gray-600 truncate">
+                        <span className="text-gray-600 truncate">
                           {session.ip.replace("::ffff:", "")}
                         </span>
-                      </div>
-                      <div className="text-xs text-gray-600 truncate">
-                        {getBrowserName(session.device)}
+                        <span className="text-gray-600 truncate">
+                          {getBrowserName(session.device)}
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex-shrink-0 ml-2 text-xs text-left text-gray-600">
-                    {getTimeDifference(session.lastActivity)}
+                  <div className="flex items-center gap-2">
+                    <div className="flex-shrink-0 text-xs text-left text-gray-600">
+                      {getTimeDifference(session.lastActivity)}
+                    </div>
+                    <Button
+                      onPress={() =>
+                        handleDeleteSession(session.sessionId, false)
+                      }
+                      variant="light"
+                      color="danger"
+                      size="sm"
+                      isIconOnly
+                      isLoading={isDeleting}
+                      className="h-6 min-w-6"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
                   </div>
                 </div>
               );

@@ -87,14 +87,15 @@ const AgencyCard: React.FC<AgencyCardProps> = ({ agency }) => {
           <div className="flex items-center">
             <HiUser className="w-5 h-5 text-purple-600 ml-3" />
             <span className="text-gray-800 font-semibold">
-              مدیر: {agency.owner?.firstName || 'نامشخص'} {agency.owner?.lastName || ''}
+              مدیر: {agency.owner?.firstName || "نامشخص"}{" "}
+              {agency.owner?.lastName || ""}
             </span>
           </div>
 
           <div className="flex items-center">
             <HiMail className="w-5 h-5 text-purple-600 ml-3" />
             <span className="text-gray-800 font-semibold truncate">
-              ایمیل: {agency.owner?.email || 'نامشخص'}
+              ایمیل: {agency.owner?.email || "نامشخص"}
             </span>
           </div>
 

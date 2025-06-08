@@ -14,6 +14,7 @@ import {
   getAdminCities,
   getAdminAreas,
 } from "@/controllers/makeRequest";
+import CreateAgencyModal from "./CreateAgencyModal";
 
 interface Agency {
   _id: string;
@@ -76,7 +77,7 @@ const AgenciesPageClient: React.FC<AgenciesPageClientProps> = ({
   const [agencies, setAgencies] = useState<Agency[]>(
     initialData?.data?.data || []
   );
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(
     initialData?.data?.page || 1
@@ -89,6 +90,7 @@ const AgenciesPageClient: React.FC<AgenciesPageClientProps> = ({
   );
   const [limit, setLimit] = useState<number>(initialData?.data?.limit || 10);
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
 
   // Filter states
   const [filters, setFilters] = useState<AgencyFilters>({
@@ -110,7 +112,7 @@ const AgenciesPageClient: React.FC<AgenciesPageClientProps> = ({
   const [provinceLoading, setProvinceLoading] = useState(false);
   const [cityLoading, setCityLoading] = useState(false);
   const [areaLoading, setAreaLoading] = useState(false);
-  
+
   // Create a separate state for input values to implement debounce
   const [inputValues, setInputValues] = useState<AgencyFilters>({
     name: "",
@@ -122,26 +124,26 @@ const AgenciesPageClient: React.FC<AgenciesPageClientProps> = ({
     sortField: "createdAt",
     sortOrder: -1,
   });
-  
+
   // Debounce the name input value
-// Custom hook for debouncing values
-const useDebounce = (value: string | undefined, delay: number) => {
-  const [debouncedValue, setDebouncedValue] = useState(value || "");
+  // Custom hook for debouncing values
+  const useDebounce = (value: string | undefined, delay: number) => {
+    const [debouncedValue, setDebouncedValue] = useState(value || "");
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value || "");
-    }, delay);
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value || "");
+      }, delay);
 
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
 
-  return debouncedValue;
-};
+    return debouncedValue;
+  };
 
-const debouncedNameValue = useDebounce(inputValues.name, 1000);
+  const debouncedNameValue = useDebounce(inputValues.name, 1000);
 
   const fetchAgencies = async (page: number = 1) => {
     setLoading(true);
@@ -182,15 +184,30 @@ const debouncedNameValue = useDebounce(inputValues.name, 1000);
 
   // Apply debounced text input values to filters
   useEffect(() => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      name: debouncedNameValue
+      name: debouncedNameValue,
     }));
   }, [debouncedNameValue]);
-  
+
   useEffect(() => {
-    // Always fetch fresh data when component mounts
-    fetchAgencies(currentPage);
+    // Fetch data when component mounts if no initial data provided
+    if (!initialData) {
+      fetchAgencies(currentPage);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Fetch fresh data when page changes
+    if (initialData) {
+      // If we have initial data, only fetch when page actually changes from initial
+      if (currentPage !== (initialData?.data?.page || 1)) {
+        fetchAgencies(currentPage);
+      }
+    } else {
+      // If no initial data, fetch on any page change
+      fetchAgencies(currentPage);
+    }
   }, [currentPage]);
 
   useEffect(() => {
@@ -250,7 +267,7 @@ const debouncedNameValue = useDebounce(inputValues.name, 1000);
       [name]: value,
     }));
   };
-  
+
   // Handle filter changes for non-text inputs (no debounce needed)
   const handleFilterChange = (name: string, value: any) => {
     // Update both input values and filters for consistency
@@ -258,7 +275,7 @@ const debouncedNameValue = useDebounce(inputValues.name, 1000);
       ...prev,
       [name]: value,
     }));
-    
+
     setFilters((prev) => ({
       ...prev,
       [name]: value,
@@ -283,9 +300,18 @@ const debouncedNameValue = useDebounce(inputValues.name, 1000);
       sortField: "createdAt",
       sortOrder: -1,
     };
-    
+
     setInputValues(resetValues);
     setFilters(resetValues);
+  };
+
+  const handleAddAgency = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCreateSuccess = () => {
+    // Refresh the agencies list after successful creation
+    fetchAgencies(currentPage);
   };
 
   // Filter section component
@@ -479,6 +505,7 @@ const debouncedNameValue = useDebounce(inputValues.name, 1000);
         onRefresh={handleRefresh}
         onToggleFilter={() => setIsFilterOpen(!isFilterOpen)}
         isFilterActive={isFilterOpen}
+        onAddAgency={handleAddAgency}
       />
 
       <FilterSection />
@@ -528,6 +555,13 @@ const debouncedNameValue = useDebounce(inputValues.name, 1000);
           />
         </div>
       )}
+
+      {/* Create Agency Modal */}
+      <CreateAgencyModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={handleCreateSuccess}
+      />
     </div>
   );
 };

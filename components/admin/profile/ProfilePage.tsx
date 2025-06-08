@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { UserProfile } from "./types";
 import { getCurrentUserProfile } from "@/controllers/makeRequest";
 import ProfileHeader from "./ProfileHeader";
-import ProfileStats from "./ProfileStats";
 import ActiveSessions from "./ActiveSessions";
 import LoginHistory from "./LoginHistory";
 import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
@@ -132,17 +131,17 @@ const ProfilePage: React.FC = () => {
         {/* Profile Header */}
         <ProfileHeader profile={profile} />
 
-        {/* Profile Stats */}
-        <ProfileStats profile={profile} />
-
         {/* Sessions and History Grid */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <ActiveSessions sessions={profile.activeSessions} />
+          <ActiveSessions
+            sessions={profile.activeSessions}
+            onRefresh={fetchProfile}
+          />
           <LoginHistory loginHistory={profile.loginHistory} />
         </div>
 
         {/* Additional Info Section */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="p-6 bg-white border rounded-lg">
             <h3 className="mb-4 font-semibold text-gray-900">
               تنظیمات حریم خصوصی
@@ -194,24 +193,6 @@ const ProfilePage: React.FC = () => {
                   }`}
                 >
                   {profile.isProfileComplete ? "کامل" : "ناقص"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6 bg-white border rounded-lg">
-            <h3 className="mb-4 font-semibold text-gray-900">آمار کلی</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">تعداد دستگاه‌ها</span>
-                <span className="text-sm font-medium text-gray-900">
-                  {profile.devices.length}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">آخرین به‌روزرسانی</span>
-                <span className="text-sm font-medium text-gray-900">
-                  {new Date(profile.updatedAt).toLocaleDateString("fa-IR")}
                 </span>
               </div>
             </div>

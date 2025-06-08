@@ -1,30 +1,35 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Button from '@/components/admin/ui/Button';
+import React from "react";
+import Button from "@/components/admin/ui/Button";
 
 interface AgencyListHeaderProps {
   totalCount: number;
   onRefresh: () => void;
   onToggleFilter: () => void;
   isFilterActive: boolean;
+  onAddAgency: () => void;
 }
 
-const AgencyListHeader: React.FC<AgencyListHeaderProps> = ({ 
-  totalCount, 
-  onRefresh, 
-  onToggleFilter, 
-  isFilterActive 
+const AgencyListHeader: React.FC<AgencyListHeaderProps> = ({
+  totalCount,
+  onRefresh,
+  onToggleFilter,
+  isFilterActive,
+  onAddAgency,
 }) => {
   return (
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6" dir="rtl">
+    <div
+      className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6"
+      dir="rtl"
+    >
       <div>
         <h1 className="text-2xl font-bold text-gray-800">آژانس‌ها</h1>
         <p className="text-gray-600 mt-1">
           مدیریت تمام آژانس‌های املاک ثبت شده ({totalCount} مورد)
         </p>
       </div>
-      
+
       <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
         <Button
           color="primary"
@@ -49,7 +54,7 @@ const AgencyListHeader: React.FC<AgencyListHeaderProps> = ({
         >
           فیلتر
         </Button>
-        
+
         <Button
           color="secondary"
           variant="bordered"
@@ -73,9 +78,10 @@ const AgencyListHeader: React.FC<AgencyListHeaderProps> = ({
         >
           بروزرسانی
         </Button>
-        
+
         <Button
           color="success"
+          onPress={onAddAgency}
           startContent={
             <svg
               className="w-4 h-4"
