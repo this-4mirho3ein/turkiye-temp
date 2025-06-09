@@ -392,7 +392,7 @@ export default function AgencyDetailsPage() {
             isOpen={isEditModalOpen}
             onClose={() => setIsEditModalOpen(false)}
             onSuccess={handleEditSuccess}
-            agency={agency}
+            agency={convertToAgencyFormat(agency)}
           />
         </>
       )}

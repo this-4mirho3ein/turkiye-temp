@@ -663,7 +663,7 @@ const AgenciesPageClient: React.FC = () => {
           <CreateAgencyModal
             isOpen={showCreateModal}
             onClose={() => setShowCreateModal(false)}
-            onAgencyCreated={handleAgencyCreated}
+            onSuccess={handleAgencyCreated}
           />
         )}
 
@@ -675,7 +675,7 @@ const AgenciesPageClient: React.FC = () => {
               setShowEditModal(false);
               setEditingAgency(null);
             }}
-            onAgencyUpdated={handleAgencyUpdated}
+            onSuccess={handleAgencyUpdated}
           />
         )}
 
