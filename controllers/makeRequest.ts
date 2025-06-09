@@ -120,6 +120,37 @@ const handle401Redirect = () => {
   }
 };
 
+// Get Agency Details by ID
+export const getAgencyDetails = async (id: string): Promise<ApiResponse> => {
+  try {
+    console.log(`🔍 Fetching agency details for ID: ${id}`);
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const response = await api.get(`/admin/agency/get-agency/${id}`, {
+      headers,
+    });
+    console.log(`✅ Agency details response:`, response.data);
+
+    return {
+      success: true,
+      data: response.data,
+      status: response.status,
+    };
+  } catch (error: any) {
+    console.error(`❌ Error fetching agency details for ID ${id}:`, error);
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+    }
+    return returnError(error);
+  }
+};
+
 // Get Agency Members
 export const getAgencyMembers = async (id: string): Promise<ApiResponse> => {
   try {
@@ -3721,6 +3752,153 @@ export const completeUpload = async (
     };
   } catch (error: any) {
     console.error("❌ Error completing upload:", error);
+    return returnError(error);
+  }
+};
+
+// Update agency
+export const updateAgency = async (
+  id: string,
+  agencyData: {
+    name: string;
+    phone: string;
+    description: string;
+    address: {
+      country: string;
+      province: string;
+      city: string;
+      area: string;
+      location: {
+        coordinates: [number, number];
+      };
+      fullAddress: string;
+    };
+  }
+): Promise<ApiResponse> => {
+  try {
+    console.log(`🏢 Updating agency with ID: ${id}`, agencyData);
+
+    // Get token from localStorage if in browser
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const response = await api.put(
+      `/admin/agency/update-agency/${id}`,
+      agencyData,
+      {
+        headers,
+      }
+    );
+
+    console.log(`✅ Update agency response status: ${response.status}`);
+    console.log(`✅ Update agency response data:`, response.data);
+
+    // Return the exact response from the API
+    return {
+      success:
+        response.data.success !== undefined ? response.data.success : true,
+      data: response.data,
+      message: response.data.message || "آژانس با موفقیت به‌روزرسانی شد",
+      status: response.data.status || response.status,
+    };
+  } catch (error: any) {
+    console.error("❌ Error updating agency:", error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+
+      // Check for 401 unauthorized and handle redirect
+      if (error.response.status === 401) {
+        handle401Redirect();
+      }
+
+      // If the error contains a response with a message, use that directly
+      if (error.response.data) {
+        return {
+          success:
+            error.response.data.success !== undefined
+              ? error.response.data.success
+              : false,
+          message: error.response.data.message || "خطا در به‌روزرسانی آژانس",
+          status: error.response.data.status || error.response.status,
+          data: error.response.data,
+        };
+      }
+    } else if (error.request) {
+      console.error("No response received. Request details:", error.request);
+    } else {
+      console.error("Error message:", error.message);
+    }
+
+    return returnError(error);
+  }
+};
+
+// Delete agency
+export const deleteAgency = async (id: string): Promise<ApiResponse> => {
+  try {
+    console.log(`🗑️ Deleting agency with ID: ${id}`);
+
+    // Get token from localStorage if in browser
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const response = await api.delete(`/admin/agency/delete-agency/${id}`, {
+      headers,
+    });
+
+    console.log(`✅ Delete agency response status: ${response.status}`);
+    console.log(`✅ Delete agency response data:`, response.data);
+
+    // Return the exact response from the API
+    return {
+      success:
+        response.data.success !== undefined ? response.data.success : true,
+      data: response.data,
+      message: response.data.message || "آژانس با موفقیت حذف شد",
+      status: response.data.status || response.status,
+    };
+  } catch (error: any) {
+    console.error("❌ Error deleting agency:", error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+
+      // Check for 401 unauthorized and handle redirect
+      if (error.response.status === 401) {
+        handle401Redirect();
+      }
+
+      // If the error contains a response with a message, use that directly
+      if (error.response.data) {
+        return {
+          success:
+            error.response.data.success !== undefined
+              ? error.response.data.success
+              : false,
+          message: error.response.data.message || "خطا در حذف آژانس",
+          status: error.response.data.status || error.response.status,
+          data: error.response.data,
+        };
+      }
+    } else if (error.request) {
+      console.error("No response received. Request details:", error.request);
+    } else {
+      console.error("Error message:", error.message);
+    }
+
     return returnError(error);
   }
 };

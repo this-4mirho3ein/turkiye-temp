@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
 
 // Import Leaflet CSS
@@ -26,22 +26,38 @@ const MapComponent: React.FC<MapComponentProps> = ({
   initialCoordinates = [51.389, 35.6892], // Default to Tehran coordinates
 }) => {
   const [mounted, setMounted] = useState(false);
-  const [coordinates, setCoordinates] =
-    useState<[number, number]>(initialCoordinates);
+
+  // Memoize initial coordinates to prevent unnecessary re-renders
+  const memoizedInitialCoordinates = useMemo(() => {
+    return initialCoordinates;
+  }, [initialCoordinates[0], initialCoordinates[1]]);
+
+  const [coordinates, setCoordinates] = useState<[number, number]>(
+    memoizedInitialCoordinates
+  );
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Only update coordinates if they actually changed
   useEffect(() => {
-    setCoordinates(initialCoordinates);
-  }, [initialCoordinates]);
+    const [newLng, newLat] = memoizedInitialCoordinates;
+    const [currentLng, currentLat] = coordinates;
 
-  const handleCoordinatesChange = (newCoordinates: [number, number]) => {
-    console.log("🗺️ Coordinates changed to:", newCoordinates);
-    setCoordinates(newCoordinates);
-    onCoordinatesChange(newCoordinates);
-  };
+    if (newLng !== currentLng || newLat !== currentLat) {
+      setCoordinates(memoizedInitialCoordinates);
+    }
+  }, [memoizedInitialCoordinates, coordinates]);
+
+  const handleCoordinatesChange = useCallback(
+    (newCoordinates: [number, number]) => {
+      console.log("🗺️ Coordinates changed to:", newCoordinates);
+      setCoordinates(newCoordinates);
+      onCoordinatesChange(newCoordinates);
+    },
+    [onCoordinatesChange]
+  );
 
   // Don't render on server side
   if (!mounted) {

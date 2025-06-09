@@ -1,20 +1,23 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { getAdminAgencies } from "@/controllers/makeRequest";
-import AgencyCard from "./AgencyCard";
-import AgencyListHeader from "./AgencyListHeader";
-import Pagination from "@/components/admin/ui/Pagination";
-import { Spinner } from "@/components/admin/ui/Spinner";
-import Input from "@/components/admin/ui/Input";
-import Button from "@/components/admin/ui/Button";
-import Link from "next/link";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
+  HiPlus,
+  HiSearch,
+  HiFilter,
+  HiRefresh,
+  HiChevronDown,
+  HiX,
+} from "react-icons/hi";
+import AgencyCard from "./AgencyCard";
+import CreateAgencyModal from "./CreateAgencyModal";
+import EditAgencyModal from "./EditAgencyModal";
+import {
+  getAdminAgencies,
   getAdminProvinces,
   getAdminCities,
   getAdminAreas,
 } from "@/controllers/makeRequest";
-import CreateAgencyModal from "./CreateAgencyModal";
 
 interface Agency {
   _id: string;
@@ -35,533 +38,708 @@ interface Agency {
   description: string;
   createdAt: string;
   updatedAt: string;
-  activeAdCount: number;
+  activeAdCount?: number;
   logo?: {
     _id: string;
     fileName: string;
   };
-}
-
-interface AgenciesResponse {
-  success: boolean;
-  data: {
-    data: Agency[];
-    count: number;
-    page: number;
-    limit: number;
-    totalPages: number;
+  address?: {
+    country?: string;
+    province?: string;
+    city?: string;
+    area?: string;
+    fullAddress?: string;
   };
-  status: number;
-  message?: string;
 }
 
-interface AgenciesPageClientProps {
-  initialData?: AgenciesResponse;
-}
-
-// Filter interface to match the API endpoint parameters
-interface AgencyFilters {
+interface ApiFilters {
   name?: string;
   province?: string;
   city?: string;
   area?: string;
   isVerified?: boolean;
-  isActive?: boolean;
-  sortField?: string;
-  sortOrder?: number;
+  page: number;
+  limit: number;
+  sortField: "createdAt" | "updatedAt" | "name" | "adQuota";
+  sortOrder: 1 | -1;
 }
 
-const AgenciesPageClient: React.FC<AgenciesPageClientProps> = ({
-  initialData,
-}) => {
-  const [agencies, setAgencies] = useState<Agency[]>(
-    initialData?.data?.data || []
-  );
-  const [loading, setLoading] = useState<boolean>(!initialData);
+const AgenciesPageClient: React.FC = () => {
+  const [agencies, setAgencies] = useState<Agency[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(
-    initialData?.data?.page || 1
-  );
-  const [totalPages, setTotalPages] = useState<number>(
-    initialData?.data?.totalPages || 1
-  );
-  const [totalCount, setTotalCount] = useState<number>(
-    initialData?.data?.count || 0
-  );
-  const [limit, setLimit] = useState<number>(initialData?.data?.limit || 10);
-  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAgency, setEditingAgency] = useState<Agency | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Filter states
-  const [filters, setFilters] = useState<AgencyFilters>({
+  // Location data for dropdowns
+  const [provinces, setProvinces] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
+  const [areas, setAreas] = useState<any[]>([]);
+  const [loadingLocations, setLoadingLocations] = useState(false);
+
+  // API Filter states
+  const [filters, setFilters] = useState<ApiFilters>({
     name: "",
     province: "",
     city: "",
     area: "",
     isVerified: undefined,
-    isActive: undefined,
+    page: 1,
+    limit: 10,
     sortField: "createdAt",
     sortOrder: -1,
   });
 
-  // Add state for autocomplete options
-  const [agencyNameQuery, setAgencyNameQuery] = useState("");
-  const [provinceOptions, setProvinceOptions] = useState<any[]>([]);
-  const [cityOptions, setCityOptions] = useState<any[]>([]);
-  const [areaOptions, setAreaOptions] = useState<any[]>([]);
-  const [provinceLoading, setProvinceLoading] = useState(false);
-  const [cityLoading, setCityLoading] = useState(false);
-  const [areaLoading, setAreaLoading] = useState(false);
+  // Pagination
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
-  // Create a separate state for input values to implement debounce
-  const [inputValues, setInputValues] = useState<AgencyFilters>({
-    name: "",
-    province: "",
-    city: "",
-    area: "",
-    isVerified: undefined,
-    isActive: undefined,
-    sortField: "createdAt",
-    sortOrder: -1,
-  });
-
-  // Debounce the name input value
-  // Custom hook for debouncing values
-  const useDebounce = (value: string | undefined, delay: number) => {
-    const [debouncedValue, setDebouncedValue] = useState(value || "");
-
-    useEffect(() => {
-      const handler = setTimeout(() => {
-        setDebouncedValue(value || "");
-      }, delay);
-
-      return () => {
-        clearTimeout(handler);
-      };
-    }, [value, delay]);
-
-    return debouncedValue;
+  // Helper functions to get display names for filters
+  const getProvinceName = (provinceId: string) => {
+    const province = provinces.find((p) => p._id === provinceId);
+    return province ? province.name : provinceId;
   };
 
-  const debouncedNameValue = useDebounce(inputValues.name, 1000);
+  const getCityName = (cityId: string) => {
+    const city = cities.find((c) => c._id === cityId);
+    return city ? city.name : cityId;
+  };
 
-  const fetchAgencies = async (page: number = 1) => {
-    setLoading(true);
-    setError(null);
+  const getAreaName = (areaId: string) => {
+    const area = areas.find((a) => a._id === areaId);
+    return area ? area.name : areaId;
+  };
 
+  // Fetch location data for dropdowns
+  const fetchLocationData = useCallback(async () => {
     try {
-      // Create params object with all filters
-      const params: any = {
-        page,
-        limit,
-        ...filters,
-      };
+      setLoadingLocations(true);
+      console.log("🌍 Fetching location data...");
 
-      // Remove undefined or empty string values
-      Object.keys(params).forEach((key) => {
-        if (params[key] === undefined || params[key] === "") {
-          delete params[key];
-        }
-      });
+      const [provincesRes, citiesRes, areasRes] = await Promise.all([
+        getAdminProvinces({ limit: 1000 }),
+        getAdminCities({ limit: 1000 }),
+        getAdminAreas({ limit: 1000 }),
+      ]);
 
-      const response = await getAdminAgencies(params);
+      console.log("🌍 Provinces:", provincesRes);
+      console.log("🌍 Cities:", citiesRes);
+      console.log("🌍 Areas:", areasRes);
 
-      if (response.success && response.data) {
-        setAgencies(response.data.data.data || []);
-        setTotalPages(response.data.data.totalPages || 1);
-        setTotalCount(response.data.data.count || 0);
-      } else {
-        setError(response.message || "Failed to fetch agencies");
-        setAgencies([]);
-      }
-    } catch (err: any) {
-      setError(err.message || "An error occurred while fetching agencies");
-      setAgencies([]);
+      setProvinces(Array.isArray(provincesRes) ? provincesRes : []);
+      setCities(Array.isArray(citiesRes) ? citiesRes : []);
+      setAreas(Array.isArray(areasRes) ? areasRes : []);
+    } catch (error) {
+      console.error("❌ Error fetching location data:", error);
     } finally {
-      setLoading(false);
-    }
-  };
-
-  // Apply debounced text input values to filters
-  useEffect(() => {
-    setFilters((prev) => ({
-      ...prev,
-      name: debouncedNameValue,
-    }));
-  }, [debouncedNameValue]);
-
-  useEffect(() => {
-    // Fetch data when component mounts if no initial data provided
-    if (!initialData) {
-      fetchAgencies(currentPage);
+      setLoadingLocations(false);
     }
   }, []);
 
-  useEffect(() => {
-    // Fetch fresh data when page changes
-    if (initialData) {
-      // If we have initial data, only fetch when page actually changes from initial
-      if (currentPage !== (initialData?.data?.page || 1)) {
-        fetchAgencies(currentPage);
+  const fetchAgencies = useCallback(
+    async (newFilters?: Partial<ApiFilters>) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const currentFilters = { ...filters, ...newFilters };
+
+        // Clean up empty string values for API
+        const apiParams: any = {
+          page: currentFilters.page,
+          limit: currentFilters.limit,
+          sortField: currentFilters.sortField,
+          sortOrder: currentFilters.sortOrder,
+        };
+
+        if (currentFilters.name && currentFilters.name.trim()) {
+          apiParams.name = currentFilters.name.trim();
+        }
+        if (currentFilters.province && currentFilters.province.trim()) {
+          apiParams.province = currentFilters.province.trim();
+        }
+        if (currentFilters.city && currentFilters.city.trim()) {
+          apiParams.city = currentFilters.city.trim();
+        }
+        if (currentFilters.area && currentFilters.area.trim()) {
+          apiParams.area = currentFilters.area.trim();
+        }
+        if (currentFilters.isVerified !== undefined) {
+          apiParams.isVerified = currentFilters.isVerified;
+        }
+
+        console.log("🔍 API Request params:", apiParams);
+
+        const response = await getAdminAgencies(apiParams);
+        console.log("🏢 Full API Response:", JSON.stringify(response, null, 2));
+
+        if (response.success && response.data) {
+          let agenciesData: Agency[] = [];
+          let pagination = { totalPages: 1, count: 0 };
+
+          // Based on your API response structure: response.data.data.data
+          if (
+            response.data.data &&
+            response.data.data.data &&
+            Array.isArray(response.data.data.data)
+          ) {
+            console.log("📋 Found agencies in response.data.data.data");
+            agenciesData = response.data.data.data;
+            pagination = {
+              totalPages: response.data.data.totalPages || 1,
+              count: response.data.data.count || agenciesData.length,
+            };
+          }
+          // Fallback: Check if response.data.data is directly an array
+          else if (response.data.data && Array.isArray(response.data.data)) {
+            console.log(
+              "📋 Found agencies in response.data.data (direct array)"
+            );
+            agenciesData = response.data.data;
+            pagination = {
+              totalPages: response.data.totalPages || 1,
+              count: response.data.count || agenciesData.length,
+            };
+          }
+          // Another fallback: Check if response.data is directly an array
+          else if (Array.isArray(response.data)) {
+            console.log("📋 Found agencies in response.data (direct array)");
+            agenciesData = response.data;
+            pagination = { totalPages: 1, count: agenciesData.length };
+          }
+
+          console.log("📋 Final agencies data:", agenciesData);
+          console.log("📋 Agencies count:", agenciesData.length);
+          console.log("📋 Pagination:", pagination);
+
+          // Set the data
+          setAgencies(agenciesData);
+          setTotalPages(pagination.totalPages);
+          setTotalCount(pagination.count);
+
+          // Update filters state
+          setFilters(currentFilters);
+
+          if (agenciesData.length === 0) {
+            console.log("⚠️ No agencies found in response");
+          } else {
+            console.log(
+              `✅ Successfully loaded ${agenciesData.length} agencies`
+            );
+          }
+        } else {
+          console.error("❌ API returned success: false or no data");
+          setError(response.message || "خطا در دریافت لیست آژانس‌ها");
+          setAgencies([]);
+        }
+      } catch (err: any) {
+        console.error("❌ Error fetching agencies:", err);
+        setError(err.message || "خطا در دریافت لیست آژانس‌ها");
+        setAgencies([]);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-    } else {
-      // If no initial data, fetch on any page change
-      fetchAgencies(currentPage);
-    }
-  }, [currentPage]);
+    },
+    [filters]
+  );
 
   useEffect(() => {
-    // Fetch provinces on mount
-    setProvinceLoading(true);
-    getAdminProvinces().then((data) => {
-      setProvinceOptions(data);
-      setProvinceLoading(false);
-    });
+    console.log("🚀 Component mounted, fetching agencies and location data...");
+    fetchAgencies();
+    fetchLocationData();
   }, []);
 
-  useEffect(() => {
-    // Fetch cities when province changes
-    if (filters.province) {
-      setCityLoading(true);
-      getAdminCities().then((data) => {
-        // Filter cities by selected province
-        setCityOptions(
-          data.filter((city) => city.province === filters.province)
-        );
-        setCityLoading(false);
-      });
-    } else {
-      setCityOptions([]);
-      setFilters((prev) => ({ ...prev, city: "", area: "" }));
-    }
-  }, [filters.province]);
-
-  useEffect(() => {
-    // Fetch areas when city changes
-    if (filters.city) {
-      setAreaLoading(true);
-      getAdminAreas().then((data) => {
-        // Filter areas by selected city
-        setAreaOptions(data.filter((area) => area.city === filters.city));
-        setAreaLoading(false);
-      });
-    } else {
-      setAreaOptions([]);
-      setFilters((prev) => ({ ...prev, area: "" }));
-    }
-  }, [filters.city]);
+  const handleFilterChange = (key: keyof ApiFilters, value: any) => {
+    const newFilters = { ...filters, [key]: value, page: 1 };
+    fetchAgencies(newFilters);
+  };
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    fetchAgencies(page);
+    fetchAgencies({ page });
   };
 
   const handleRefresh = () => {
-    fetchAgencies(currentPage);
+    setRefreshing(true);
+    fetchAgencies();
   };
 
-  // Handle input changes (for debounce)
-  const handleInputChange = (name: string, value: any) => {
-    setInputValues((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleCreateAgency = () => {
+    setShowCreateModal(true);
   };
 
-  // Handle filter changes for non-text inputs (no debounce needed)
-  const handleFilterChange = (name: string, value: any) => {
-    // Update both input values and filters for consistency
-    setInputValues((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    setFilters((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleEditAgency = (agency: Agency) => {
+    setEditingAgency(agency);
+    setShowEditModal(true);
   };
 
-  const applyFilters = () => {
-    setCurrentPage(1); // Reset to first page when applying filters
-    fetchAgencies(1);
-    setIsFilterOpen(false);
+  const handleDeleteAgency = useCallback((agencyId: string) => {
+    setAgencies((prev) => {
+      const prevArray = Array.isArray(prev) ? prev : [];
+      return prevArray.filter((agency) => agency._id !== agencyId);
+    });
+  }, []);
+
+  const handleAgencyCreated = () => {
+    setShowCreateModal(false);
+    fetchAgencies();
   };
 
-  const resetFilters = () => {
-    // Reset both input values and filters
-    const resetValues = {
+  const handleAgencyUpdated = () => {
+    setShowEditModal(false);
+    setEditingAgency(null);
+    fetchAgencies();
+  };
+
+  const clearFilters = () => {
+    const resetFilters = {
       name: "",
       province: "",
       city: "",
       area: "",
       isVerified: undefined,
-      isActive: undefined,
-      sortField: "createdAt",
-      sortOrder: -1,
+      page: 1,
+      limit: 10,
+      sortField: "createdAt" as const,
+      sortOrder: -1 as const,
     };
-
-    setInputValues(resetValues);
-    setFilters(resetValues);
+    fetchAgencies(resetFilters);
   };
 
-  const handleAddAgency = () => {
-    setIsCreateModalOpen(true);
-  };
+  const hasActiveFilters =
+    filters.name ||
+    filters.province ||
+    filters.city ||
+    filters.area ||
+    filters.isVerified !== undefined;
 
-  const handleCreateSuccess = () => {
-    // Refresh the agencies list after successful creation
-    fetchAgencies(currentPage);
-  };
-
-  // Filter section component
-  const FilterSection = () => {
-    if (!isFilterOpen) return null;
-
+  if (loading && !refreshing) {
     return (
-      <div
-        className="bg-gray-50 p-4 mb-6 rounded-lg border border-gray-200"
-        dir="rtl"
-      >
-        <h3 className="text-lg font-semibold mb-4">فیلتر آژانس‌ها</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-          {/* Agency Name Autocomplete */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              نام آژانس
-            </label>
-            <input
-              list="agency-names"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="جستجو بر اساس نام"
-              value={inputValues.name || ""}
-              onChange={(e) => handleInputChange("name", e.target.value)}
-              dir="rtl"
-            />
-            <datalist id="agency-names">
-              {agencies.map((agency) => (
-                <option key={agency._id} value={agency.name} />
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-gray-200 rounded w-64"></div>
+            <div className="h-12 bg-gray-200 rounded"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-64 bg-gray-200 rounded-xl"></div>
               ))}
-            </datalist>
+            </div>
           </div>
-          {/* Province Autocomplete */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              استان
-            </label>
-            <input
-              list="province-list"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="نام استان"
-              value={
-                provinceOptions.find((p) => p._id === filters.province)?.name ||
-                ""
-              }
-              onChange={(e) => {
-                const selected = provinceOptions.find(
-                  (p) => p.name === e.target.value
-                );
-                handleFilterChange("province", selected ? selected._id : "");
-              }}
-              dir="rtl"
-            />
-            <datalist id="province-list">
-              {provinceOptions.map((province) => (
-                <option key={province._id} value={province.name} />
-              ))}
-            </datalist>
-          </div>
-          {/* City Autocomplete */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              شهر
-            </label>
-            <input
-              list="city-list"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="نام شهر"
-              value={
-                cityOptions.find((c) => c._id === filters.city)?.name || ""
-              }
-              onChange={(e) => {
-                const selected = cityOptions.find(
-                  (c) => c.name === e.target.value
-                );
-                handleFilterChange("city", selected ? selected._id : "");
-              }}
-              dir="rtl"
-            />
-            <datalist id="city-list">
-              {cityOptions.map((city) => (
-                <option key={city._id} value={city.name} />
-              ))}
-            </datalist>
-          </div>
-          {/* Area Autocomplete */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              منطقه
-            </label>
-            <input
-              list="area-list"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="نام منطقه"
-              value={
-                areaOptions.find((a) => a._id === filters.area)?.name || ""
-              }
-              onChange={(e) => {
-                const selected = areaOptions.find(
-                  (a) => a.name === e.target.value
-                );
-                handleFilterChange("area", selected ? selected._id : "");
-              }}
-              dir="rtl"
-            />
-            <datalist id="area-list">
-              {areaOptions.map((area) => (
-                <option key={area._id} value={area.name} />
-              ))}
-            </datalist>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              وضعیت تأیید
-            </label>
-            <select
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              value={
-                filters.isVerified === undefined
-                  ? ""
-                  : String(filters.isVerified)
-              }
-              onChange={(e) => {
-                const value = e.target.value;
-                handleFilterChange(
-                  "isVerified",
-                  value === "" ? undefined : value === "true"
-                );
-              }}
-            >
-              <option value="">همه</option>
-              <option value="true">تأیید شده</option>
-              <option value="false">تأیید نشده</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              وضعیت فعالیت
-            </label>
-            <select
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              value={
-                filters.isActive === undefined ? "" : String(filters.isActive)
-              }
-              onChange={(e) => {
-                const value = e.target.value;
-                handleFilterChange(
-                  "isActive",
-                  value === "" ? undefined : value === "true"
-                );
-              }}
-            >
-              <option value="">همه</option>
-              <option value="true">فعال</option>
-              <option value="false">غیرفعال</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="flex justify-end space-x-0 space-x-reverse space-x-2">
-          <Button
-            size="sm"
-            variant="bordered"
-            color="danger"
-            onPress={resetFilters}
-            className="mx-1"
-            startContent={<span className="ml-1">🗑️</span>}
-          >
-            پاک کردن فیلترها
-          </Button>
-          <Button
-            size="sm"
-            variant="solid"
-            color="primary"
-            onPress={applyFilters}
-            className="mx-1"
-            startContent={<span className="ml-1">✓</span>}
-          >
-            اعمال فیلترها
-          </Button>
         </div>
       </div>
     );
-  };
+  }
 
-  return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <AgencyListHeader
-        totalCount={totalCount}
-        onRefresh={handleRefresh}
-        onToggleFilter={() => setIsFilterOpen(!isFilterOpen)}
-        isFilterActive={isFilterOpen}
-        onAddAgency={handleAddAgency}
-      />
-
-      <FilterSection />
-
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <Spinner size="lg" />
-        </div>
-      ) : error ? (
-        <div className="text-center p-8 text-red-500">
-          <p className="text-lg font-semibold">خطا</p>
-          <p>{error}</p>
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            خطا در بارگذاری
+          </h3>
+          <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={handleRefresh}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             تلاش مجدد
           </button>
         </div>
-      ) : agencies.length === 0 ? (
-        <div className="text-center p-8 text-gray-500">
-          <p className="text-lg font-semibold">آژانسی یافت نشد</p>
-          <p>هیچ آژانسی در سیستم ثبت نشده است.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">آژانس‌ها</h1>
+          <button
+            onClick={handleCreateAgency}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+          >
+            <HiPlus className="w-4 h-4" />
+            جدید
+          </button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-          {agencies.map((agency) => (
-            <Link
-              key={agency._id}
-              href={`/admin/agencies/${agency._id}`}
-              tabIndex={0}
-              aria-label={`مشاهده جزئیات آژانس ${agency.name}`}
-              className="focus:outline-none focus:ring-2 focus:ring-purple-500 rounded-xl cursor-pointer"
+
+        {/* Search and Filters */}
+        <div className="bg-white rounded-lg border p-4 mb-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1">
+              <div className="relative">
+                <HiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="جستجو..."
+                  value={filters.name}
+                  onChange={(e) => handleFilterChange("name", e.target.value)}
+                  className="w-full pr-10 pl-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* Filter Toggle */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+                showFilters || hasActiveFilters
+                  ? "bg-blue-50 border-blue-200 text-blue-700"
+                  : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+              }`}
             >
-              <AgencyCard agency={agency} />
-            </Link>
-          ))}
-        </div>
-      )}
+              <HiFilter className="w-4 h-4" />
+              فیلتر
+              {hasActiveFilters && (
+                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+              )}
+              <HiChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  showFilters ? "rotate-180" : ""
+                }`}
+              />
+            </button>
 
-      {totalPages > 1 && (
-        <div className="mt-8">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
+            {/* Refresh */}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg disabled:opacity-50"
+            >
+              <HiRefresh
+                className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+              />
+              بروزرسانی
+            </button>
+          </div>
+
+          {/* Filters Panel */}
+          {showFilters && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    استان
+                  </label>
+                  <select
+                    value={filters.province}
+                    onChange={(e) =>
+                      handleFilterChange("province", e.target.value)
+                    }
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={loadingLocations}
+                  >
+                    <option value="">همه استان‌ها</option>
+                    {provinces.map((province) => (
+                      <option key={province._id} value={province._id}>
+                        {province.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    شهر
+                  </label>
+                  <select
+                    value={filters.city}
+                    onChange={(e) => handleFilterChange("city", e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={loadingLocations}
+                  >
+                    <option value="">همه شهرها</option>
+                    {cities.map((city) => (
+                      <option key={city._id} value={city._id}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    منطقه
+                  </label>
+                  <select
+                    value={filters.area}
+                    onChange={(e) => handleFilterChange("area", e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={loadingLocations}
+                  >
+                    <option value="">همه مناطق</option>
+                    {areas.map((area) => (
+                      <option key={area._id} value={area._id}>
+                        {area.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    وضعیت تایید
+                  </label>
+                  <select
+                    value={
+                      filters.isVerified === undefined
+                        ? ""
+                        : String(filters.isVerified)
+                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      handleFilterChange(
+                        "isVerified",
+                        value === "" ? undefined : value === "true"
+                      );
+                    }}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">همه</option>
+                    <option value="true">تایید شده</option>
+                    <option value="false">تایید نشده</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      مرتب‌سازی
+                    </label>
+                    <select
+                      value={filters.sortField}
+                      onChange={(e) =>
+                        handleFilterChange("sortField", e.target.value)
+                      }
+                      className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="createdAt">تاریخ ایجاد</option>
+                      <option value="updatedAt">تاریخ بروزرسانی</option>
+                      <option value="name">نام</option>
+                      <option value="adQuota">سقف آگهی</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      ترتیب
+                    </label>
+                    <select
+                      value={filters.sortOrder}
+                      onChange={(e) =>
+                        handleFilterChange("sortOrder", Number(e.target.value))
+                      }
+                      className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value={-1}>نزولی</option>
+                      <option value={1}>صعودی</option>
+                    </select>
+                  </div>
+                </div>
+
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-800"
+                  >
+                    <HiX className="w-4 h-4" />
+                    پاک کردن
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Results Info */}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-gray-600">{totalCount} آژانس</p>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">تعداد در صفحه:</span>
+            <select
+              value={filters.limit}
+              onChange={(e) =>
+                handleFilterChange("limit", Number(e.target.value))
+              }
+              className="px-2 py-1 border border-gray-200 rounded text-sm"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Agencies Grid */}
+        {agencies.length === 0 ? (
+          <div className="text-center py-12">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              آژانسی یافت نشد
+            </h3>
+            <p className="text-gray-600 mb-4">
+              {hasActiveFilters
+                ? "فیلترهای خود را تغییر دهید"
+                : "اولین آژانس را ایجاد کنید"}
+            </p>
+            {hasActiveFilters ? (
+              <button
+                onClick={clearFilters}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                پاک کردن فیلترها
+              </button>
+            ) : (
+              <button
+                onClick={handleCreateAgency}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+              >
+                ایجاد آژانس
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {agencies.map((agency) => (
+              <AgencyCard
+                key={agency._id}
+                agency={agency}
+                onEdit={handleEditAgency}
+                onDelete={handleDeleteAgency}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-8">
+            <button
+              onClick={() => handlePageChange(filters.page - 1)}
+              disabled={filters.page <= 1}
+              className="px-3 py-2 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              قبلی
+            </button>
+
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const page = i + 1;
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-3 py-2 rounded-lg ${
+                      filters.page === page
+                        ? "bg-blue-600 text-white"
+                        : "border border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => handlePageChange(filters.page + 1)}
+              disabled={filters.page >= totalPages}
+              className="px-3 py-2 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              بعدی
+            </button>
+          </div>
+        )}
+
+        {/* Modals */}
+        {showCreateModal && (
+          <CreateAgencyModal
+            isOpen={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+            onAgencyCreated={handleAgencyCreated}
           />
-        </div>
-      )}
+        )}
 
-      {/* Create Agency Modal */}
-      <CreateAgencyModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={handleCreateSuccess}
-      />
+        {showEditModal && editingAgency && (
+          <EditAgencyModal
+            isOpen={showEditModal}
+            agency={editingAgency}
+            onClose={() => {
+              setShowEditModal(false);
+              setEditingAgency(null);
+            }}
+            onAgencyUpdated={handleAgencyUpdated}
+          />
+        )}
+
+        {hasActiveFilters && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            <span className="text-sm text-gray-600">فیلترهای فعال:</span>
+            {filters.name && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                نام: {filters.name}
+                <button
+                  onClick={() => handleFilterChange("name", "")}
+                  className="hover:bg-blue-200 rounded-full p-0.5"
+                >
+                  <HiX className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {filters.province && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                استان: {getProvinceName(filters.province)}
+                <button
+                  onClick={() => handleFilterChange("province", "")}
+                  className="hover:bg-green-200 rounded-full p-0.5"
+                >
+                  <HiX className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {filters.city && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
+                شهر: {getCityName(filters.city)}
+                <button
+                  onClick={() => handleFilterChange("city", "")}
+                  className="hover:bg-purple-200 rounded-full p-0.5"
+                >
+                  <HiX className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {filters.area && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
+                منطقه: {getAreaName(filters.area)}
+                <button
+                  onClick={() => handleFilterChange("area", "")}
+                  className="hover:bg-orange-200 rounded-full p-0.5"
+                >
+                  <HiX className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {filters.isVerified !== undefined && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
+                وضعیت: {filters.isVerified ? "تایید شده" : "تایید نشده"}
+                <button
+                  onClick={() => handleFilterChange("isVerified", undefined)}
+                  className="hover:bg-yellow-200 rounded-full p-0.5"
+                >
+                  <HiX className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

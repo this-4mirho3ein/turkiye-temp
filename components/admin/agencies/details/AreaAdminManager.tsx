@@ -27,7 +27,7 @@ const AreaAdminManager: React.FC<AreaAdminManagerProps> = ({
   agencyId,
   areaAdmins,
   isAgencyOwner,
-  onAdminRemoved
+  onAdminRemoved,
 }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [deletingAdminId, setDeletingAdminId] = useState<string | null>(null);
@@ -36,11 +36,11 @@ const AreaAdminManager: React.FC<AreaAdminManagerProps> = ({
   const handleDeleteAreaAdmin = async (adminId: string) => {
     if (!isAgencyOwner) {
       addToast({
-        title: 'خطا',
-        description: 'فقط صاحب آژانس می‌تواند مدیر منطقه را حذف کند',
-        color: 'danger',
-        radius: 'md',
-        variant: 'solid',
+        title: "خطا",
+        description: "فقط صاحب آژانس می‌تواند مدیر منطقه را حذف کند",
+        color: "danger",
+        radius: "md",
+        variant: "solid",
         timeout: 3000,
       });
       return;
@@ -49,45 +49,54 @@ const AreaAdminManager: React.FC<AreaAdminManagerProps> = ({
     try {
       setLoading(true);
       setDeletingAdminId(adminId);
-      
+
       const response = await removeAgencyAreaAdmin(agencyId, adminId);
-      
+
       if (response.success) {
         addToast({
-          title: 'موفق',
-          description: response.message || 'مدیر منطقه با موفقیت حذف شد',
-          color: 'success',
-          radius: 'md',
-          variant: 'solid',
+          title: "موفق",
+          description: response.message || "مدیر منطقه با موفقیت حذف شد",
+          color: "success",
+          radius: "md",
+          variant: "solid",
           timeout: 3000,
         });
-        
+
         // Refresh the agency details
         onAdminRemoved();
       } else {
         addToast({
-          title: 'خطا',
-          description: response.message || 'خطا در حذف مدیر منطقه',
-          color: 'danger',
-          radius: 'md',
-          variant: 'solid',
+          title: "خطا",
+          description: response.message || "خطا در حذف مدیر منطقه",
+          color: "danger",
+          radius: "md",
+          variant: "solid",
           timeout: 3000,
         });
       }
     } catch (error: any) {
       console.error("Error removing area admin:", error);
       addToast({
-        title: 'خطا',
-        description: error.message || 'خطا در حذف مدیر منطقه',
-        color: 'danger',
-        radius: 'md',
-        variant: 'solid',
+        title: "خطا",
+        description: error.message || "خطا در حذف مدیر منطقه",
+        color: "danger",
+        radius: "md",
+        variant: "solid",
         timeout: 3000,
       });
     } finally {
       setLoading(false);
       setDeletingAdminId(null);
     }
+  };
+
+  // Function to get proper location display name
+  const getLocationDisplayName = (admin: AreaAdmin): string => {
+    if (admin.area?.name) {
+      return admin.area.name;
+    }
+    // If no area name is available, return a placeholder instead of ID
+    return "نامشخص";
   };
 
   return (
@@ -111,51 +120,122 @@ const AreaAdminManager: React.FC<AreaAdminManagerProps> = ({
             <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
-          <p className="text-lg font-medium">هیچ مدیر منطقه‌ای برای این آژانس ثبت نشده است</p>
+          <p className="text-lg font-medium">
+            هیچ مدیر منطقه‌ای برای این آژانس ثبت نشده است
+          </p>
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="w-full table-fixed divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نام</th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تلفن</th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ایمیل</th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">منطقه</th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  style={{ width: "25%" }}
+                >
+                  نام
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  style={{ width: "25%" }}
+                >
+                  تلفن
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  style={{ width: "25%" }}
+                >
+                  ایمیل
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  style={{ width: isAgencyOwner ? "15%" : "25%" }}
+                >
+                  منطقه
+                </th>
                 {isAgencyOwner && (
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عملیات</th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    style={{ width: "10%" }}
+                  >
+                    عملیات
+                  </th>
                 )}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {areaAdmins.map((admin) => (
-                <tr key={admin._id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {admin.firstName || ''} {admin.lastName || ''}
+                <tr key={admin._id} className="hover:bg-gray-50">
+                  <td
+                    className="px-6 py-4 text-sm font-medium text-gray-900 text-right"
+                    style={{ width: "25%" }}
+                  >
+                    <div className="truncate">
+                      {admin.firstName || ""} {admin.lastName || ""}
+                    </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dir-ltr">
-                    {admin.phone || '-'}
+                  <td
+                    className="px-6 py-4 text-sm text-gray-500 text-right"
+                    style={{ width: "25%" }}
+                    dir="ltr"
+                  >
+                    <div className="truncate">{admin.phone || "-"}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dir-ltr">
-                    {admin.email || '-'}
+                  <td
+                    className="px-6 py-4 text-sm text-gray-500 text-right"
+                    style={{ width: "25%" }}
+                    dir="ltr"
+                  >
+                    <div className="truncate">{admin.email || "-"}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {admin.area?.name || '-'}
+                  <td
+                    className="px-6 py-4 text-sm text-gray-500 text-right"
+                    style={{ width: isAgencyOwner ? "15%" : "25%" }}
+                  >
+                    <div className="truncate">
+                      {getLocationDisplayName(admin)}
+                    </div>
                   </td>
                   {isAgencyOwner && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td
+                      className="px-6 py-4 text-sm text-gray-500 text-right"
+                      style={{ width: "10%" }}
+                    >
                       <button
                         onClick={() => handleDeleteAreaAdmin(admin._id)}
                         disabled={loading && deletingAdminId === admin._id}
                         className={`px-3 py-1.5 rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors flex items-center gap-1 ${
-                          loading && deletingAdminId === admin._id ? 'opacity-50 cursor-not-allowed' : ''
+                          loading && deletingAdminId === admin._id
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
                         }`}
                       >
                         {loading && deletingAdminId === admin._id ? (
                           <>
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            <svg
+                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
                             </svg>
                             در حال حذف...
                           </>

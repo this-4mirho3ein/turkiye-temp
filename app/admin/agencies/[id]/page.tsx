@@ -2,12 +2,24 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { getAgencyMembers } from "@/controllers/makeRequest";
+import { getAgencyDetails, getAgencyMembers } from "@/controllers/makeRequest";
 import AgencyDetailsCard from "@/components/admin/agencies/details/AgencyDetailsCard";
 import AddAreaAdminModal from "@/components/admin/agencies/details/AddAreaAdminModal";
 import AreaAdminManager from "@/components/admin/agencies/details/AreaAdminManager";
 import ConsultantManager from "@/components/admin/agencies/details/ConsultantManager";
 import AddConsultantModal from "@/components/admin/agencies/details/AddConsultantModal";
+import EditAgencyModal from "@/components/admin/agencies/EditAgencyModal";
+
+interface AgencyAddress {
+  country?: string | { _id: string; name: string };
+  province?: string | { _id: string; name: string };
+  city?: string | { _id: string; name: string };
+  area?: string | { _id: string; name: string };
+  location?: {
+    coordinates: [number, number];
+  };
+  fullAddress?: string;
+}
 
 interface AgencyDetails {
   _id: string;
@@ -33,7 +45,7 @@ interface AgencyDetails {
     _id: string;
     fileName: string;
   };
-  address?: string;
+  address: AgencyAddress;
   email?: string;
   website?: string;
   socialMedia?: {
@@ -42,12 +54,8 @@ interface AgencyDetails {
     facebook?: string;
     linkedin?: string;
   };
-  location?: {
-    country?: string;
-    province?: string;
-    city?: string;
-    area?: string;
-  };
+  isPhoneShow?: boolean;
+  isAddressShow?: boolean;
 }
 
 export default function AgencyDetailsPage() {
@@ -56,49 +64,66 @@ export default function AgencyDetailsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isAgencyOwner, setIsAgencyOwner] = useState<boolean>(true);
-  const [isAreaAdminModalOpen, setIsAreaAdminModalOpen] = useState<boolean>(false);
-  const [isConsultantModalOpen, setIsConsultantModalOpen] = useState<boolean>(false);
+  const [isAreaAdminModalOpen, setIsAreaAdminModalOpen] =
+    useState<boolean>(false);
+  const [isConsultantModalOpen, setIsConsultantModalOpen] =
+    useState<boolean>(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchAgencyDetails = async () => {
       try {
         setLoading(true);
-        // Since we don't have getAgencyDetails API, we'll use getAgencyMembers to get some data
-        // and create a mock agency object with the available information
-        const response = await getAgencyMembers(id as string);
-        console.log("Agency members API response:", response);
+        console.log(`🔍 Fetching agency details for ID: ${id}`);
 
-        if (response.success && response.data) {
-          // Create a mock agency object with the available ID and some default values
-          const mockAgency: AgencyDetails = {
-            _id: id as string,
-            name: "آژانس نمونه",
-            phone: "",
-            owner: {
-              _id: "",
-              phone: "",
-              email: "",
-              firstName: "",
-              lastName: ""
-            },
-            consultants: response.data.consultants || [],
-            areaAdmins: response.data.areaAdmins || [],
-            adQuota: 10,
-            isActive: true,
-            isVerified: true,
-            description: "",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            activeAdCount: 0
+        // Get agency details (which already includes consultants and areaAdmins)
+        const agencyResponse = await getAgencyDetails(id as string);
+        console.log("Agency details API response:", agencyResponse);
+
+        if (agencyResponse.success && agencyResponse.data) {
+          // Extract the agency data from the response
+          const agencyData = agencyResponse.data.data || agencyResponse.data;
+
+          console.log("Extracted agency data:", agencyData);
+          console.log("Consultants from agency data:", agencyData.consultants);
+          console.log("Area admins from agency data:", agencyData.areaAdmins);
+
+          // The agency details response already includes consultants and areaAdmins
+          const fullAgencyData: AgencyDetails = {
+            _id: agencyData._id,
+            name: agencyData.name,
+            phone: agencyData.phone,
+            owner: agencyData.owner,
+            consultants: agencyData.consultants || [],
+            areaAdmins: agencyData.areaAdmins || [],
+            adQuota: agencyData.adQuota || 0,
+            isActive: agencyData.isActive || false,
+            isVerified: agencyData.isVerified || false,
+            description: agencyData.description || "",
+            createdAt: agencyData.createdAt,
+            updatedAt: agencyData.updatedAt,
+            activeAdCount: agencyData.activeAdCount || 0,
+            logo: agencyData.logo,
+            address: agencyData.address || {},
+            email: agencyData.email,
+            website: agencyData.website,
+            socialMedia: agencyData.socialMedia,
+            isPhoneShow: agencyData.isPhoneShow,
+            isAddressShow: agencyData.isAddressShow,
           };
-          
-          setAgency(mockAgency);
+
+          console.log(
+            "Final agency data with consultants and area admins:",
+            fullAgencyData
+          );
+          setAgency(fullAgencyData);
           setError(null);
         } else {
-          setError(response.message || "خطا در دریافت اطلاعات آژانس");
+          setError(agencyResponse.message || "خطا در دریافت اطلاعات آژانس");
           setAgency(null);
         }
       } catch (err: any) {
+        console.error("Error fetching agency details:", err);
         setError(err.message || "خطا در دریافت اطلاعات آژانس");
         setAgency(null);
       } finally {
@@ -114,19 +139,43 @@ export default function AgencyDetailsPage() {
   const refreshAgencyDetails = async () => {
     try {
       setLoading(true);
-      // Use getAgencyMembers instead since getAgencyDetails is not available
-      const response = await getAgencyMembers(id as string);
-      if (response.success && response.data) {
-        // Update the mock agency with new members data
-        setAgency(prevAgency => {
-          if (!prevAgency) return null;
-          return {
-            ...prevAgency,
-            consultants: response.data.consultants || [],
-            areaAdmins: response.data.areaAdmins || [],
-            updatedAt: new Date().toISOString()
-          };
-        });
+      console.log(`🔄 Refreshing agency details for ID: ${id}`);
+
+      // Get updated agency details (which already includes consultants and areaAdmins)
+      const agencyResponse = await getAgencyDetails(id as string);
+
+      if (agencyResponse.success && agencyResponse.data) {
+        const agencyData = agencyResponse.data.data || agencyResponse.data;
+
+        console.log("Refreshed agency data:", agencyData);
+        console.log("Refreshed consultants:", agencyData.consultants);
+        console.log("Refreshed area admins:", agencyData.areaAdmins);
+
+        // The agency details response already includes consultants and areaAdmins
+        const fullAgencyData: AgencyDetails = {
+          _id: agencyData._id,
+          name: agencyData.name,
+          phone: agencyData.phone,
+          owner: agencyData.owner,
+          consultants: agencyData.consultants || [],
+          areaAdmins: agencyData.areaAdmins || [],
+          adQuota: agencyData.adQuota || 0,
+          isActive: agencyData.isActive || false,
+          isVerified: agencyData.isVerified || false,
+          description: agencyData.description || "",
+          createdAt: agencyData.createdAt,
+          updatedAt: agencyData.updatedAt,
+          activeAdCount: agencyData.activeAdCount || 0,
+          logo: agencyData.logo,
+          address: agencyData.address || {},
+          email: agencyData.email,
+          website: agencyData.website,
+          socialMedia: agencyData.socialMedia,
+          isPhoneShow: agencyData.isPhoneShow,
+          isAddressShow: agencyData.isAddressShow,
+        };
+
+        setAgency(fullAgencyData);
         setError(null);
       }
     } catch (err: any) {
@@ -134,6 +183,44 @@ export default function AgencyDetailsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditAgency = () => {
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    // Refresh the agency details after successful edit
+    refreshAgencyDetails();
+  };
+
+  const handleDeleteAgency = () => {
+    // Redirect to agencies list after successful delete
+    window.location.href = "/admin/agencies";
+  };
+
+  // Convert AgencyDetails to Agency format for EditAgencyModal
+  const convertToAgencyFormat = (agencyDetails: AgencyDetails) => {
+    const getStringValue = (value: string | { _id: string; name: string } | undefined): string => {
+      if (!value) return "";
+      if (typeof value === "string") return value;
+      return value._id; // Use the ID for the form
+    };
+
+    return {
+      _id: agencyDetails._id,
+      name: agencyDetails.name,
+      phone: agencyDetails.phone,
+      description: agencyDetails.description,
+      address: {
+        country: getStringValue(agencyDetails.address?.country),
+        province: getStringValue(agencyDetails.address?.province),
+        city: getStringValue(agencyDetails.address?.city),
+        area: getStringValue(agencyDetails.address?.area),
+        location: agencyDetails.address?.location,
+        fullAddress: agencyDetails.address?.fullAddress,
+      },
+    };
   };
 
   return (
@@ -172,8 +259,12 @@ export default function AgencyDetailsPage() {
         </div>
       ) : agency ? (
         <div className="space-y-8">
-          <AgencyDetailsCard agency={agency} />
-          
+          <AgencyDetailsCard
+            agency={agency}
+            onEdit={handleEditAgency}
+            onDelete={handleDeleteAgency}
+          />
+
           {/* Area Admin Section */}
           <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-6">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
@@ -196,7 +287,7 @@ export default function AgencyDetailsPage() {
               </svg>
               مدیر منطقه
             </h2>
-            
+
             {/* Display area admins with delete option if they exist */}
             <AreaAdminManager
               agencyId={agency._id}
@@ -204,7 +295,7 @@ export default function AgencyDetailsPage() {
               isAgencyOwner={isAgencyOwner}
               onAdminRemoved={refreshAgencyDetails}
             />
-            
+
             {/* Button to add area admin only when there are no area admins */}
             {agency.areaAdmins.length === 0 && isAgencyOwner && (
               <div className="mt-6 flex justify-center">
@@ -233,7 +324,7 @@ export default function AgencyDetailsPage() {
               </div>
             )}
           </div>
-          
+
           {/* Consultant Section */}
           <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-6">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
@@ -256,7 +347,7 @@ export default function AgencyDetailsPage() {
               </svg>
               مشاوران
             </h2>
-            
+
             {/* Display consultants with add/delete options */}
             <ConsultantManager
               agencyId={agency._id}
@@ -295,6 +386,13 @@ export default function AgencyDetailsPage() {
             agencyId={agency._id}
             isAgencyOwner={isAgencyOwner}
             onSuccess={refreshAgencyDetails}
+          />
+          {/* Edit Agency Modal */}
+          <EditAgencyModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            onSuccess={handleEditSuccess}
+            agency={agency}
           />
         </>
       )}
