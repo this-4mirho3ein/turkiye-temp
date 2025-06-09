@@ -199,9 +199,29 @@ export default function AgencyDetailsPage() {
     window.location.href = "/admin/agencies";
   };
 
+  // Agency interface for EditAgencyModal
+  interface Agency {
+    _id: string;
+    name: string;
+    phone: string;
+    description: string;
+    address?: {
+      country?: string;
+      province?: string;
+      city?: string;
+      area?: string;
+      location?: {
+        coordinates: [number, number];
+      };
+      fullAddress?: string;
+    };
+  }
+
   // Convert AgencyDetails to Agency format for EditAgencyModal
-  const convertToAgencyFormat = (agencyDetails: AgencyDetails) => {
-    const getStringValue = (value: string | { _id: string; name: string } | undefined): string => {
+  const convertToAgencyFormat = (agencyDetails: AgencyDetails): Agency => {
+    const getStringValue = (
+      value: string | { _id: string; name: string } | undefined
+    ): string => {
       if (!value) return "";
       if (typeof value === "string") return value;
       return value._id; // Use the ID for the form
@@ -224,17 +244,17 @@ export default function AgencyDetailsPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container px-4 py-8 mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">جزئیات آژانس</h1>
+        <h1 className="mb-2 text-2xl font-bold text-gray-800">جزئیات آژانس</h1>
         <div className="flex items-center text-sm text-gray-500">
-          <a href="/admin" className="hover:text-purple-600 transition-colors">
+          <a href="/admin" className="transition-colors hover:text-purple-600">
             داشبورد
           </a>
           <span className="mx-2">/</span>
           <a
             href="/admin/agencies"
-            className="hover:text-purple-600 transition-colors"
+            className="transition-colors hover:text-purple-600"
           >
             آژانس‌ها
           </a>
@@ -244,15 +264,15 @@ export default function AgencyDetailsPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+        <div className="flex items-center justify-center h-64">
+          <div className="w-12 h-12 border-t-2 border-b-2 border-purple-500 rounded-full animate-spin"></div>
         </div>
       ) : error ? (
-        <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 text-center">
+        <div className="p-4 text-center text-red-800 border border-red-200 rounded-lg bg-red-50">
           <p className="text-lg font-medium">{error}</p>
           <button
             onClick={() => window.history.back()}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="px-4 py-2 mt-4 text-white transition-colors bg-red-600 rounded-lg hover:bg-red-700"
           >
             بازگشت
           </button>
@@ -266,8 +286,8 @@ export default function AgencyDetailsPage() {
           />
 
           {/* Area Admin Section */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <div className="p-6 overflow-hidden bg-white border border-gray-100 shadow-lg rounded-xl">
+            <h2 className="flex items-center mb-4 text-xl font-bold text-gray-800">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -278,7 +298,7 @@ export default function AgencyDetailsPage() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-purple-600 ml-2"
+                className="ml-2 text-purple-600"
               >
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                 <circle cx="9" cy="7" r="4"></circle>
@@ -298,10 +318,10 @@ export default function AgencyDetailsPage() {
 
             {/* Button to add area admin only when there are no area admins */}
             {agency.areaAdmins.length === 0 && isAgencyOwner && (
-              <div className="mt-6 flex justify-center">
+              <div className="flex justify-center mt-6">
                 <button
                   onClick={() => setIsAreaAdminModalOpen(true)}
-                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 shadow-md"
+                  className="flex items-center gap-2 px-6 py-3 text-white transition-colors bg-purple-600 rounded-lg shadow-md hover:bg-purple-700"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -326,8 +346,8 @@ export default function AgencyDetailsPage() {
           </div>
 
           {/* Consultant Section */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <div className="p-6 overflow-hidden bg-white border border-gray-100 shadow-lg rounded-xl">
+            <h2 className="flex items-center mb-4 text-xl font-bold text-gray-800">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -338,7 +358,7 @@ export default function AgencyDetailsPage() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-purple-600 ml-2"
+                className="ml-2 text-purple-600"
               >
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                 <circle cx="9" cy="7" r="4"></circle>
@@ -359,11 +379,11 @@ export default function AgencyDetailsPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg p-4 text-center">
+        <div className="p-4 text-center text-yellow-800 border border-yellow-200 rounded-lg bg-yellow-50">
           <p className="text-lg font-medium">اطلاعات آژانس یافت نشد</p>
           <button
             onClick={() => window.history.back()}
-            className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+            className="px-4 py-2 mt-4 text-white transition-colors bg-yellow-600 rounded-lg hover:bg-yellow-700"
           >
             بازگشت
           </button>

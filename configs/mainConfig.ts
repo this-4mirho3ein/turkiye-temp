@@ -10,4 +10,5 @@ export default {
   webSocketServer: "ws://192.168.1.6:3000/ws/chat/?token=",
   imageServer: "192.168.1.6",
   fileServer: "http://192.168.1.6:3000/media",
+  imageUploadServer: "http://193.151.138.42:3000/api/upload/media",
 };

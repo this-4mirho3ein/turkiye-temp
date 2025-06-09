@@ -2550,7 +2550,69 @@ export const getAdminPropertyTypes = async (
     return data || [];
   } catch (err) {
     console.error("❌ Error fetching property types:", err);
-    return [];
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log("⚙️ Attempting direct Axios fallback for property types...");
+
+      // Get token from localStorage if in browser environment
+      let token = "";
+      if (typeof window !== "undefined") {
+        token = localStorage.getItem("accessToken") || "";
+      }
+
+      // Create headers with authentication token
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (token) {
+        headers["x-access-token"] = token;
+      }
+
+      const directResponse = await axios.get(
+        `${mainConfig.apiServer}/admin/property-type/get-property-types?page=${page}&limit=${limit}${cacheParam}`,
+        {
+          headers,
+          withCredentials: false,
+        }
+      );
+
+      // Handle different possible response structures
+      let directData = [];
+      if (
+        directResponse.data?.data?.data &&
+        Array.isArray(directResponse.data.data.data)
+      ) {
+        directData = directResponse.data.data.data;
+        console.log(
+          `⚙️ Found ${directData.length} property types in direct response`
+        );
+      } else if (
+        directResponse.data?.data &&
+        Array.isArray(directResponse.data.data)
+      ) {
+        directData = directResponse.data.data;
+        console.log(
+          `⚙️ Found ${directData.length} property types in direct response`
+        );
+      } else if (Array.isArray(directResponse.data)) {
+        directData = directResponse.data;
+        console.log(
+          `⚙️ Found ${directData.length} property types in direct response`
+        );
+      } else {
+        console.warn(
+          "⚠️ Unexpected direct property types response structure:",
+          directResponse.data
+        );
+      }
+
+      return directData || [];
+    } catch (fallbackErr) {
+      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
+      return [];
+    }
   }
 };
 
@@ -3974,5 +4036,512 @@ export const endUserSession = async (
     }
 
     return returnError(error);
+  }
+};
+
+//#region AdminAds
+// Get admin ads with filtering and pagination
+export const getAdminAds = async (
+  params: {
+    propertyType?: string;
+    category?: string;
+    status?: string;
+    isActive?: boolean;
+    country?: string;
+    province?: string;
+    city?: string;
+    area?: string;
+    page?: number;
+    limit?: number;
+    sortField?: string;
+    sortOrder?: number;
+    forceRefresh?: boolean;
+  } = {}
+): Promise<ApiResponse> => {
+  const {
+    propertyType,
+    category,
+    status,
+    isActive,
+    country,
+    province,
+    city,
+    area,
+    page = 1,
+    limit = 10,
+    sortField = "createdAt",
+    sortOrder = -1,
+    forceRefresh = false,
+  } = params;
+
+  // Add cache-busting parameter if forceRefresh is true
+  const cacheParam = forceRefresh ? `&_t=${Date.now()}` : "";
+
+  // Build query parameters
+  let queryParams = `page=${page}&limit=${limit}&sortField=${sortField}&sortOrder=${sortOrder}`;
+
+  // Add filter parameters if they exist
+  if (propertyType)
+    queryParams += `&propertyType=${encodeURIComponent(propertyType)}`;
+  if (category) queryParams += `&category=${encodeURIComponent(category)}`;
+  if (status) queryParams += `&status=${encodeURIComponent(status)}`;
+  if (isActive !== undefined) queryParams += `&isActive=${isActive}`;
+  if (country) queryParams += `&country=${encodeURIComponent(country)}`;
+  if (province) queryParams += `&province=${encodeURIComponent(province)}`;
+  if (city) queryParams += `&city=${encodeURIComponent(city)}`;
+  if (area) queryParams += `&area=${encodeURIComponent(area)}`;
+
+  try {
+    console.log(`📢 Fetching ads with filters...`);
+    const apiUrl = `/admin/ad/get-ads?${queryParams}${cacheParam}`;
+    console.log(`📢 API URL: ${apiUrl}`);
+
+    // Get token from localStorage if in browser
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const response = await api.get(apiUrl, { headers });
+
+    console.log("📢 Ads API response status:", response.status);
+    console.log("📢 Ads API response data:", response.data);
+
+    return {
+      success: true,
+      data: response.data,
+      status: response.status,
+    };
+  } catch (err: any) {
+    console.error("📢 Error fetching ads:", err);
+    if (err.response) {
+      console.error("📢 Error response status:", err.response.status);
+      console.error("📢 Error response data:", err.response.data);
+    }
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log("⚙️ Attempting direct Axios fallback for ads...");
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers["x-access-token"] = token;
+
+      const directResponse = await axios.get(
+        `${mainConfig.apiServer}/admin/ad/get-ads?${queryParams}${cacheParam}`,
+        {
+          headers,
+          withCredentials: false,
+        }
+      );
+
+      console.log("⚙️ Direct ads request status:", directResponse.status);
+      console.log("⚙️ Direct ads request data:", directResponse.data);
+
+      return {
+        success: true,
+        data: directResponse.data,
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
+      return {
+        success: false,
+        message: err.message || "Failed to fetch ads",
+        status: err.response?.status || 500,
+      };
+    }
+  }
+};
+
+// Get ad details by ID
+export const getAdminAdById = async (id: string): Promise<ApiResponse> => {
+  try {
+    console.log(`📢 Fetching ad details for ID: ${id}`);
+
+    // Get token from localStorage if in browser
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    // Make the API request
+    const response = await api.get(`/admin/ad/get-ad/${id}`, { headers });
+
+    console.log("📢 Ad details API response status:", response.status);
+    console.log("📢 Ad details API response data:", response.data);
+
+    // Process the response data to ensure it follows the expected structure
+    let adData;
+
+    // Check if response has a nested data structure and extract accordingly
+    if (response.data && response.data.data) {
+      adData = response.data.data;
+      console.log("📢 Found nested data structure, using response.data.data");
+    } else {
+      adData = response.data;
+      console.log("📢 Using direct response data");
+    }
+
+    // Make sure we have all required fields for display
+    const processedData = {
+      success: true,
+      data: adData,
+      message: response.data.message || "آگهی با موفقیت دریافت شد",
+      status: response.status,
+    };
+
+    console.log("📢 Processed ad data ready for component:", processedData);
+    return processedData;
+  } catch (err: any) {
+    console.error("📢 Error fetching ad details:", err);
+
+    // Add detailed error logging
+    if (err.response) {
+      console.error("Error response status:", err.response.status);
+      console.error("Error response data:", err.response.data);
+    }
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log("⚙️ Attempting direct Axios fallback for ad details...");
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers["x-access-token"] = token;
+
+      const directResponse = await axios.get(
+        `${mainConfig.apiServer}/admin/ad/get-ad/${id}`,
+        {
+          headers,
+          withCredentials: false,
+        }
+      );
+
+      console.log(
+        "⚙️ Direct ad details request status:",
+        directResponse.status
+      );
+      console.log("⚙️ Direct ad details request data:", directResponse.data);
+
+      // Process the data from the direct response
+      let directAdData;
+
+      // Check if direct response has a nested data structure
+      if (directResponse.data && directResponse.data.data) {
+        directAdData = directResponse.data.data;
+      } else {
+        directAdData = directResponse.data;
+      }
+
+      return {
+        success: true,
+        data: directAdData,
+        message: directResponse.data.message || "آگهی با موفقیت دریافت شد",
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
+      return {
+        success: false,
+        message: err.message || "خطا در دریافت اطلاعات آگهی",
+        status: err.response?.status || 500,
+      };
+    }
+  }
+};
+
+// Update ad
+export const updateAdminAd = async (
+  id: string,
+  adData: {
+    title: string;
+    description: string;
+    propertyType?: string;
+    category?: string;
+    saleOrRent: "sale" | "rent";
+    address: {
+      country: string;
+      province: string;
+      city: string;
+      area: string;
+      location: {
+        coordinates: [number, number];
+      };
+      fullAddress: string;
+    };
+    filters?: Record<string, any>;
+    price: number;
+    flags?: string[];
+    agency?: string;
+    mainImageId?: string;
+    mediaIds?: string;
+  }
+): Promise<ApiResponse> => {
+  try {
+    console.log(`📢 Updating ad with ID: ${id}`, adData);
+
+    // Get token from localStorage if in browser
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const response = await api.put(`/ad/update-ad/${id}`, adData, {
+      headers,
+    });
+
+    console.log(`✅ Update ad response status: ${response.status}`);
+    console.log(`✅ Update ad response data:`, response.data);
+
+    return {
+      success:
+        response.data.success !== undefined ? response.data.success : true,
+      data: response.data,
+      message: response.data.message || "آگهی با موفقیت به‌روزرسانی شد",
+      status: response.data.status || response.status,
+    };
+  } catch (error: any) {
+    console.error("❌ Error updating ad:", error);
+
+    // Add more detailed error logging
+    if (error.response) {
+      console.error("Error response status:", error.response.status);
+      console.error("Error response data:", error.response.data);
+
+      // Check for 401 unauthorized and handle redirect
+      if (error.response.status === 401) {
+        handle401Redirect();
+      }
+
+      // If the error contains a response with a message, use that directly
+      if (error.response.data) {
+        return {
+          success:
+            error.response.data.success !== undefined
+              ? error.response.data.success
+              : false,
+          message: error.response.data.message || "خطا در به‌روزرسانی آگهی",
+          status: error.response.data.status || error.response.status,
+          data: error.response.data,
+        };
+      }
+    } else if (error.request) {
+      console.error("No response received. Request details:", error.request);
+    } else {
+      console.error("Error message:", error.message);
+    }
+
+    return returnError(error);
+  }
+};
+//#endregion
+
+// Confirm or reject an ad
+export const confirmAd = async (
+  adId: string,
+  isConfirmed: boolean,
+  rejectReason?: string
+): Promise<ApiResponse> => {
+  try {
+    console.log(
+      `📢 ${isConfirmed ? "Confirming" : "Rejecting"} ad with ID: ${adId}`
+    );
+
+    // Get token from localStorage if in browser
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    // Prepare request body
+    const requestBody: Record<string, any> = {
+      adId,
+      isConfirmed,
+    };
+
+    // Add reject reason if ad is being rejected
+    if (!isConfirmed && rejectReason) {
+      requestBody.rejectReason = rejectReason;
+    }
+
+    console.log("📢 Request body:", requestBody);
+
+    // Make the API request
+    const response = await api.put(`/admin/ad/confirm-ad`, requestBody, {
+      headers,
+    });
+
+    console.log(`📢 Confirm ad response status: ${response.status}`);
+    console.log(`📢 Confirm ad response data:`, response.data);
+
+    return {
+      success: response.data.success || true,
+      data: response.data,
+      message: isConfirmed
+        ? response.data.message || "آگهی با موفقیت تایید شد"
+        : response.data.message || "آگهی با موفقیت رد شد",
+      status: response.status,
+    };
+  } catch (err: any) {
+    console.error(
+      `📢 Error ${isConfirmed ? "confirming" : "rejecting"} ad:`,
+      err
+    );
+
+    // Add detailed error logging
+    if (err.response) {
+      console.error("Error response status:", err.response.status);
+      console.error("Error response data:", err.response.data);
+    }
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log("⚙️ Attempting direct Axios fallback...");
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers["x-access-token"] = token;
+
+      // Prepare request body for fallback
+      const requestBody: Record<string, any> = {
+        adId,
+        isConfirmed,
+      };
+
+      // Add reject reason if ad is being rejected
+      if (!isConfirmed && rejectReason) {
+        requestBody.rejectReason = rejectReason;
+      }
+
+      const directResponse = await axios.put(
+        `${mainConfig.apiServer}/admin/ad/confirm-ad`,
+        requestBody,
+        {
+          headers,
+          withCredentials: false,
+        }
+      );
+
+      console.log(
+        `⚙️ Direct confirm ad response status:`,
+        directResponse.status
+      );
+      console.log(`⚙️ Direct confirm ad response data:`, directResponse.data);
+
+      return {
+        success: directResponse.data.success || true,
+        data: directResponse.data,
+        message: isConfirmed
+          ? directResponse.data.message || "آگهی با موفقیت تایید شد"
+          : directResponse.data.message || "آگهی با موفقیت رد شد",
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
+      return {
+        success: false,
+        message:
+          err.message || (isConfirmed ? "خطا در تایید آگهی" : "خطا در رد آگهی"),
+        status: err.response?.status || 500,
+      };
+    }
+  }
+};
+
+// Delete ad by ID
+export const deleteAd = async (id: string): Promise<ApiResponse> => {
+  try {
+    console.log(`📢 Deleting ad with ID: ${id}`);
+
+    // Get token from localStorage if in browser
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    // Make the API request
+    const response = await api.delete(`/ad/delete-ad/${id}`, { headers });
+
+    console.log(`📢 Delete ad response status: ${response.status}`);
+    console.log(`📢 Delete ad response data:`, response.data);
+
+    return {
+      success: response.data.success || true,
+      data: response.data,
+      message: response.data.message || "آگهی با موفقیت حذف شد",
+      status: response.status,
+    };
+  } catch (err: any) {
+    console.error(`📢 Error deleting ad:`, err);
+
+    // Add detailed error logging
+    if (err.response) {
+      console.error("Error response status:", err.response.status);
+      console.error("Error response data:", err.response.data);
+    }
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log("⚙️ Attempting direct Axios fallback...");
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers["x-access-token"] = token;
+
+      const directResponse = await axios.delete(
+        `${mainConfig.apiServer}/ad/delete-ad/${id}`,
+        {
+          headers,
+          withCredentials: false,
+        }
+      );
+
+      console.log(
+        `⚙️ Direct delete ad response status:`,
+        directResponse.status
+      );
+      console.log(`⚙️ Direct delete ad response data:`, directResponse.data);
+
+      return {
+        success: directResponse.data.success || true,
+        data: directResponse.data,
+        message: directResponse.data.message || "آگهی با موفقیت حذف شد",
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
+      return {
+        success: false,
+        message: err.message || "خطا در حذف آگهی",
+        status: err.response?.status || 500,
+      };
+    }
   }
 };
