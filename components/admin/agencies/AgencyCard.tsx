@@ -88,18 +88,12 @@ const AgencyCard: React.FC<AgencyCardProps> = ({
     return new Date(dateString).toLocaleDateString("fa-IR");
   };
 
-  const getLocationText = () => {
-    const { address } = agency;
-    if (!address) return "آدرس نامشخص";
-
-    const parts = [address.city, address.province].filter(Boolean);
-    return parts.length > 0 ? parts.join("، ") : "آدرس نامشخص";
-  };
+  // Location display has been removed
 
   return (
     <>
-      <Link href={`/admin/agencies/${agency._id}`} className="block">
-        <div className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer">
+      <div className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 overflow-hidden">
+        <Link href={`/admin/agencies/${agency._id}`} className="block">
           {/* Header */}
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-start justify-between">
@@ -147,31 +141,7 @@ const AgencyCard: React.FC<AgencyCardProps> = ({
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onEdit(agency);
-                  }}
-                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  title="ویرایش"
-                >
-                  <HiPencil className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowDeleteModal(true);
-                  }}
-                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  title="حذف"
-                >
-                  <HiTrash className="w-4 h-4" />
-                </button>
-              </div>
+              {/* Actions moved to bottom */}
             </div>
           </div>
 
@@ -191,11 +161,7 @@ const AgencyCard: React.FC<AgencyCardProps> = ({
               <span>{agency.phone}</span>
             </div>
 
-            {/* Location */}
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <HiLocationMarker className="w-4 h-4" />
-              <span>{getLocationText()}</span>
-            </div>
+            {/* Location has been removed */}
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 pt-3 border-t border-gray-100">
@@ -211,16 +177,38 @@ const AgencyCard: React.FC<AgencyCardProps> = ({
                 </div>
                 <div className="text-xs text-gray-500">آگهی فعال</div>
               </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-gray-900">
-                  {agency.adQuota || 0}
-                </div>
-                <div className="text-xs text-gray-500">سقف آگهی</div>
-              </div>
+              {/* Ad quota has been removed */}
             </div>
           </div>
+        </Link>
+
+        {/* Bottom action buttons in one row */}
+        <div className="flex justify-center items-center gap-2 p-3 border-t border-gray-100">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onEdit(agency);
+            }}
+            className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+          >
+            <HiPencil className="w-4 h-4" />
+            <span>ویرایش</span>
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowDeleteModal(true);
+            }}
+            className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-sm bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
+          >
+            <HiTrash className="w-4 h-4" />
+            <span>حذف</span>
+          </button>
         </div>
-      </Link>
+      </div>
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (

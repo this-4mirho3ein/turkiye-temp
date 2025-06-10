@@ -120,9 +120,9 @@ const AgenciesPageClient: React.FC = () => {
       console.log("🌍 Fetching location data...");
 
       const [provincesRes, citiesRes, areasRes] = await Promise.all([
-        getAdminProvinces({ limit: 1000 }),
-        getAdminCities({ limit: 1000 }),
-        getAdminAreas({ limit: 1000 }),
+        getAdminProvinces({ limit: 100 }),
+        getAdminCities({ limit: 100 }),
+        getAdminAreas({ limit: 100 }),
       ]);
 
       console.log("🌍 Provinces:", provincesRes);

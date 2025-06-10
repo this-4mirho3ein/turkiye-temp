@@ -18,8 +18,9 @@ import {
   HiGlobe,
   HiIdentification,
   HiClock,
+  HiBadgeCheck,
 } from "react-icons/hi";
-import { deleteAgency } from "@/controllers/makeRequest";
+import { deleteAgency, confirmAgency } from "@/controllers/makeRequest";
 import mainConfig from "@/configs/mainConfig";
 
 interface AgencyAddress {
@@ -82,7 +83,9 @@ const AgencyDetailsCard: React.FC<AgencyDetailsCardProps> = ({
   onDelete,
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const logoUrl = agency.logo?.fileName
     ? `${mainConfig.fileServer}/${agency.logo.fileName}`
@@ -119,158 +122,153 @@ const AgencyDetailsCard: React.FC<AgencyDetailsCardProps> = ({
     setShowDeleteConfirm(false);
   };
 
-  const renderAddress = () => {
-    if (!agency.address) return "نامشخص";
-
-    // If fullAddress is available, use it first
-    if (agency.address.fullAddress) {
-      return agency.address.fullAddress;
-    }
-
-    // Build address from location names (not IDs)
-    const parts = [];
-
-    // Check if these are location objects with names or just strings
-    if (agency.address.area) {
-      if (typeof agency.address.area === "object" && agency.address.area.name) {
-        parts.push(agency.address.area.name);
-      } else if (
-        typeof agency.address.area === "string" &&
-        !agency.address.area.match(/^[0-9a-fA-F]{24}$/)
-      ) {
-        // Only add if it's not a MongoDB ObjectId (24 hex characters)
-        parts.push(agency.address.area);
-      }
-    }
-
-    if (agency.address.city) {
-      if (typeof agency.address.city === "object" && agency.address.city.name) {
-        parts.push(agency.address.city.name);
-      } else if (
-        typeof agency.address.city === "string" &&
-        !agency.address.city.match(/^[0-9a-fA-F]{24}$/)
-      ) {
-        parts.push(agency.address.city);
-      }
-    }
-
-    if (agency.address.province) {
-      if (
-        typeof agency.address.province === "object" &&
-        agency.address.province.name
-      ) {
-        parts.push(agency.address.province.name);
-      } else if (
-        typeof agency.address.province === "string" &&
-        !agency.address.province.match(/^[0-9a-fA-F]{24}$/)
-      ) {
-        parts.push(agency.address.province);
-      }
-    }
-
-    if (agency.address.country) {
-      if (
-        typeof agency.address.country === "object" &&
-        agency.address.country.name
-      ) {
-        parts.push(agency.address.country.name);
-      } else if (
-        typeof agency.address.country === "string" &&
-        !agency.address.country.match(/^[0-9a-fA-F]{24}$/)
-      ) {
-        parts.push(agency.address.country);
-      }
-    }
-
-    return parts.length > 0 ? parts.join(", ") : "نامشخص";
+  const handleConfirmClick = () => {
+    setShowConfirmModal(true);
   };
+
+  const handleConfirmAgency = async () => {
+    try {
+      setIsConfirming(true);
+      const response = await confirmAgency(
+        agency._id,
+        true,
+        "آژانس شما توسط ادمین تایید شد."
+      );
+
+      if (response.success) {
+        // Reload the page to show updated status
+        window.location.reload();
+      } else {
+        alert(response.message || "خطا در تایید آژانس");
+      }
+    } catch (error: any) {
+      alert(error.message || "خطا در تایید آژانس");
+    } finally {
+      setIsConfirming(false);
+      setShowConfirmModal(false);
+    }
+  };
+
+  const handleCancelConfirm = () => {
+    setShowConfirmModal(false);
+  };
+
+  // Location display has been removed
 
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        {/* Header */}
-        <div className="relative bg-gradient-to-br from-slate-50 via-white to-blue-50 p-8">
-          {/* Status Badges */}
-          <div className="absolute top-6 left-6 flex flex-col gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm">
-              {agency.isVerified ? (
-                <HiCheckCircle className="w-4 h-4 text-emerald-500" />
-              ) : (
-                <HiXCircle className="w-4 h-4 text-amber-500" />
-              )}
-              <span
-                className={`text-sm font-medium ${
-                  agency.isVerified ? "text-emerald-700" : "text-amber-700"
-                }`}
-              >
-                {agency.isVerified ? "تایید شده" : "در انتظار تایید"}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm">
+        {/* Header - Redesigned */}
+        <div className="bg-gradient-to-br from-slate-50 via-white to-blue-50 p-6">
+          {/* Status and Actions Container - New flex layout */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            {/* Status Badges - Now horizontal */}
+            <div className="flex flex-wrap gap-3">
               <div
-                className={`w-3 h-3 rounded-full ${
-                  agency.isActive ? "bg-emerald-400" : "bg-red-400"
-                }`}
-              />
-              <span
-                className={`text-sm font-medium ${
-                  agency.isActive ? "text-emerald-700" : "text-red-700"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-sm ${
+                  agency.isVerified
+                    ? "bg-emerald-50 border border-emerald-200"
+                    : "bg-amber-50 border border-amber-200"
                 }`}
               >
-                {agency.isActive ? "فعال" : "غیرفعال"}
-              </span>
+                {agency.isVerified ? (
+                  <HiCheckCircle className="w-5 h-5 text-emerald-500" />
+                ) : (
+                  <HiXCircle className="w-5 h-5 text-amber-500" />
+                )}
+                <span
+                  className={`text-sm font-medium ${
+                    agency.isVerified ? "text-emerald-700" : "text-amber-700"
+                  }`}
+                >
+                  {agency.isVerified ? "آژانس تایید شده" : "در انتظار تایید"}
+                </span>
+              </div>
+
+              <div
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-sm ${
+                  agency.isActive
+                    ? "bg-emerald-50 border border-emerald-200"
+                    : "bg-red-50 border border-red-200"
+                }`}
+              >
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    agency.isActive ? "bg-emerald-400" : "bg-red-400"
+                  }`}
+                />
+                <span
+                  className={`text-sm font-medium ${
+                    agency.isActive ? "text-emerald-700" : "text-red-700"
+                  }`}
+                >
+                  {agency.isActive ? "آژانس فعال" : "آژانس غیرفعال"}
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons - Now with text labels */}
+            <div className="flex flex-wrap gap-3">
+              {/* Confirm Button - Only show if agency is not already verified */}
+              {!agency.isVerified && (
+                <button
+                  onClick={handleConfirmClick}
+                  disabled={isConfirming}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <HiBadgeCheck className="w-5 h-5" />
+                  <span className="font-medium">تایید آژانس</span>
+                </button>
+              )}
+
+              {onEdit && (
+                <button
+                  onClick={onEdit}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm transition-all duration-200"
+                >
+                  <HiPencil className="w-5 h-5" />
+                  <span className="font-medium">ویرایش</span>
+                </button>
+              )}
+
+              {onDelete && (
+                <button
+                  onClick={handleDeleteClick}
+                  disabled={isDeleting}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 border border-red-200 rounded-lg shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <HiTrash className="w-5 h-5" />
+                  <span className="font-medium">حذف</span>
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="absolute top-6 right-6 flex gap-3">
-            {onEdit && (
-              <button
-                onClick={onEdit}
-                className="p-3 bg-white/90 backdrop-blur-sm hover:bg-white text-indigo-600 hover:text-indigo-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-indigo-100"
-                title="ویرایش آژانس"
-              >
-                <HiPencil className="w-5 h-5" />
-              </button>
-            )}
-            {onDelete && (
-              <button
-                onClick={handleDeleteClick}
-                disabled={isDeleting}
-                className="p-3 bg-white/90 backdrop-blur-sm hover:bg-white text-red-600 hover:text-red-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="حذف آژانس"
-              >
-                <HiTrash className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-
-          {/* Logo and Title */}
-          <div className="flex items-center gap-6 mt-12">
+          {/* Logo and Title - Redesigned */}
+          <div className="flex items-center gap-6">
             <div className="relative">
-              <div className="w-24 h-24 rounded-3xl overflow-hidden bg-white shadow-md border border-gray-100">
+              <div className="w-20 h-20 rounded-xl overflow-hidden bg-white shadow-md border border-gray-100">
                 <Image
                   src={logoUrl}
                   alt={agency.name}
-                  width={96}
-                  height={96}
+                  width={80}
+                  height={80}
                   className="object-cover w-full h-full"
                 />
               </div>
               <div
-                className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full border-3 border-white ${
+                className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white ${
                   agency.isActive ? "bg-emerald-400" : "bg-gray-400"
                 }`}
               />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-2xl font-bold text-gray-900">
                 {agency.name}
               </h1>
-              <div className="flex items-center gap-2 text-gray-600">
-                <HiLocationMarker className="w-5 h-5" />
-                <span className="text-lg">{renderAddress()}</span>
-              </div>
+              <p className="text-gray-500 mt-1">
+                کد آژانس: {agency._id.substring(agency._id.length - 8)}
+              </p>
             </div>
           </div>
         </div>
@@ -289,7 +287,7 @@ const AgencyDetailsCard: React.FC<AgencyDetailsCardProps> = ({
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-blue-50 rounded-xl p-4 text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <HiClipboardList className="w-6 h-6 text-blue-600" />
@@ -300,15 +298,7 @@ const AgencyDetailsCard: React.FC<AgencyDetailsCardProps> = ({
               <p className="text-sm text-gray-600">آگهی فعال</p>
             </div>
 
-            <div className="bg-purple-50 rounded-xl p-4 text-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <HiOfficeBuilding className="w-6 h-6 text-purple-600" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900 mb-1">
-                {agency.adQuota}
-              </p>
-              <p className="text-sm text-gray-600">سقف آگهی</p>
-            </div>
+            {/* سقف آگهی removed */}
 
             <div className="bg-emerald-50 rounded-xl p-4 text-center">
               <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-3">
@@ -355,17 +345,7 @@ const AgencyDetailsCard: React.FC<AgencyDetailsCardProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <HiLocationMarker className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-500">آدرس</p>
-                    <p className="text-base font-medium text-gray-900">
-                      {agency.address?.fullAddress || renderAddress()}
-                    </p>
-                  </div>
-                </div>
+                {/* Location display has been removed */}
               </div>
             </div>
 
@@ -422,42 +402,58 @@ const AgencyDetailsCard: React.FC<AgencyDetailsCardProps> = ({
             </div>
           </div>
 
-          {/* Location Coordinates */}
-          {agency.address?.location?.coordinates && (
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <HiGlobe className="w-5 h-5 text-green-600" />
-                مختصات جغرافیایی
-              </h3>
-              <div className="bg-green-50 rounded-xl p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-600">
-                      طول جغرافیایی:
-                    </span>
-                    <span
-                      className="text-base font-semibold text-gray-900"
-                      dir="ltr"
-                    >
-                      {agency.address.location.coordinates[0]}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-600">
-                      عرض جغرافیایی:
-                    </span>
-                    <span
-                      className="text-base font-semibold text-gray-900"
-                      dir="ltr"
-                    >
-                      {agency.address.location.coordinates[1]}
-                    </span>
-                  </div>
+          {/* Location Coordinates have been removed */}
+        </div>
+
+        {/* Confirm Agency Modal */}
+        {showConfirmModal && (
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={handleCancelConfirm}
+          >
+            <div
+              className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                  <HiBadgeCheck className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    تایید آژانس
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    تایید آژانس برای فعالیت در سیستم
+                  </p>
                 </div>
               </div>
+              <p className="text-gray-700 mb-6 leading-relaxed">
+                آیا از تایید آژانس{" "}
+                <span className="font-semibold text-gray-900">
+                  "{agency.name}"
+                </span>{" "}
+                اطمینان دارید؟
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCancelConfirm}
+                  className="flex-1 px-4 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium transition-colors"
+                  disabled={isConfirming}
+                >
+                  انصراف
+                </button>
+                <button
+                  onClick={handleConfirmAgency}
+                  disabled={isConfirming}
+                  className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isConfirming ? "در حال تایید..." : "تایید آژانس"}
+                </button>
+              </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (

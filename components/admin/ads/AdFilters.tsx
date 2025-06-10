@@ -24,10 +24,6 @@ interface ApiFilters {
   category?: string;
   status?: string;
   isActive?: boolean;
-  country?: string;
-  province?: string;
-  city?: string;
-  area?: string;
   page: number;
   limit: number;
   sortField: "createdAt" | "updatedAt" | "title" | "price";

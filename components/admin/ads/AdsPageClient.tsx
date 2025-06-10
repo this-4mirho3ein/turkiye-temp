@@ -87,10 +87,6 @@ interface ApiFilters {
   category?: string;
   status?: string;
   isActive?: boolean;
-  country?: string;
-  province?: string;
-  city?: string;
-  area?: string;
   page: number;
   limit: number;
   sortField: "createdAt" | "updatedAt" | "title" | "price";
@@ -172,40 +168,31 @@ const AdsPageClient: React.FC = () => {
         setCategories(categoriesResponse);
       }
 
-      // Handle the nested property types response structure
+      console.log("Property types response:", propertyTypesResponse);
+
+      // Handle the property types response with the confirmed structure
       if (propertyTypesResponse) {
-        // Check if propertyTypesResponse is an array directly
         if (Array.isArray(propertyTypesResponse)) {
           console.log(
             "Setting property types from array:",
             propertyTypesResponse
           );
           setPropertyTypes(propertyTypesResponse);
-        }
-        // Check if it's an object with a data property that might be nested
-        else {
-          // Use a type assertion to handle the object structure
-          const typedResponse = propertyTypesResponse as {
-            data?: { data?: any[] } | any[];
-          };
+        } else {
+          console.log(
+            "Property types is not an array, checking for nested structure"
+          );
 
-          if (typedResponse.data && Array.isArray(typedResponse.data)) {
-            console.log(
-              "Setting property types from data array:",
-              typedResponse.data
-            );
-            setPropertyTypes(typedResponse.data);
-          } else if (
-            typedResponse.data &&
-            typeof typedResponse.data === "object" &&
-            typedResponse.data.data &&
-            Array.isArray(typedResponse.data.data)
+          // Based on the confirmed response structure
+          if (
+            propertyTypesResponse.data &&
+            Array.isArray(propertyTypesResponse.data.data)
           ) {
             console.log(
               "Setting property types from nested data:",
-              typedResponse.data.data
+              propertyTypesResponse.data.data
             );
-            setPropertyTypes(typedResponse.data.data);
+            setPropertyTypes(propertyTypesResponse.data.data);
           } else {
             console.warn(
               "Unexpected property types structure:",
@@ -260,11 +247,7 @@ const AdsPageClient: React.FC = () => {
     filters.propertyType ||
       filters.category ||
       filters.status ||
-      filters.isActive !== undefined ||
-      filters.country ||
-      filters.province ||
-      filters.city ||
-      filters.area
+      filters.isActive !== undefined
   );
 
   return (

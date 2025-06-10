@@ -1247,14 +1247,29 @@ export const deleteAdminCountry = async (id: string): Promise<ApiResponse> => {
 export const getAdminProvinces = async (
   params: { page?: number; limit?: number; forceRefresh?: boolean } = {}
 ): Promise<any[]> => {
-  const { page = 1, limit = 100, forceRefresh = false } = params;
+  // Ensure limit is not greater than 100 (backend restriction)
+  const {
+    page = 1,
+    limit: requestedLimit = 100,
+    forceRefresh = false,
+  } = params;
+  const limit = Math.min(requestedLimit, 100);
 
   // Add cache-busting parameter if forceRefresh is true
   const cacheParam = forceRefresh ? `&_t=${Date.now()}` : "";
 
   try {
+    // Get token from localStorage if in browser environment
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
     const response = await api.get(
-      `/admin/province/get-provinces?page=${page}&limit=${limit}${cacheParam}`
+      `/admin/province/get-provinces?page=${page}&limit=${limit}${cacheParam}`,
+      { headers }
     );
 
     // Handle different possible response structures
@@ -1272,9 +1287,20 @@ export const getAdminProvinces = async (
 
     // Fallback to direct Axios call if the api instance fails
     try {
+      // Get token from localStorage if in browser environment
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers["x-access-token"] = token;
+
       const directResponse = await axios.get(
         `${mainConfig.apiServer}/admin/province/get-provinces?page=${page}&limit=${limit}${cacheParam}`,
         {
+          headers,
           withCredentials: false,
         }
       );
@@ -1426,16 +1452,46 @@ export const deleteAdminProvince = async (id: string): Promise<ApiResponse> => {
 
 // --- City ---
 export const getAdminCities = async (
-  params: { page?: number; limit?: number; forceRefresh?: boolean } = {}
+  params: {
+    page?: number;
+    limit?: number;
+    forceRefresh?: boolean;
+    province?: string;
+  } = {}
 ): Promise<any[]> => {
-  const { page = 1, limit = 100, forceRefresh = false } = params;
+  // Ensure limit is not greater than 100 (backend restriction)
+  const {
+    page = 1,
+    limit: requestedLimit = 100,
+    forceRefresh = false,
+    province,
+  } = params;
+  const limit = Math.min(requestedLimit, 100);
 
   // Add cache-busting parameter if forceRefresh is true
   const cacheParam = forceRefresh ? `&_t=${Date.now()}` : "";
 
+  // Add a default filter object to avoid "filter is not defined" error
+  const filterParam = `&filter=${encodeURIComponent(JSON.stringify({}))}`;
+
   try {
+    // Get token from localStorage if in browser environment
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    console.log(
+      `🏙️ Fetching cities with page=${page}, limit=${limit}${
+        province ? ", province=" + province : ""
+      }`
+    );
+
     const response = await api.get(
-      `/admin/city/get-cities?page=${page}&limit=${limit}${cacheParam}`
+      `/admin/city/get-cities?page=${page}&limit=${limit}${filterParam}${cacheParam}`,
+      { headers }
     );
 
     // Handle different possible response structures
@@ -1453,9 +1509,24 @@ export const getAdminCities = async (
 
     // Fallback to direct Axios call if the api instance fails
     try {
+      // Get token from localStorage if in browser environment
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers["x-access-token"] = token;
+
+      console.log(
+        `🏙️ Fallback: Fetching cities with page=${page}, limit=${limit}${filterParam}`
+      );
+
       const directResponse = await axios.get(
-        `${mainConfig.apiServer}/admin/city/get-cities?page=${page}&limit=${limit}${cacheParam}`,
+        `${mainConfig.apiServer}/admin/city/get-cities?page=${page}&limit=${limit}${filterParam}${cacheParam}`,
         {
+          headers,
           withCredentials: false,
         }
       );
@@ -1597,14 +1668,29 @@ export const deleteAdminCity = async (id: string): Promise<ApiResponse> => {
 export const getAdminAreas = async (
   params: { page?: number; limit?: number; forceRefresh?: boolean } = {}
 ): Promise<any[]> => {
-  const { page = 1, limit = 100, forceRefresh = false } = params;
+  // Ensure limit is not greater than 100 (backend restriction)
+  const {
+    page = 1,
+    limit: requestedLimit = 100,
+    forceRefresh = false,
+  } = params;
+  const limit = Math.min(requestedLimit, 100);
 
   // Add cache-busting parameter if forceRefresh is true
   const cacheParam = forceRefresh ? `&_t=${Date.now()}` : "";
 
   try {
+    // Get token from localStorage if in browser environment
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
     const response = await api.get(
-      `/admin/area/get-areas?page=${page}&limit=${limit}${cacheParam}`
+      `/admin/area/get-areas?page=${page}&limit=${limit}${cacheParam}`,
+      { headers }
     );
 
     // Handle different possible response structures
@@ -1622,9 +1708,20 @@ export const getAdminAreas = async (
 
     // Fallback to direct Axios call if the api instance fails
     try {
+      // Get token from localStorage if in browser environment
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers["x-access-token"] = token;
+
       const directResponse = await axios.get(
         `${mainConfig.apiServer}/admin/area/get-areas?page=${page}&limit=${limit}${cacheParam}`,
         {
+          headers,
           withCredentials: false,
         }
       );
@@ -2495,14 +2592,16 @@ export const getAdminPropertyType = async (id: string): Promise<any> => {
 export const getAdminPropertyTypes = async (
   params: { page?: number; limit?: number; forceRefresh?: boolean } = {}
 ): Promise<any[]> => {
-  const { page = 1, limit = 10, forceRefresh = false } = params;
+  // Ensure limit is not greater than 100 (backend restriction)
+  const { page = 1, limit: requestedLimit = 10, forceRefresh = false } = params;
+  const limit = Math.min(requestedLimit, 100);
 
   // Add cache-busting parameter if forceRefresh is true
   const cacheParam = forceRefresh ? `&_t=${Date.now()}` : "";
 
   try {
     console.log(
-      `🔍 Fetching property types (force refresh: ${forceRefresh})...`
+      `🔍 Fetching property types (force refresh: ${forceRefresh}, limit: ${limit})...`
     );
     const response = await api.get(
       `/admin/property-type/get-property-types?page=${page}&limit=${limit}${cacheParam}`
@@ -2510,41 +2609,23 @@ export const getAdminPropertyTypes = async (
 
     console.log("🔍 Property types API response status:", response.status);
 
-    // Log data summary
-    const dataStructureSummary = {
-      hasData: !!response.data,
-      isDataObject: response.data && typeof response.data === "object",
-      hasDataData: response.data?.data !== undefined,
-      isDataDataObject:
-        response.data?.data && typeof response.data.data === "object",
-      hasDataDataData: response.data?.data?.data !== undefined,
-      isDataDataDataArray:
-        response.data?.data?.data && Array.isArray(response.data.data.data),
-    };
-    console.log("🔍 Data structure summary:", dataStructureSummary);
+    // If successful, log the response data
+    if (response.status === 200) {
+      console.log("🔍 Property types API response data:", response.data);
+    }
 
-    // Handle different possible response structures
+    // Handle the specific response structure we've confirmed
+    if (response.data?.success && response.data?.data?.data) {
+      console.log(`🔍 Found ${response.data.data.data.length} property types`);
+      return response.data.data.data;
+    }
+
+    // Handle other potential response structures as fallback
     let data = [];
-    if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
-      data = response.data.data.data;
-      console.log(
-        `🔍 Found ${data.length} property types in response.data.data.data`
-      );
-    } else if (response.data?.data && Array.isArray(response.data.data)) {
+    if (response.data?.data && Array.isArray(response.data.data)) {
       data = response.data.data;
-      console.log(
-        `🔍 Found ${data.length} property types in response.data.data`
-      );
     } else if (Array.isArray(response.data)) {
       data = response.data;
-      console.log(
-        `🔍 Found ${data.length} property types in response.data (array)`
-      );
-    } else {
-      console.warn(
-        "⚠️ Unexpected property types response structure:",
-        response.data
-      );
     }
 
     return data || [];
@@ -2578,34 +2659,23 @@ export const getAdminPropertyTypes = async (
         }
       );
 
-      // Handle different possible response structures
+      // Handle the specific response structure we've confirmed
+      if (directResponse.data?.success && directResponse.data?.data?.data) {
+        console.log(
+          `⚙️ Found ${directResponse.data.data.data.length} property types in direct response`
+        );
+        return directResponse.data.data.data;
+      }
+
+      // Handle other potential response structures as fallback
       let directData = [];
       if (
-        directResponse.data?.data?.data &&
-        Array.isArray(directResponse.data.data.data)
-      ) {
-        directData = directResponse.data.data.data;
-        console.log(
-          `⚙️ Found ${directData.length} property types in direct response`
-        );
-      } else if (
         directResponse.data?.data &&
         Array.isArray(directResponse.data.data)
       ) {
         directData = directResponse.data.data;
-        console.log(
-          `⚙️ Found ${directData.length} property types in direct response`
-        );
       } else if (Array.isArray(directResponse.data)) {
         directData = directResponse.data;
-        console.log(
-          `⚙️ Found ${directData.length} property types in direct response`
-        );
-      } else {
-        console.warn(
-          "⚠️ Unexpected direct property types response structure:",
-          directResponse.data
-        );
       }
 
       return directData || [];
@@ -4047,10 +4117,6 @@ export const getAdminAds = async (
     category?: string;
     status?: string;
     isActive?: boolean;
-    country?: string;
-    province?: string;
-    city?: string;
-    area?: string;
     page?: number;
     limit?: number;
     sortField?: string;
@@ -4063,10 +4129,6 @@ export const getAdminAds = async (
     category,
     status,
     isActive,
-    country,
-    province,
-    city,
-    area,
     page = 1,
     limit = 10,
     sortField = "createdAt",
@@ -4086,10 +4148,6 @@ export const getAdminAds = async (
   if (category) queryParams += `&category=${encodeURIComponent(category)}`;
   if (status) queryParams += `&status=${encodeURIComponent(status)}`;
   if (isActive !== undefined) queryParams += `&isActive=${isActive}`;
-  if (country) queryParams += `&country=${encodeURIComponent(country)}`;
-  if (province) queryParams += `&province=${encodeURIComponent(province)}`;
-  if (city) queryParams += `&city=${encodeURIComponent(city)}`;
-  if (area) queryParams += `&area=${encodeURIComponent(area)}`;
 
   try {
     console.log(`📢 Fetching ads with filters...`);
@@ -4350,6 +4408,130 @@ export const updateAdminAd = async (
   }
 };
 //#endregion
+
+// Confirm or reject an agency
+export const confirmAgency = async (
+  agencyId: string,
+  isConfirmed: boolean,
+  message?: string
+): Promise<ApiResponse> => {
+  try {
+    console.log(
+      `🏢 ${
+        isConfirmed ? "Confirming" : "Rejecting"
+      } agency with ID: ${agencyId}`
+    );
+
+    // Get token from localStorage if in browser
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    // Prepare request body
+    const requestBody: Record<string, any> = {
+      agencyId,
+      isConfirmed,
+      message:
+        message ||
+        (isConfirmed ? "آژانس شما توسط ادمین تایید شد." : "آژانس شما رد شد."),
+    };
+
+    console.log("🏢 Request body:", requestBody);
+
+    // Make the API request
+    const response = await api.put(
+      `/admin/agency/confirm-agency`,
+      requestBody,
+      {
+        headers,
+      }
+    );
+
+    console.log(`🏢 Confirm agency response status: ${response.status}`);
+    console.log(`🏢 Confirm agency response data:`, response.data);
+
+    return {
+      success: response.data.success || true,
+      data: response.data,
+      message: isConfirmed
+        ? response.data.message || "آژانس با موفقیت تایید شد"
+        : response.data.message || "آژانس با موفقیت رد شد",
+      status: response.status,
+    };
+  } catch (err: any) {
+    console.error(
+      `🏢 Error ${isConfirmed ? "confirming" : "rejecting"} agency:`,
+      err
+    );
+
+    // Add detailed error logging
+    if (err.response) {
+      console.error("Error response status:", err.response.status);
+      console.error("Error response data:", err.response.data);
+    }
+
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      console.log("⚙️ Attempting direct Axios fallback...");
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers["x-access-token"] = token;
+
+      // Prepare request body for fallback
+      const requestBody: Record<string, any> = {
+        agencyId,
+        isConfirmed,
+        message:
+          message ||
+          (isConfirmed ? "آژانس شما توسط ادمین تایید شد." : "آژانس شما رد شد."),
+      };
+
+      const directResponse = await axios.put(
+        `${mainConfig.apiServer}/admin/agency/confirm-agency`,
+        requestBody,
+        {
+          headers,
+          withCredentials: false,
+        }
+      );
+
+      console.log(
+        `⚙️ Direct confirm agency response status:`,
+        directResponse.status
+      );
+      console.log(
+        `⚙️ Direct confirm agency response data:`,
+        directResponse.data
+      );
+
+      return {
+        success: directResponse.data.success || true,
+        data: directResponse.data,
+        message: isConfirmed
+          ? directResponse.data.message || "آژانس با موفقیت تایید شد"
+          : directResponse.data.message || "آژانس با موفقیت رد شد",
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
+      return {
+        success: false,
+        message:
+          err.message ||
+          (isConfirmed ? "خطا در تایید آژانس" : "خطا در رد آژانس"),
+        status: err.response?.status || 500,
+      };
+    }
+  }
+};
 
 // Confirm or reject an ad
 export const confirmAd = async (

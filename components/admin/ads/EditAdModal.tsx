@@ -112,9 +112,9 @@ const EditAdModal: React.FC<EditAdModalProps> = ({
       try {
         const [countriesData, categoriesData, propertyTypesData] =
           await Promise.all([
-            getAdminCountries({ limit: 1000 }),
-            getAdminCategories({ limit: 1000 }),
-            getAdminPropertyTypes({ limit: 1000 }),
+            getAdminCountries({ limit: 100 }),
+            getAdminCategories({ limit: 100 }),
+            getAdminPropertyTypes({ limit: 100 }),
           ]);
 
         setCountries(countriesData);
@@ -123,7 +123,7 @@ const EditAdModal: React.FC<EditAdModalProps> = ({
 
         // Load provinces for the selected country
         if (formData.country) {
-          const provincesData = await getAdminProvinces({ limit: 1000 });
+          const provincesData = await getAdminProvinces({ limit: 100 });
           setProvinces(
             provincesData.filter((p: any) => p.country === formData.country)
           );
@@ -131,7 +131,7 @@ const EditAdModal: React.FC<EditAdModalProps> = ({
 
         // Load cities for the selected province
         if (formData.province) {
-          const citiesData = await getAdminCities({ limit: 1000 });
+          const citiesData = await getAdminCities({ limit: 100 });
           setCities(
             citiesData.filter((c: any) => c.province === formData.province)
           );
@@ -139,7 +139,7 @@ const EditAdModal: React.FC<EditAdModalProps> = ({
 
         // Load areas for the selected city
         if (formData.city) {
-          const areasData = await getAdminAreas({ limit: 1000 });
+          const areasData = await getAdminAreas({ limit: 100 });
           setAreas(areasData.filter((a: any) => a.city === formData.city));
         }
       } catch (error) {
@@ -163,7 +163,7 @@ const EditAdModal: React.FC<EditAdModalProps> = ({
     }));
 
     if (countryId) {
-      const provincesData = await getAdminProvinces({ limit: 1000 });
+      const provincesData = await getAdminProvinces({ limit: 100 });
       setProvinces(provincesData.filter((p: any) => p.country === countryId));
     } else {
       setProvinces([]);
@@ -182,7 +182,7 @@ const EditAdModal: React.FC<EditAdModalProps> = ({
     }));
 
     if (provinceId) {
-      const citiesData = await getAdminCities({ limit: 1000 });
+      const citiesData = await getAdminCities({ limit: 100 });
       setCities(citiesData.filter((c: any) => c.province === provinceId));
     } else {
       setCities([]);
@@ -199,7 +199,7 @@ const EditAdModal: React.FC<EditAdModalProps> = ({
     }));
 
     if (cityId) {
-      const areasData = await getAdminAreas({ limit: 1000 });
+      const areasData = await getAdminAreas({ limit: 100 });
       setAreas(areasData.filter((a: any) => a.city === cityId));
     } else {
       setAreas([]);
@@ -385,11 +385,12 @@ const EditAdModal: React.FC<EditAdModalProps> = ({
                   required
                 >
                   <option value="">انتخاب کنید</option>
-                  {propertyTypes.map((type) => (
-                    <option key={type._id} value={type._id}>
-                      {type.name}
-                    </option>
-                  ))}
+                  {propertyTypes &&
+                    propertyTypes.map((type) => (
+                      <option key={type._id} value={type._id}>
+                        {type.type || type.name}
+                      </option>
+                    ))}
                 </select>
               </div>
 
