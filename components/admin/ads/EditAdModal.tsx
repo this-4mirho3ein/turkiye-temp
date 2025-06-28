@@ -71,6 +71,7 @@ interface EditAdModalProps {
 interface SelectOption {
   _id: string;
   name: string;
+  type?: string;
 }
 
 const EditAdModal: React.FC<EditAdModalProps> = ({

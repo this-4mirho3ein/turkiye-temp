@@ -183,16 +183,24 @@ const AdsPageClient: React.FC = () => {
             "Property types is not an array, checking for nested structure"
           );
 
-          // Based on the confirmed response structure
+          // Use type assertion to help TypeScript understand the structure
+          const typedResponse = propertyTypesResponse as {
+            data?: {
+              data?: AdPropertyType[];
+            };
+          };
+
+          // Check if it has the nested data structure
           if (
-            propertyTypesResponse.data &&
-            Array.isArray(propertyTypesResponse.data.data)
+            typedResponse.data &&
+            typedResponse.data.data &&
+            Array.isArray(typedResponse.data.data)
           ) {
             console.log(
               "Setting property types from nested data:",
-              propertyTypesResponse.data.data
+              typedResponse.data.data
             );
-            setPropertyTypes(propertyTypesResponse.data.data);
+            setPropertyTypes(typedResponse.data.data);
           } else {
             console.warn(
               "Unexpected property types structure:",
