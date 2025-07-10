@@ -66,7 +66,6 @@ const adminAuthService = {
    */
   sendLoginCode: async (phoneNumber: string): Promise<ApiResponse> => {
     try {
-      console.log("Sending login code API request with phone:", phoneNumber);
 
       // The server expects the request body in this format: { "phone": "9123456789" }
       const response = await apiClient.post<ApiResponse>(
@@ -98,9 +97,6 @@ const adminAuthService = {
     activationCode: string
   ): Promise<ApiResponse<AuthData>> => {
     try {
-      console.log(
-        `Login API request with phone: ${phoneNumber}, code: ${activationCode}`
-      );
 
       // The server expects the request body in this format:
       // { "phone": "9123456789", "activationCode": "123456" }
@@ -143,9 +139,7 @@ const adminAuthService = {
         };
         localStorage.setItem("userData", JSON.stringify(userData));
 
-        console.log(
-          "Login successful. Tokens stored in localStorage and cookies."
-        );
+
       }
 
       return response.data;

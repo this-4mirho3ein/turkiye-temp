@@ -117,18 +117,12 @@ const AgenciesPageClient: React.FC = () => {
   const fetchLocationData = useCallback(async () => {
     try {
       setLoadingLocations(true);
-      console.log("🌍 Fetching location data...");
 
       const [provincesRes, citiesRes, areasRes] = await Promise.all([
         getAdminProvinces({ limit: 100 }),
         getAdminCities({ limit: 100 }),
         getAdminAreas({ limit: 100 }),
       ]);
-
-      console.log("🌍 Provinces:", provincesRes);
-      console.log("🌍 Cities:", citiesRes);
-      console.log("🌍 Areas:", areasRes);
-
       setProvinces(Array.isArray(provincesRes) ? provincesRes : []);
       setCities(Array.isArray(citiesRes) ? citiesRes : []);
       setAreas(Array.isArray(areasRes) ? areasRes : []);
@@ -171,10 +165,8 @@ const AgenciesPageClient: React.FC = () => {
           apiParams.isVerified = currentFilters.isVerified;
         }
 
-        console.log("🔍 API Request params:", apiParams);
 
         const response = await getAdminAgencies(apiParams);
-        console.log("🏢 Full API Response:", JSON.stringify(response, null, 2));
 
         if (response.success && response.data) {
           let agenciesData: Agency[] = [];
@@ -186,7 +178,6 @@ const AgenciesPageClient: React.FC = () => {
             response.data.data.data &&
             Array.isArray(response.data.data.data)
           ) {
-            console.log("📋 Found agencies in response.data.data.data");
             agenciesData = response.data.data.data;
             pagination = {
               totalPages: response.data.data.totalPages || 1,
@@ -195,9 +186,7 @@ const AgenciesPageClient: React.FC = () => {
           }
           // Fallback: Check if response.data.data is directly an array
           else if (response.data.data && Array.isArray(response.data.data)) {
-            console.log(
-              "📋 Found agencies in response.data.data (direct array)"
-            );
+           
             agenciesData = response.data.data;
             pagination = {
               totalPages: response.data.totalPages || 1,
@@ -206,14 +195,12 @@ const AgenciesPageClient: React.FC = () => {
           }
           // Another fallback: Check if response.data is directly an array
           else if (Array.isArray(response.data)) {
-            console.log("📋 Found agencies in response.data (direct array)");
+           
             agenciesData = response.data;
             pagination = { totalPages: 1, count: agenciesData.length };
           }
 
-          console.log("📋 Final agencies data:", agenciesData);
-          console.log("📋 Agencies count:", agenciesData.length);
-          console.log("📋 Pagination:", pagination);
+         
 
           // Set the data
           setAgencies(agenciesData);
@@ -222,14 +209,6 @@ const AgenciesPageClient: React.FC = () => {
 
           // Update filters state
           setFilters(currentFilters);
-
-          if (agenciesData.length === 0) {
-            console.log("⚠️ No agencies found in response");
-          } else {
-            console.log(
-              `✅ Successfully loaded ${agenciesData.length} agencies`
-            );
-          }
         } else {
           console.error("❌ API returned success: false or no data");
           setError(response.message || "خطا در دریافت لیست آژانس‌ها");
@@ -248,7 +227,7 @@ const AgenciesPageClient: React.FC = () => {
   );
 
   useEffect(() => {
-    console.log("🚀 Component mounted, fetching agencies and location data...");
+
     fetchAgencies();
     fetchLocationData();
   }, []);

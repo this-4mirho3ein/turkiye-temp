@@ -43,9 +43,6 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Only clear tokens and redirect if we're in a browser
       if (typeof window !== "undefined") {
-        console.log(
-          "🔐 Authentication failed (401), clearing tokens and redirecting to login"
-        );
 
         // Clear all authentication data
         localStorage.removeItem("accessToken");
@@ -90,9 +87,6 @@ interface ApiResponse {
 const handle401Redirect = () => {
   // Only clear tokens and redirect if we're in a browser
   if (typeof window !== "undefined") {
-    console.log(
-      "🔐 Authentication failed (401), clearing tokens and redirecting to login"
-    );
 
     // Clear all authentication data
     localStorage.removeItem("accessToken");
@@ -123,7 +117,6 @@ const handle401Redirect = () => {
 // Get Agency Details by ID
 export const getAgencyDetails = async (id: string): Promise<ApiResponse> => {
   try {
-    console.log(`🔍 Fetching agency details for ID: ${id}`);
     const token =
       typeof window !== "undefined"
         ? localStorage.getItem("accessToken")
@@ -134,7 +127,6 @@ export const getAgencyDetails = async (id: string): Promise<ApiResponse> => {
     const response = await api.get(`/admin/agency/get-agency/${id}`, {
       headers,
     });
-    console.log(`✅ Agency details response:`, response.data);
 
     return {
       success: true,
@@ -142,11 +134,6 @@ export const getAgencyDetails = async (id: string): Promise<ApiResponse> => {
       status: response.status,
     };
   } catch (error: any) {
-    console.error(`❌ Error fetching agency details for ID ${id}:`, error);
-    if (error.response) {
-      console.error("Error response status:", error.response.status);
-      console.error("Error response data:", error.response.data);
-    }
     return returnError(error);
   }
 };
@@ -154,7 +141,6 @@ export const getAgencyDetails = async (id: string): Promise<ApiResponse> => {
 // Get Agency Members
 export const getAgencyMembers = async (id: string): Promise<ApiResponse> => {
   try {
-    console.log(`🔍 Fetching agency members for ID: ${id}`);
     const token =
       typeof window !== "undefined"
         ? localStorage.getItem("accessToken")
@@ -165,7 +151,6 @@ export const getAgencyMembers = async (id: string): Promise<ApiResponse> => {
     const response = await api.get(`/admin/agency/get-members/${id}`, {
       headers,
     });
-    console.log(`✅ Agency members response:`, response.data);
 
     return {
       success: true,
@@ -173,11 +158,6 @@ export const getAgencyMembers = async (id: string): Promise<ApiResponse> => {
       status: response.status,
     };
   } catch (error: any) {
-    console.error(`❌ Error fetching agency members for ID ${id}:`, error);
-    if (error.response) {
-      console.error("Error response status:", error.response.status);
-      console.error("Error response data:", error.response.data);
-    }
     return returnError(error);
   }
 };
@@ -188,9 +168,6 @@ export const addAgencyAreaAdmin = async (
   phone: string
 ): Promise<ApiResponse> => {
   try {
-    console.log(
-      `🔍 Adding area admin to agency ID: ${agencyId} with phone: ${phone}`
-    );
 
     // Get token from localStorage if in browser
     const token =
@@ -214,8 +191,6 @@ export const addAgencyAreaAdmin = async (
       { headers }
     );
 
-    console.log(`✅ Add area admin response status: ${response.status}`);
-    console.log(`✅ Add area admin response data:`, response.data);
 
     // Return the exact response from the API
     return {
@@ -226,12 +201,10 @@ export const addAgencyAreaAdmin = async (
       status: response.data.status || response.status,
     };
   } catch (error: any) {
-    console.error("❌ Error adding area admin:", error);
 
     // Add more detailed error logging
     if (error.response) {
-      console.error("Error response status:", error.response.status);
-      console.error("Error response data:", error.response.data);
+
 
       // Check for 401 unauthorized and handle redirect
       if (error.response.status === 401) {
@@ -250,11 +223,7 @@ export const addAgencyAreaAdmin = async (
           data: error.response.data,
         };
       }
-    } else if (error.request) {
-      console.error("No response received. Request details:", error.request);
-    } else {
-      console.error("Error message:", error.message);
-    }
+    } 
 
     return returnError(error);
   }
@@ -266,9 +235,6 @@ export const removeAgencyAreaAdmin = async (
   adminId: string
 ): Promise<ApiResponse> => {
   try {
-    console.log(
-      `🔍 Removing area admin with ID: ${adminId} from agency ID: ${agencyId}`
-    );
 
     // Get token from localStorage if in browser
     const token =
@@ -289,8 +255,6 @@ export const removeAgencyAreaAdmin = async (
       data: requestBody, // For DELETE requests, the body goes in the 'data' property
     });
 
-    console.log(`✅ Remove area admin response status: ${response.status}`);
-    console.log(`✅ Remove area admin response data:`, response.data);
 
     // Return the exact response from the API
     return {
@@ -301,12 +265,9 @@ export const removeAgencyAreaAdmin = async (
       status: response.data.status || response.status,
     };
   } catch (error: any) {
-    console.error("❌ Error removing area admin:", error);
 
     // Add more detailed error logging
     if (error.response) {
-      console.error("Error response status:", error.response.status);
-      console.error("Error response data:", error.response.data);
 
       // Check for 401 unauthorized and handle redirect
       if (error.response.status === 401) {
@@ -325,11 +286,7 @@ export const removeAgencyAreaAdmin = async (
           data: error.response.data,
         };
       }
-    } else if (error.request) {
-      console.error("No response received. Request details:", error.request);
-    } else {
-      console.error("Error message:", error.message);
-    }
+    } 
 
     return returnError(error);
   }
@@ -341,9 +298,6 @@ export const addAgencyConsultant = async (
   phone: string
 ): Promise<ApiResponse> => {
   try {
-    console.log(
-      `🔍 Adding consultant to agency ID: ${agencyId} with phone: ${phone}`
-    );
 
     // Get token from localStorage if in browser
     const token =
@@ -367,8 +321,6 @@ export const addAgencyConsultant = async (
       { headers }
     );
 
-    console.log(`✅ Add consultant response status: ${response.status}`);
-    console.log(`✅ Add consultant response data:`, response.data);
 
     // Return the exact response from the API
     return {
@@ -379,12 +331,9 @@ export const addAgencyConsultant = async (
       status: response.data.status || response.status,
     };
   } catch (error: any) {
-    console.error("❌ Error adding consultant:", error);
 
     // Add more detailed error logging
     if (error.response) {
-      console.error("Error response status:", error.response.status);
-      console.error("Error response data:", error.response.data);
 
       // If the error contains a response with a message, use that directly
       if (error.response.data) {
@@ -398,11 +347,7 @@ export const addAgencyConsultant = async (
           data: error.response.data,
         };
       }
-    } else if (error.request) {
-      console.error("No response received. Request details:", error.request);
-    } else {
-      console.error("Error message:", error.message);
-    }
+    } 
 
     return returnError(error);
   }
@@ -414,9 +359,6 @@ export const removeAgencyConsultant = async (
   consultantId: string
 ): Promise<ApiResponse> => {
   try {
-    console.log(
-      `🔍 Removing consultant with ID: ${consultantId} from agency ID: ${agencyId}`
-    );
 
     // Get token from localStorage if in browser
     const token =
@@ -437,8 +379,6 @@ export const removeAgencyConsultant = async (
       data: requestBody, // For DELETE requests, the body goes in the 'data' property
     });
 
-    console.log(`✅ Remove consultant response status: ${response.status}`);
-    console.log(`✅ Remove consultant response data:`, response.data);
 
     // Return the exact response from the API
     return {
@@ -449,12 +389,9 @@ export const removeAgencyConsultant = async (
       status: response.data.status || response.status,
     };
   } catch (error: any) {
-    console.error("❌ Error removing consultant:", error);
 
     // Add more detailed error logging
     if (error.response) {
-      console.error("Error response status:", error.response.status);
-      console.error("Error response data:", error.response.data);
 
       // If the error contains a response with a message, use that directly
       if (error.response.data) {
@@ -468,11 +405,7 @@ export const removeAgencyConsultant = async (
           data: error.response.data,
         };
       }
-    } else if (error.request) {
-      console.error("No response received. Request details:", error.request);
-    } else {
-      console.error("Error message:", error.message);
-    }
+    } 
 
     return returnError(error);
   }
@@ -485,9 +418,6 @@ export const getAgencyVerifications = async (
   limit: number = 10
 ): Promise<ApiResponse> => {
   try {
-    console.log(
-      `🔍 Fetching agency verifications with status: ${status}, page: ${page}, limit: ${limit}`
-    );
 
     // Get token from localStorage if in browser
     const token =
@@ -502,8 +432,6 @@ export const getAgencyVerifications = async (
       { headers }
     );
 
-    console.log(`✅ Get verifications response status: ${response.status}`);
-    console.log(`✅ Get verifications response data:`, response.data);
 
     // Return the exact response from the API
     return {
@@ -514,12 +442,9 @@ export const getAgencyVerifications = async (
       status: response.data.status || response.status,
     };
   } catch (error: any) {
-    console.error("❌ Error fetching verifications:", error);
 
     // Add more detailed error logging
     if (error.response) {
-      console.error("Error response status:", error.response.status);
-      console.error("Error response data:", error.response.data);
 
       // If the error contains a response with a message, use that directly
       if (error.response.data) {
@@ -534,11 +459,7 @@ export const getAgencyVerifications = async (
           data: error.response.data,
         };
       }
-    } else if (error.request) {
-      console.error("No response received. Request details:", error.request);
-    } else {
-      console.error("Error message:", error.message);
-    }
+      } 
 
     return returnError(error);
   }
@@ -549,7 +470,6 @@ export const getAgencyVerificationDocuments = async (
   id: string
 ): Promise<ApiResponse> => {
   try {
-    console.log(`🔍 Fetching verification documents for agency ID: ${id}`);
 
     // Get token from localStorage if in browser
     const token =
@@ -564,10 +484,6 @@ export const getAgencyVerificationDocuments = async (
       { headers }
     );
 
-    console.log(
-      `✅ Get verification documents response status: ${response.status}`
-    );
-    console.log(`✅ Get verification documents response data:`, response.data);
 
     // Return the exact response from the API
     return {
@@ -578,12 +494,9 @@ export const getAgencyVerificationDocuments = async (
       status: response.data.status || response.status,
     };
   } catch (error: any) {
-    console.error("❌ Error fetching verification documents:", error);
 
     // Add more detailed error logging
     if (error.response) {
-      console.error("Error response status:", error.response.status);
-      console.error("Error response data:", error.response.data);
 
       // If the error contains a response with a message, use that directly
       if (error.response.data) {
@@ -597,11 +510,7 @@ export const getAgencyVerificationDocuments = async (
           data: error.response.data,
         };
       }
-    } else if (error.request) {
-      console.error("No response received. Request details:", error.request);
-    } else {
-      console.error("Error message:", error.message);
-    }
+    } 
 
     return returnError(error);
   }
@@ -623,16 +532,12 @@ export const getAgencyVerificationDocuments = async (
  */
 export const reviewAgencyVerification = async (reviewData: {
   agencyId: string;
-  action: "approve" | "reject" | "request_more_info" | "review_document";
+  action: "approved" | "rejected" | "request_more_info" | "review_document";
   documentIds: string | string[];
   rejectionReason?: string;
   documentNotes?: string;
 }): Promise<ApiResponse> => {
   try {
-    console.log(
-      `🔍 Reviewing verification documents for agency ID: ${reviewData.agencyId}`
-    );
-    console.log(`🔍 Action: ${reviewData.action}`);
 
     // Format document IDs to array if it's a string
     const documentIds = Array.isArray(reviewData.documentIds)
@@ -656,7 +561,6 @@ export const reviewAgencyVerification = async (reviewData: {
       documentNotes: reviewData.documentNotes || "",
     };
 
-    console.log(`🔍 Review request body:`, requestBody);
 
     const response = await api.post(
       `/admin/agency/verification/review`,
@@ -664,8 +568,6 @@ export const reviewAgencyVerification = async (reviewData: {
       { headers }
     );
 
-    console.log(`✅ Review documents response status: ${response.status}`);
-    console.log(`✅ Review documents response data:`, response.data);
 
     // Return the exact response from the API
     return {
@@ -676,12 +578,9 @@ export const reviewAgencyVerification = async (reviewData: {
       status: response.data.status || response.status,
     };
   } catch (error: any) {
-    console.error("❌ Error reviewing verification documents:", error);
 
     // Add more detailed error logging
     if (error.response) {
-      console.error("Error response status:", error.response.status);
-      console.error("Error response data:", error.response.data);
 
       // If the error contains a response with a message, use that directly
       if (error.response.data) {
@@ -695,11 +594,7 @@ export const reviewAgencyVerification = async (reviewData: {
           data: error.response.data,
         };
       }
-    } else if (error.request) {
-      console.error("No response received. Request details:", error.request);
-    } else {
-      console.error("Error message:", error.message);
-    }
+      } 
 
     return returnError(error);
   }
@@ -786,14 +681,10 @@ export const getAdminAgencies = async (
   if (sortOrder !== undefined) queryParams += `&sortOrder=${sortOrder}`;
 
   try {
-    console.log(`🏢 Fetching agencies with filters...`);
     const apiUrl = `/admin/agency/get-all-agencies?${queryParams}${cacheParam}`;
-    console.log(`🏢 API URL: ${apiUrl}`);
 
     const response = await api.get(apiUrl);
 
-    console.log("🏢 Agencies API response status:", response.status);
-    console.log("🏢 Agencies API response data:", response.data);
 
     return {
       success: true,
@@ -801,15 +692,9 @@ export const getAdminAgencies = async (
       status: response.status,
     };
   } catch (err: any) {
-    console.error("🏢 Error fetching agencies:", err);
-    if (err.response) {
-      console.error("🏢 Error response status:", err.response.status);
-      console.error("🏢 Error response data:", err.response.data);
-    }
 
     // Fallback to direct Axios call if the api instance fails
     try {
-      console.log("⚙️ Attempting direct Axios fallback for agencies...");
       const token =
         typeof window !== "undefined"
           ? localStorage.getItem("accessToken")
@@ -827,16 +712,12 @@ export const getAdminAgencies = async (
         }
       );
 
-      console.log("⚙️ Direct agencies request status:", directResponse.status);
-      console.log("⚙️ Direct agencies request data:", directResponse.data);
-
       return {
         success: true,
         data: directResponse.data,
         status: directResponse.status,
       };
     } catch (fallbackErr: any) {
-      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
       return {
         success: false,
         message: err.message || "Failed to fetch agencies",
@@ -869,187 +750,33 @@ export const getAdminCountries = async (
   const deletedParam = includeDeleted ? "&isDeleted=true" : "";
 
   try {
-    console.log(
-      `🔍 Fetching countries (force refresh: ${forceRefresh}, include deleted: ${includeDeleted})...`
-    );
     // Don't add isDeleted param, we want all countries (deleted and non-deleted)
     const apiUrl = `/admin/country/get-countries?page=${page}&limit=${limit}${cacheParam}`;
-    console.log(`🔍 API URL: ${apiUrl}`);
 
     const response = await api.get(apiUrl);
-
-    console.log("🔍 Countries API response status:", response.status);
-
-    // Log full response structure for debugging
-    console.log(
-      "🔍 Full API response structure:",
-      JSON.stringify(
-        {
-          status: response.status,
-          headers: response.headers,
-          config: {
-            url: response.config.url,
-            method: response.config.method,
-          },
-        },
-        null,
-        2
-      )
-    );
-
-    // Log the raw response data to check for deleted items
-    console.log(
-      "🔍 COUNTRIES API RESPONSE DATA:",
-      JSON.stringify(response.data, null, 2)
-    );
-
-    // Specifically check for deleted items
-    const deletedItems = Array.isArray(response.data)
-      ? response.data.filter((item: any) => item.isDeleted)
-      : Array.isArray(response.data?.data)
-      ? response.data.data.filter((item: any) => item.isDeleted)
-      : Array.isArray(response.data?.data?.data)
-      ? response.data.data.data.filter((item: any) => item.isDeleted)
-      : [];
-
-    console.log(
-      `🔍 FOUND ${deletedItems.length} DELETED ITEMS:`,
-      JSON.stringify(deletedItems, null, 2)
-    );
-
-    // Log data summary
-    const dataStructureSummary = {
-      hasData: !!response.data,
-      isDataObject: response.data && typeof response.data === "object",
-      hasDataData: response.data?.data !== undefined,
-      isDataDataObject:
-        response.data?.data && typeof response.data.data === "object",
-      hasDataDataData: response.data?.data?.data !== undefined,
-      isDataDataDataArray:
-        response.data?.data?.data && Array.isArray(response.data.data.data),
-      dataDataDataLength:
-        response.data?.data?.data && Array.isArray(response.data.data.data)
-          ? response.data.data.data.length
-          : "N/A",
-      isDataArray: Array.isArray(response.data),
-      dataLength: Array.isArray(response.data) ? response.data.length : "N/A",
-    };
-    console.log("🔍 Data structure summary:", dataStructureSummary);
-
+    
     // Handle different possible response structures
     let data = [];
     if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
       // Most likely structure
       data = response.data.data.data;
-      console.log(
-        `🔍 Found ${data.length} countries in response.data.data.data`
-      );
-
-      // Log first item to see structure
-      if (data.length > 0) {
-        console.log(
-          "🔍 Sample country data:",
-          JSON.stringify(data[0], null, 2)
-        );
-      }
     } else if (response.data?.data && Array.isArray(response.data.data)) {
       // Alternative structure
       data = response.data.data;
-      console.log(`🔍 Found ${data.length} countries in response.data.data`);
-
-      // Log first item to see structure
-      if (data.length > 0) {
-        console.log(
-          "🔍 Sample country data:",
-          JSON.stringify(data[0], null, 2)
-        );
-      }
     } else if (Array.isArray(response.data)) {
       // Direct array response
       data = response.data;
-      console.log(`🔍 Found ${data.length} countries in response.data (array)`);
-
-      // Log first item to see structure
-      if (data.length > 0) {
-        console.log(
-          "🔍 Sample country data:",
-          JSON.stringify(data[0], null, 2)
-        );
-      }
-    } else {
-      console.warn(
-        "⚠️ Unexpected countries response structure:",
-        response.data
-      );
     }
-
-    // Add extra debug logging to check for deleted items
-    if (data.length > 0) {
-      const hasDeletedItems = data.some((item: any) => item.isDeleted === true);
-      console.log(
-        `🚨 DEBUG: HAS DELETED ITEMS: ${hasDeletedItems ? "YES" : "NO"}`
-      );
-
-      if (hasDeletedItems) {
-        const deletedItems = data.filter(
-          (item: any) => item.isDeleted === true
-        );
-        console.log(
-          `🚨 DEBUG: FOUND ${deletedItems.length} DELETED ITEMS OUT OF ${data.length}`
-        );
-        if (deletedItems.length > 0) {
-          console.log(
-            `🚨 DEBUG: FIRST DELETED ITEM:`,
-            JSON.stringify(deletedItems[0], null, 2)
-          );
-        }
-      }
-    }
-
     return data || [];
   } catch (err) {
-    console.error("❌ Error fetching countries:", err);
-
     // Fallback to direct Axios call if the api instance fails
     try {
-      console.log("⚙️ Attempting direct Axios fallback for countries...");
       const directResponse = await axios.get(
         `${mainConfig.apiServer}/admin/country/get-countries?page=${page}&limit=${limit}${cacheParam}`,
         {
           withCredentials: false,
         }
       );
-
-      console.log("⚙️ Direct countries request status:", directResponse.status);
-
-      // Log data summary
-      const dataStructureSummary = {
-        hasData: !!directResponse.data,
-        isDataObject:
-          directResponse.data && typeof directResponse.data === "object",
-        hasDataData: directResponse.data?.data !== undefined,
-        isDataDataObject:
-          directResponse.data?.data &&
-          typeof directResponse.data.data === "object",
-        hasDataDataData: directResponse.data?.data?.data !== undefined,
-        isDataDataDataArray:
-          directResponse.data?.data?.data &&
-          Array.isArray(directResponse.data.data.data),
-        dataDataDataLength:
-          directResponse.data?.data?.data &&
-          Array.isArray(directResponse.data.data.data)
-            ? directResponse.data.data.data.length
-            : "N/A",
-        isDataArray: Array.isArray(directResponse.data),
-        dataLength: Array.isArray(directResponse.data)
-          ? directResponse.data.length
-          : "N/A",
-      };
-      console.log(
-        "⚙️ Direct request data structure summary:",
-        dataStructureSummary
-      );
-
       // Handle different possible response structures
       let directData = [];
       if (
@@ -1058,58 +785,18 @@ export const getAdminCountries = async (
       ) {
         // Most likely structure
         directData = directResponse.data.data.data;
-        console.log(
-          `⚙️ Found ${directData.length} countries in directResponse.data.data.data`
-        );
-
-        // Log first item to see structure
-        if (directData.length > 0) {
-          console.log(
-            "⚙️ Sample country data (direct):",
-            JSON.stringify(directData[0], null, 2)
-          );
-        }
       } else if (
         directResponse.data?.data &&
         Array.isArray(directResponse.data.data)
       ) {
         // Alternative structure
         directData = directResponse.data.data;
-        console.log(
-          `⚙️ Found ${directData.length} countries in directResponse.data.data`
-        );
-
-        // Log first item to see structure
-        if (directData.length > 0) {
-          console.log(
-            "⚙️ Sample country data (direct):",
-            JSON.stringify(directData[0], null, 2)
-          );
-        }
       } else if (Array.isArray(directResponse.data)) {
         // Direct array response
         directData = directResponse.data;
-        console.log(
-          `⚙️ Found ${directData.length} countries in directResponse.data (array)`
-        );
-
-        // Log first item to see structure
-        if (directData.length > 0) {
-          console.log(
-            "⚙️ Sample country data (direct):",
-            JSON.stringify(directData[0], null, 2)
-          );
-        }
-      } else {
-        console.warn(
-          "⚠️ Unexpected direct countries response structure:",
-          directResponse.data
-        );
       }
-
       return directData || [];
     } catch (fallbackErr) {
-      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
       return [];
     }
   }
@@ -1130,8 +817,6 @@ export const createAdminCountry = async (data: {
       data: response.data?.data,
     };
   } catch (err: any) {
-    console.error("Error creating country:", err);
-
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.post(
@@ -1148,10 +833,6 @@ export const createAdminCountry = async (data: {
         data: directResponse.data?.data,
       };
     } catch (fallbackErr: any) {
-      console.error(
-        "Direct country creation fallback also failed:",
-        fallbackErr
-      );
       return {
         success: false,
         message: err.response?.data?.message || "ایجاد کشور با خطا مواجه شد",
@@ -1178,8 +859,6 @@ export const updateAdminCountry = async (
       data: response.data?.data,
     };
   } catch (err: any) {
-    console.error(`Error updating country ${id}:`, err);
-
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.put(
@@ -1197,7 +876,6 @@ export const updateAdminCountry = async (
         data: directResponse.data?.data,
       };
     } catch (fallbackErr: any) {
-      console.error("Direct country update fallback also failed:", fallbackErr);
       return {
         success: false,
         message:
@@ -1215,8 +893,6 @@ export const deleteAdminCountry = async (id: string): Promise<ApiResponse> => {
       message: response.data?.message || "کشور با موفقیت حذف شد",
     };
   } catch (err: any) {
-    console.error(`Error deleting country ${id}:`, err);
-
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.delete(
@@ -1231,10 +907,6 @@ export const deleteAdminCountry = async (id: string): Promise<ApiResponse> => {
         message: directResponse.data?.message || "کشور با موفقیت حذف شد",
       };
     } catch (fallbackErr: any) {
-      console.error(
-        "Direct country deletion fallback also failed:",
-        fallbackErr
-      );
       return {
         success: false,
         message: err.response?.data?.message || "حذف کشور با خطا مواجه شد",
@@ -1339,8 +1011,6 @@ export const createAdminProvince = async (
       data: response.data?.data,
     };
   } catch (err: any) {
-    console.error("Error creating province:", err);
-
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.post(
@@ -1358,10 +1028,6 @@ export const createAdminProvince = async (
         data: directResponse.data?.data,
       };
     } catch (fallbackErr: any) {
-      console.error(
-        "Direct province creation fallback also failed:",
-        fallbackErr
-      );
       return {
         success: false,
         message: err.response?.data?.message || "Failed to create province",
@@ -1382,8 +1048,6 @@ export const updateAdminProvince = async (
       data: response.data?.data,
     };
   } catch (err: any) {
-    console.error(`Error updating province ${id}:`, err);
-
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.put(
@@ -1401,10 +1065,6 @@ export const updateAdminProvince = async (
         data: directResponse.data?.data,
       };
     } catch (fallbackErr: any) {
-      console.error(
-        "Direct province update fallback also failed:",
-        fallbackErr
-      );
       return {
         success: false,
         message: err.response?.data?.message || "Failed to update province",
@@ -1421,8 +1081,6 @@ export const deleteAdminProvince = async (id: string): Promise<ApiResponse> => {
       message: response.data?.message || "Province deleted successfully",
     };
   } catch (err: any) {
-    console.error(`Error deleting province ${id}:`, err);
-
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.delete(
@@ -1438,10 +1096,6 @@ export const deleteAdminProvince = async (id: string): Promise<ApiResponse> => {
           directResponse.data?.message || "Province deleted successfully",
       };
     } catch (fallbackErr: any) {
-      console.error(
-        "Direct province deletion fallback also failed:",
-        fallbackErr
-      );
       return {
         success: false,
         message: err.response?.data?.message || "Failed to delete province",
@@ -1565,8 +1219,6 @@ export const createAdminCity = async (
       data: response.data?.data,
     };
   } catch (err: any) {
-    console.error("Error creating city:", err);
-
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.post(
@@ -1583,7 +1235,6 @@ export const createAdminCity = async (
         data: directResponse.data?.data,
       };
     } catch (fallbackErr: any) {
-      console.error("Direct city creation fallback also failed:", fallbackErr);
       return {
         success: false,
         message: err.response?.data?.message || "Failed to create city",
@@ -1604,8 +1255,6 @@ export const updateAdminCity = async (
       data: response.data?.data,
     };
   } catch (err: any) {
-    console.error(`Error updating city ${id}:`, err);
-
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.put(
@@ -1622,7 +1271,6 @@ export const updateAdminCity = async (
         data: directResponse.data?.data,
       };
     } catch (fallbackErr: any) {
-      console.error("Direct city update fallback also failed:", fallbackErr);
       return {
         success: false,
         message: err.response?.data?.message || "Failed to update city",
@@ -1639,8 +1287,6 @@ export const deleteAdminCity = async (id: string): Promise<ApiResponse> => {
       message: response.data?.message || "City deleted successfully",
     };
   } catch (err: any) {
-    console.error(`Error deleting city ${id}:`, err);
-
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.delete(
@@ -1655,7 +1301,6 @@ export const deleteAdminCity = async (id: string): Promise<ApiResponse> => {
         message: directResponse.data?.message || "City deleted successfully",
       };
     } catch (fallbackErr: any) {
-      console.error("Direct city deletion fallback also failed:", fallbackErr);
       return {
         success: false,
         message: err.response?.data?.message || "Failed to delete city",
@@ -1760,8 +1405,6 @@ export const createAdminArea = async (
       data: response.data?.data,
     };
   } catch (err: any) {
-    console.error("Error creating area:", err);
-
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.post(
@@ -1778,7 +1421,6 @@ export const createAdminArea = async (
         data: directResponse.data?.data,
       };
     } catch (fallbackErr: any) {
-      console.error("Direct area creation fallback also failed:", fallbackErr);
       return {
         success: false,
         message: err.response?.data?.message || "Failed to create area",
@@ -1799,8 +1441,6 @@ export const updateAdminArea = async (
       data: response.data?.data,
     };
   } catch (err: any) {
-    console.error(`Error updating area ${id}:`, err);
-
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.put(
@@ -1817,7 +1457,6 @@ export const updateAdminArea = async (
         data: directResponse.data?.data,
       };
     } catch (fallbackErr: any) {
-      console.error("Direct area update fallback also failed:", fallbackErr);
       return {
         success: false,
         message: err.response?.data?.message || "Failed to update area",
@@ -1834,8 +1473,6 @@ export const deleteAdminArea = async (id: string): Promise<ApiResponse> => {
       message: response.data?.message || "Area deleted successfully",
     };
   } catch (err: any) {
-    console.error(`Error deleting area ${id}:`, err);
-
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.delete(
@@ -1850,7 +1487,6 @@ export const deleteAdminArea = async (id: string): Promise<ApiResponse> => {
         message: directResponse.data?.message || "Area deleted successfully",
       };
     } catch (fallbackErr: any) {
-      console.error("Direct area deletion fallback also failed:", fallbackErr);
       return {
         success: false,
         message: err.response?.data?.message || "Failed to delete area",
@@ -1959,26 +1595,17 @@ export const getAdminUsers = async (
 
     // Handle different possible response structures to extract the users array
     if (response.data?.data && Array.isArray(response.data.data)) {
-      console.log(
-        `🔍 Found ${response.data.data.length} users in response.data.data array`
-      );
       return response.data.data;
     } else if (Array.isArray(response.data)) {
-      console.log(
-        `🔍 Found ${response.data.length} users in response.data array`
-      );
       return response.data;
     } else if (response.data && typeof response.data === "object") {
       // If the API returns {status, data, message, success} format
       // Return the entire response for the component to handle
       return response.data;
     } else {
-      console.warn("⚠️ Unexpected users response structure:", response.data);
       return [];
     }
   } catch (err) {
-    console.error("❌ Error fetching users:", err);
-
     // Fallback to direct Axios call if the api instance fails
     try {
       console.log("⚙️ Attempting direct Axios fallback for users...");
@@ -2019,24 +1646,13 @@ export const getAdminUsers = async (
         Array.isArray(directResponse.data.data)
       ) {
         directData = directResponse.data.data;
-        console.log(
-          `⚙️ Found ${directData.length} users in directResponse.data.data`
-        );
       } else if (Array.isArray(directResponse.data)) {
         directData = directResponse.data;
-        console.log(
-          `⚙️ Found ${directData.length} users in directResponse.data (array)`
-        );
       } else {
-        console.warn(
-          "⚠️ Unexpected direct users response structure:",
-          directResponse.data
-        );
       }
 
       return directData || [];
     } catch (fallbackErr) {
-      console.error("❌ Direct Axios fallback also failed:", fallbackErr);
       return [];
     }
   }
@@ -2053,8 +1669,6 @@ export const createAdminUser = async (
       data: response.data?.data,
     };
   } catch (err: any) {
-    console.error("Error creating user:", err);
-
     // Fallback to direct Axios call if the api instance fails
     try {
       const directResponse = await axios.post(
@@ -2071,7 +1685,6 @@ export const createAdminUser = async (
         data: directResponse.data?.data,
       };
     } catch (fallbackErr: any) {
-      console.error("Direct user creation fallback also failed:", fallbackErr);
       return {
         success: false,
         message: err.response?.data?.message || "ایجاد کاربر با خطا مواجه شد",
@@ -2112,7 +1725,6 @@ export const updateAdminUser = async (
       data: response.data?.data,
     };
   } catch (err: any) {
-    console.error(`Error updating user:`, err);
     if (err.response) {
       console.error(`Error response status:`, err.response.status);
       console.error(`Error response data:`, err.response.data);
@@ -2142,11 +1754,6 @@ export const updateAdminUser = async (
           },
         }
       );
-      console.log(
-        `⚙️ Direct update response:`,
-        directResponse.status,
-        directResponse.data
-      );
 
       return {
         success: directResponse.data.success,
@@ -2155,7 +1762,6 @@ export const updateAdminUser = async (
         data: directResponse.data?.data,
       };
     } catch (fallbackErr: any) {
-      console.error("Direct user update fallback also failed:", fallbackErr);
       if (fallbackErr.response) {
         console.error(
           `Fallback error response status:`,
@@ -2188,7 +1794,6 @@ export const deleteAdminUser = async (id: string): Promise<ApiResponse> => {
       data: response.data?.data,
     };
   } catch (err: any) {
-    console.error(`❌ Error deleting user ${id}:`, err);
     if (err.response) {
       console.error(`Error response status:`, err.response.status);
       console.error(`Error response data:`, err.response.data);
@@ -2214,20 +1819,6 @@ export const deleteAdminUser = async (id: string): Promise<ApiResponse> => {
         data: directResponse.data?.data,
       };
     } catch (fallbackErr: any) {
-      console.error(
-        "❌ Direct user deletion fallback also failed:",
-        fallbackErr
-      );
-      if (fallbackErr.response) {
-        console.error(
-          `Fallback error response status:`,
-          fallbackErr.response.status
-        );
-        console.error(
-          `Fallback error response data:`,
-          fallbackErr.response.data
-        );
-      }
       return {
         success: false,
         message: err.response?.data?.message || "حذف کاربر با خطا مواجه شد",
@@ -2249,7 +1840,6 @@ export const restoreAdminUser = async (id: string): Promise<ApiResponse> => {
       data: response.data?.data,
     };
   } catch (err: any) {
-    console.error(`❌ Error restoring user ${id}:`, err);
     if (err.response) {
       console.error(`Error response status:`, err.response.status);
       console.error(`Error response data:`, err.response.data);
@@ -2278,10 +1868,6 @@ export const restoreAdminUser = async (id: string): Promise<ApiResponse> => {
           },
         }
       );
-      console.log(
-        `⚙️ Direct restore response status: ${directResponse.status}`
-      );
-      console.log(`⚙️ Direct restore response data:`, directResponse.data);
 
       return {
         success: directResponse.data.success,
@@ -2289,20 +1875,6 @@ export const restoreAdminUser = async (id: string): Promise<ApiResponse> => {
         data: directResponse.data?.data,
       };
     } catch (fallbackErr: any) {
-      console.error(
-        "❌ Direct user restoration fallback also failed:",
-        fallbackErr
-      );
-      if (fallbackErr.response) {
-        console.error(
-          `Fallback error response status:`,
-          fallbackErr.response.status
-        );
-        console.error(
-          `Fallback error response data:`,
-          fallbackErr.response.data
-        );
-      }
       return {
         success: false,
         message: err.response?.data?.message || "بازیابی کاربر با خطا مواجه شد",
@@ -2478,11 +2050,6 @@ export const getCurrentUserProfile = async (
         status: directResponse.status,
       };
     } catch (fallbackErr: any) {
-      console.error(
-        "❌ Direct current user profile fallback also failed:",
-        fallbackErr
-      );
-
       return {
         success: false,
         message:

@@ -140,8 +140,6 @@ export default function UserEditForm({
           const response = await getAdminUserById(user.originalId);
           if (response && response.success && response.data) {
             const userData = response.data as any;
-            console.log("Loaded user data from API:", userData);
-
             setFormData({
               name: user.name,
               email: userData.email || user.email,
@@ -185,7 +183,6 @@ export default function UserEditForm({
 
     const initializeFromLocalUser = () => {
       if (user) {
-        console.log("Initializing form with local user data:", user);
 
         const nameParts = user.name.split(" ");
         const firstName = nameParts[0] || "";
@@ -265,7 +262,7 @@ export default function UserEditForm({
         ...prev,
         [name]: processedValue,
       }));
-      console.log('Phone number processed:', processedValue);
+
     } else if (name === "isActive") {
       const isActive = value === "true";
       setFormData((prev) => ({
@@ -294,11 +291,11 @@ export default function UserEditForm({
   };
 
   const validateForm = () => {
-    console.log('validateForm function called');
+
     const newErrors: Record<string, string> = {};
     
     try {
-      console.log('Parsing form data with Zod schema');
+
       const formDataToValidate = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -313,22 +310,22 @@ export default function UserEditForm({
         isBanned: formData.isBanned
       };
       
-      console.log('Form data being validated:', formDataToValidate);
+
       userFormSchema.parse(formDataToValidate);
       
-      console.log('Zod validation passed');
+
       setErrors({});
       return true;
     } catch (err) {
-      console.log('Validation error caught:', err);
+
       
       if (err instanceof z.ZodError) {
-        console.log('ZodError detected with errors:', err.errors);
+
         
         err.errors.forEach((error) => {
           const field = error.path[0] as string;
           newErrors[field] = error.message;
-          console.log(`Validation error for field '${field}':`, error.message);
+
         });
       } else {
         console.error('Non-Zod validation error:', err);
@@ -339,29 +336,29 @@ export default function UserEditForm({
         });
       }
       
-      console.log('Setting errors state with:', newErrors);
+
       setErrors(newErrors);
       
       const isValid = Object.keys(newErrors).length === 0;
-      console.log('Form validation result after error handling:', isValid);
+
       return isValid;
     }
   };
 
   const handleSubmit = async () => {
-    console.log('handleSubmit function called');
+
     
     // Check if form is valid
-    console.log('Validating form...');
+
     const isValid = validateForm();
-    console.log('Form validation result:', isValid);
+
     
     if (!isValid) {
-      console.log('Form validation failed, returning early');
+
       return;
     }
 
-    console.log('Setting isSaving to true');
+
     setIsSaving(true);
 
     try {
@@ -399,32 +396,24 @@ export default function UserEditForm({
           isBanned: formData.isBanned,
         };
 
-        console.log(
-          "Sending update API request with data:",
-          JSON.stringify(apiData, null, 2)
-        );
-        console.log("User ID being sent:", user.originalId);
+
 
         // Make sure we're passing a valid ID - if originalId is empty, try using the regular id
         const userId = user.originalId || String(user.id);
-        console.log("Final user ID being used:", userId);
 
-        console.log("Calling updateAdminUser with userId:", userId);
-        console.log("API data being sent:", apiData);
         
         try {
           const response = await updateAdminUser(userId, apiData as any);
-          console.log("Update API response:", response);
 
           if (response.success) {
-            console.log("Update successful, calling onSave with data");
+
             onSave({
               ...formData,
               id: user.id,
               createdAt: user.createdAt,
             } as User);
             
-            console.log("Showing success toast");
+
             addToast({
               title: "موفقیت",
               description: "اطلاعات کاربر با موفقیت به‌روزرسانی شد",
@@ -454,18 +443,15 @@ export default function UserEditForm({
           isBanned: formData.isBanned,
         };
         
-        console.log(
-          "Sending create API request with data:",
-          JSON.stringify(apiData, null, 2)
-        );
+
         
         try {
-          console.log("Calling createAdminUser with data");
+
           const response = await createAdminUser(apiData as any);
-          console.log("Create API response:", response);
+
           
           if (response.success) {
-            console.log("Create successful, preparing new user data");
+
             const newUser = {
               ...formData,
               id: response.data?.id || Date.now().toString(), 
@@ -473,10 +459,9 @@ export default function UserEditForm({
               originalId: response.data?.id || "",
             } as User;
             
-            console.log("Calling onSave with new user:", newUser);
+
             onSave(newUser);
             
-            console.log("Showing success toast");
             addToast({
               title: "موفقیت",
               description: "کاربر جدید با موفقیت ایجاد شد",
@@ -682,7 +667,6 @@ return (
                     birthDate: dateString
                   }));
                   
-                  console.log('Selected date (Gregorian for API):', dateString);
                 }}
                 placeholder="انتخاب تاریخ"
                 error={errors.birthDate}
@@ -914,10 +898,6 @@ return (
           color="primary"
           variant="solid"
           onPress={() => {
-            console.log('Save button clicked!');
-            console.log('Current form data:', formData);
-            console.log('Current user:', user);
-            console.log('isSaving state:', isSaving);
             handleSubmit();
           }}
           className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5"

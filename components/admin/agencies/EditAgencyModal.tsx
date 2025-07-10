@@ -151,8 +151,7 @@ const EditAgencyModal: React.FC<EditAgencyModalProps> = ({
       if (formData.address.country) {
         try {
           const data = await getAdminProvinces();
-          console.log("All provinces:", data);
-          console.log("Selected country:", formData.address.country);
+
 
           // Try different possible field names for country reference
           const filteredProvinces = data.filter(
@@ -162,7 +161,7 @@ const EditAgencyModal: React.FC<EditAgencyModalProps> = ({
               province.country?._id === formData.address.country
           );
 
-          console.log("Filtered provinces:", filteredProvinces);
+
           setProvinces(filteredProvinces);
         } catch (error) {
           console.error("Error loading provinces:", error);
@@ -189,8 +188,7 @@ const EditAgencyModal: React.FC<EditAgencyModalProps> = ({
       if (formData.address.province) {
         try {
           const data = await getAdminCities();
-          console.log("All cities:", data);
-          console.log("Selected province:", formData.address.province);
+
 
           // Try different possible field names for province reference
           const filteredCities = data.filter(
@@ -200,7 +198,7 @@ const EditAgencyModal: React.FC<EditAgencyModalProps> = ({
               city.province?._id === formData.address.province
           );
 
-          console.log("Filtered cities:", filteredCities);
+
           setCities(filteredCities);
         } catch (error) {
           console.error("Error loading cities:", error);
@@ -226,8 +224,7 @@ const EditAgencyModal: React.FC<EditAgencyModalProps> = ({
       if (formData.address.city) {
         try {
           const data = await getAdminAreas();
-          console.log("🏘️ All areas:", data);
-          console.log("🏘️ Selected city:", formData.address.city);
+
 
           // Try different possible field names for city reference
           const filteredAreas = data.filter(
@@ -237,7 +234,7 @@ const EditAgencyModal: React.FC<EditAgencyModalProps> = ({
               area.city?._id === formData.address.city
           );
 
-          console.log("🏘️ Filtered areas:", filteredAreas);
+
           setAreas(filteredAreas);
         } catch (error) {
           console.error("Error loading areas:", error);
@@ -289,7 +286,7 @@ const EditAgencyModal: React.FC<EditAgencyModalProps> = ({
   };
 
   const handleMapClick = useCallback((coordinates: [number, number]) => {
-    console.log("🗺️ Map click received in modal:", coordinates);
+
     setFormData((prev) => ({
       ...prev,
       address: {

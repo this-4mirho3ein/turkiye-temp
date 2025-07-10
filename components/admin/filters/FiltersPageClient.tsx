@@ -94,7 +94,6 @@ function FiltersPageClientInner() {
 
   // Function to force refresh data
   const refreshData = useCallback(async () => {
-    console.log("🔄 Forcing refresh of filters data...");
 
     // Invalidate the cache
     await queryClient.invalidateQueries({ queryKey: ["admin-filters"] });

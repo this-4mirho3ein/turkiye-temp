@@ -107,7 +107,6 @@ function RegionsPageClientInner() {
 
   // Function to force refresh all data
   const refreshAllData = useCallback(async () => {
-    console.log("🔄 Forcing refresh of all region data...");
 
     // Invalidate all region caches
     await queryClient.invalidateQueries({ queryKey: ["admin-countries"] });
@@ -128,7 +127,6 @@ function RegionsPageClientInner() {
     // Increment refresh trigger to cause re-render
     setRefreshTrigger((prev) => prev + 1);
 
-    console.log("🔄 Refresh complete!");
   }, [queryClient]);
 
   // Fetch and cache all data on first load with useApi hook
@@ -194,28 +192,6 @@ function RegionsPageClientInner() {
     if (areasError) {
       console.error("Error fetching areas:", areasError);
     }
-
-    // Log raw data for debugging
-    console.log(
-      `Raw countries data (refresh #${refreshTrigger}):`,
-      countriesData?.length || 0,
-      "items"
-    );
-    console.log(
-      `Raw provinces data (refresh #${refreshTrigger}):`,
-      provincesData?.length || 0,
-      "items"
-    );
-    console.log(
-      `Raw cities data (refresh #${refreshTrigger}):`,
-      citiesData?.length || 0,
-      "items"
-    );
-    console.log(
-      `Raw areas data (refresh #${refreshTrigger}):`,
-      areasData?.length || 0,
-      "items"
-    );
   }, [
     countriesData,
     provincesData,
@@ -230,25 +206,10 @@ function RegionsPageClientInner() {
 
   // Convert API response to match Region interface
   const mapToRegions = (items: ApiRegion[] = [], type?: string): Region[] => {
-    // Log any deleted items for debugging
-    const deletedItems = items.filter((item) => item.isDeleted === true);
-    if (deletedItems.length > 0) {
-      console.log(
-        `🔄 Found ${deletedItems.length} deleted items in ${type} mapping:`,
-        deletedItems
-      );
-    }
 
-    // Log total count for debugging
-    console.log(
-      `🔄 Mapping ${items.length} total ${type} (including ${deletedItems.length} deleted items)`
-    );
 
     return items.map((item) => {
-      // Check and log if this individual item is deleted
-      if (item.isDeleted === true) {
-        console.log(`🔄 Mapping deleted ${type} item:`, item);
-      }
+
 
       const result: Region = {
         id: createNumericId(item._id), // Create stable numeric ID
@@ -366,16 +327,13 @@ function RegionsPageClientInner() {
   // Calculate the final data to use
   const mappedCountries = useMemo(() => {
     if (countriesData && countriesData.length > 0) {
-      console.log("💾 Raw countries data to map:", countriesData);
+
 
       // Find any deleted items
       const rawDeletedItems = countriesData.filter(
         (item) => item.isDeleted === true
       );
-      console.log(
-        `💾 Found ${rawDeletedItems.length} raw deleted countries:`,
-        rawDeletedItems
-      );
+
 
       const mapped = mapToRegions(countriesData, "countries");
 
@@ -383,10 +341,7 @@ function RegionsPageClientInner() {
       const mappedDeletedItems = mapped.filter(
         (item) => item.isDeleted === true
       );
-      console.log(
-        `💾 Found ${mappedDeletedItems.length} mapped deleted countries:`,
-        mappedDeletedItems
-      );
+      
 
       return mapped;
     }

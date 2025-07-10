@@ -125,7 +125,6 @@ export default function AdminDashboard() {
       typeof window !== "undefined" &&
       sessionStorage.getItem("isAuthenticating")
     ) {
-      console.log("Clearing authentication transition flag on admin dashboard");
       sessionStorage.removeItem("isAuthenticating");
     }
 
@@ -144,7 +143,6 @@ export default function AdminDashboard() {
 
     // If not authenticated at this point, redirect to login
     if (!isAuthenticated && typeof window !== "undefined") {
-      console.log("Not authenticated on dashboard, redirecting to login");
       router.replace("/admin/login");
     }
   }, [router]);

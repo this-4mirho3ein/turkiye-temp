@@ -35,8 +35,7 @@ const LoginContainer = () => {
     }
 
     // The API expects the number without leading zero
-    console.log("Original phone:", phoneNumber);
-    console.log("Formatted for API:", digitsOnly);
+
 
     return digitsOnly;
   };
@@ -46,9 +45,7 @@ const LoginContainer = () => {
       // Format phone number for API
       const formattedPhone = formatPhoneForApi(phoneNumber);
 
-      // Log phone number for debugging
-      console.log("Login phone number submitted:", phoneNumber);
-      console.log("Formatted for API:", formattedPhone);
+
 
       // Loading state is managed in LoginForm component
       // The button will show loading state during this API call
@@ -56,8 +53,7 @@ const LoginContainer = () => {
       // Send login code via API
       const response = await adminAuthService.sendLoginCode(formattedPhone);
 
-      // Log response for debugging
-      console.log("API response:", response);
+
 
       if (response.success) {
         // Show success toast

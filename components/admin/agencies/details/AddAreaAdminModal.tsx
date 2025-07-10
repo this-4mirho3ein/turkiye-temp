@@ -26,11 +26,9 @@ const phoneSchema = z.string()
     
     // If the number starts with 0, remove it
     if (cleaned.startsWith('0')) {
-      console.log('Removing leading 0 from phone number');
       cleaned = cleaned.substring(1);
     }
     
-    console.log('Transformed phone number:', cleaned);
     return cleaned;
   });
 
@@ -69,7 +67,6 @@ const AddAreaAdminModal: React.FC<AddAreaAdminModalProps> = ({
     try {
       // Validate and transform phone number
       const validatedPhone = phoneSchema.parse(phone);
-      console.log('Original phone:', phone, 'Validated phone:', validatedPhone);
       
       setLoading(true);
       setError(null);

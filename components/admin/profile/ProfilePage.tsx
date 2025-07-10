@@ -27,19 +27,16 @@ const ProfilePage: React.FC = () => {
         return;
       }
 
-      console.log("🔍 Fetching profile for user ID:", userId);
 
       const response = await getCurrentUserProfile(userId);
 
       if (response.success && response.data) {
         setProfile(response.data);
-        console.log("✅ Profile loaded successfully:", response.data);
       } else {
         setError(response.message || "خطا در دریافت اطلاعات پروفایل");
-        console.error("❌ Profile fetch failed:", response);
       }
     } catch (err: any) {
-      console.error("❌ Profile fetch error:", err);
+
       setError("خطا در برقراری ارتباط با سرور");
     } finally {
       setLoading(false);

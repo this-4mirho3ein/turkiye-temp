@@ -22,13 +22,11 @@ const AdminAuthGuard = ({ children }: AdminAuthGuardProps) => {
     // Check if user is authenticated
     const authCheck = async () => {
       const isAuth = adminAuthService.isAuthenticated();
-      console.log("Admin route auth check:", isAuth);
-      console.log("Context auth check:", contextIsAuthenticated);
-      console.log("Is authenticating:", isAuthenticating);
+
 
       // If transitioning from successful login, don't redirect
       if (isAuthenticating === "true") {
-        console.log("Currently in authentication transition, allowing access");
+
         setIsAuthenticated(true);
         setIsLoading(false);
         return;
@@ -46,11 +44,11 @@ const AdminAuthGuard = ({ children }: AdminAuthGuardProps) => {
 
       if (hasValidToken || isAuth || contextIsAuthenticated) {
         // If authenticated in any system, allow access
-        console.log("Authenticated in at least one system, allowing access");
+
         setIsAuthenticated(true);
       } else {
         // Only redirect if all authentication systems report as unauthenticated
-        console.log("Not authenticated in any system, redirecting to login page");
+
         router.replace("/admin/login");
       }
 

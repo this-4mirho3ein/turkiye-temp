@@ -101,8 +101,6 @@ const PropertyTypeFormModal: React.FC<PropertyTypeFormModalProps> = ({
               data = response.data; // Use as is if can't parse
             }
 
-            console.log("Fetched property type data:", data);
-
             // Update form with fetched data
             setFormData({
               type: data.type || propertyType.type || "",

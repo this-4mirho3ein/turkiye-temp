@@ -77,7 +77,6 @@ function PropertyTypesPageClientInner() {
 
   // Function to force refresh data
   const refreshData = useCallback(async () => {
-    console.log("🔄 Forcing refresh of property types data...");
 
     // Invalidate the cache
     await queryClient.invalidateQueries({ queryKey: ["admin-property-types"] });
@@ -92,7 +91,6 @@ function PropertyTypesPageClientInner() {
     // Increment refresh trigger to cause re-render
     setRefreshTrigger((prev) => prev + 1);
 
-    console.log("🔄 Refresh complete!");
   }, [queryClient]);
 
   // Handle opening form modal for add/edit

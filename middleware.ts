@@ -4,11 +4,8 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  console.log("🔐 Middleware running for path:", pathname);
-
   // Redirect root path to admin
   if (pathname === "/") {
-    console.log("🔐 Redirecting root path to /admin");
     const adminUrl = new URL("/admin", request.url);
     return NextResponse.redirect(adminUrl);
   }
@@ -17,7 +14,6 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith("/admin")) {
     // Don't check token for login route and its subroutes
     if (pathname.startsWith("/admin/login")) {
-      console.log("🔐 Allowing access to login routes");
       return NextResponse.next();
     }
 
@@ -31,15 +27,8 @@ export function middleware(request: NextRequest) {
       request.headers.get("access-token") ||
       request.headers.get("authorization")?.replace("Bearer ", "");
 
-    console.log(
-      "🔐 Token checks - Cookie:",
-      !!cookieToken,
-      "Header:",
-      !!headerToken
-    );
 
     if (!cookieToken && !headerToken) {
-      console.log("🔐 No token found, redirecting to login");
 
       // Create the URL for the login page
       const loginUrl = new URL("/admin/login", request.url);
@@ -48,7 +37,6 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    console.log("🔐 Token found, allowing access to admin route");
   }
 
   return NextResponse.next();

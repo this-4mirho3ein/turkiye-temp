@@ -91,27 +91,6 @@ function CategoriesPageClientInner() {
     return true;
   });
 
-  // Debug categories data
-  useEffect(() => {
-    console.log("Categories data:", displayCategories);
-
-    // Check for deleted items
-    const deletedItems = displayCategories.filter((cat) => cat.isDeleted);
-    console.log(
-      `Found ${deletedItems.length} deleted categories:`,
-      deletedItems
-    );
-
-    // Check if the server is returning the isDeleted property
-    if (categories.length > 0) {
-      console.log("Sample category:", categories[0]);
-      console.log(
-        "isDeleted property exists:",
-        categories.some((cat) => "isDeleted" in cat)
-      );
-    }
-  }, [categories, displayCategories, searchTerm]);
-
   // Log any errors
   useEffect(() => {
     if (error) {
@@ -125,7 +104,6 @@ function CategoriesPageClientInner() {
 
   // Function to force refresh data
   const refreshData = useCallback(async () => {
-    console.log("🔄 Forcing refresh of categories data...");
 
     // Invalidate the cache
     await queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
@@ -145,8 +123,6 @@ function CategoriesPageClientInner() {
       message: "اطلاعات دسته‌بندی‌ها با موفقیت به‌روزرسانی شد",
       type: "success",
     });
-
-    console.log("🔄 Refresh complete!");
   }, [queryClient, showToast]);
 
   // Handle opening form modal for add/edit
@@ -326,7 +302,6 @@ function CategoriesPageClientInner() {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         onSearch={() => {
-          console.log("Searching for:", searchTerm);
           setRefreshTrigger((prev) => prev + 1);
         }}
         isLoading={isLoading}

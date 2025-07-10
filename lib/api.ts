@@ -48,12 +48,6 @@ api.interceptors.request.use(
         const token = getAuthToken();
         if (token) {
           config.headers["x-access-token"] = token;
-          // Log only for debugging
-          console.log(`Added auth token to admin request: ${config.url}`);
-        } else {
-          console.warn(
-            `No auth token available for admin request: ${config.url}`
-          );
         }
       }
     }
@@ -69,12 +63,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: ExtendedAxiosResponse) => {
     // Log only for debugging API calls
-    if (
-      response.config.url?.includes("/api/") &&
-      response.config.url?.includes("/get-")
-    ) {
-      console.log(`API Response for ${response.config.url}:`, response.status);
-    }
+  
 
     // Return the response without modification
     return response;

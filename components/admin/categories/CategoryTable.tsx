@@ -76,14 +76,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
 
   // Filter categories based on showDeletedItems using useMemo for performance
   const filteredCategories = useMemo(() => {
-    // Log for debugging
-    console.log("Filtering categories:", {
-      total: categories.length,
-      showDeleted: showDeletedItems,
-      deletedCount: categories.filter((cat) => cat.isDeleted === true).length,
-      hasIsDeletedProperty:
-        categories.length > 0 ? "isDeleted" in categories[0] : false,
-    });
+
 
     if (showDeletedItems) {
       // Show all categories when showDeletedItems is true

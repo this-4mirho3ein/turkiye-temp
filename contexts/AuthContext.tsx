@@ -62,7 +62,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsAuthenticated(true);
         } else {
           // User doesn't have admin role - clear auth data
-          console.log("User doesn't have admin role, clearing auth data");
           localStorage.removeItem(TOKEN_KEY);
           localStorage.removeItem(USER_DATA_KEY);
           localStorage.removeItem("refreshToken");
@@ -115,7 +114,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // If we're in the authentication process, don't do any redirects
     if (isAuthenticating) {
-      console.log("AuthContext: Currently authenticating, skipping redirects");
       return;
     }
 
@@ -137,14 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (isAdminRoute && (!isAuthenticated || !hasAdminRole)) {
       // User is trying to access a protected route without authentication or admin role
-      console.log(
-        "AuthContext: Not authenticated or no admin role, redirecting to login",
-        {
-          pathname,
-          isAuthenticated,
-          hasAdminRole,
-        }
-      );
+
       router.replace("/admin/login");
     } else if (
       isLoginRoute &&
@@ -153,14 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       !pendingAuth
     ) {
       // User is authenticated with admin role but on login page - redirect to admin
-      console.log(
-        "AuthContext: Already authenticated with admin role, redirecting to admin",
-        {
-          pathname,
-          isAuthenticated,
-          hasAdminRole,
-        }
-      );
+
       router.replace("/admin");
     }
   }, [
@@ -175,18 +159,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Login function to store token and user data
   const login = (token: string, userData: any) => {
-    console.log(
-      "Login called with token:",
-      !!token,
-      "and userData:",
-      !!userData
-    );
+
 
     // Check if user has admin role before proceeding
     const hasAdmin = checkAdminRole(userData);
 
     if (!hasAdmin) {
-      console.log("Login denied: User does not have admin role");
+
       return false; // Return false to indicate failed login
     }
 

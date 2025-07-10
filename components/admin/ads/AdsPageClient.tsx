@@ -116,14 +116,12 @@ const AdsPageClient: React.FC = () => {
       if (showLoading) setLoading(true);
       setError(null);
 
-      console.log("🔍 Fetching ads with filters:", filters);
 
       const response = await getAdminAds(filters);
 
       if (response.success && response.data) {
         const adsData = response.data.ads || response.data.data || [];
 
-        console.log("✅ Ads response:", adsData);
 
         if (adsData.data && Array.isArray(adsData.data)) {
           setAds(adsData.data);
@@ -168,20 +166,14 @@ const AdsPageClient: React.FC = () => {
         setCategories(categoriesResponse);
       }
 
-      console.log("Property types response:", propertyTypesResponse);
 
       // Handle the property types response with the confirmed structure
       if (propertyTypesResponse) {
         if (Array.isArray(propertyTypesResponse)) {
-          console.log(
-            "Setting property types from array:",
-            propertyTypesResponse
-          );
+        
           setPropertyTypes(propertyTypesResponse);
         } else {
-          console.log(
-            "Property types is not an array, checking for nested structure"
-          );
+         
 
           // Use type assertion to help TypeScript understand the structure
           const typedResponse = propertyTypesResponse as {
@@ -196,10 +188,6 @@ const AdsPageClient: React.FC = () => {
             typedResponse.data.data &&
             Array.isArray(typedResponse.data.data)
           ) {
-            console.log(
-              "Setting property types from nested data:",
-              typedResponse.data.data
-            );
             setPropertyTypes(typedResponse.data.data);
           } else {
             console.warn(

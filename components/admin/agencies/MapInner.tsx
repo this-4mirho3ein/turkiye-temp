@@ -27,7 +27,6 @@ function MapClickHandler({
 }) {
   const map = useMapEvents({
     click: (e) => {
-      console.log("🗺️ Map clicked at:", e.latlng);
       const { lat, lng } = e.latlng;
       onCoordinatesChange([lng, lat]); // Note: GeoJSON format is [longitude, latitude]
     },

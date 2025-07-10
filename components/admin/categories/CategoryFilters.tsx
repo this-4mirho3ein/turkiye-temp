@@ -64,12 +64,6 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({
 
     filters.showDeleted = showDeletedItems;
     
-    // Log the filters being applied
-    console.log("Applying filters to API request:", {
-      isActive: filters.isActive,
-      searchTerm: filters.searchTerm,
-      showDeleted: filters.showDeleted
-    });
 
     // Close the filter panel when applying filters
     setIsOpen(false);

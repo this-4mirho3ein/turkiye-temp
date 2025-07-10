@@ -85,7 +85,6 @@ function UserManagementInner({ initialUsers }: UserManagementProps) {
 
   // Function to force refresh all data
   const refreshAllData = () => {
-    console.log("🔄 Forcing refresh of user data...");
     setRefreshTrigger((prev) => prev + 1);
     setHasErrorOccurred(false); // Reset error state on refresh
   };
@@ -130,17 +129,11 @@ function UserManagementInner({ initialUsers }: UserManagementProps) {
   
   // Log the current filter parameters being sent to the API
   useEffect(() => {
-    console.log("Current API filter parameters:", {
-      roles: activeFilters.roles?.join(","),
-      isActive: activeFilters.isActive,
-      isBanned: activeFilters.isBanned,
-      isProfileComplete: activeFilters.isProfileComplete,
-      search: activeFilters.searchTerm,
-    });
+
     
     // When filters change, force a refresh to get new filtered data from API
     if (Object.keys(activeFilters).length > 0) {
-      console.log("Filters changed, refreshing data...");
+
       refetchUsers();
     }
   }, [activeFilters, refetchUsers]);
@@ -148,14 +141,14 @@ function UserManagementInner({ initialUsers }: UserManagementProps) {
   // Function to map API users to our app's User interface
   const mapToUsers = (apiUsers: ApiUser[]): User[] => {
     if (!apiUsers || !Array.isArray(apiUsers)) {
-      console.warn("Invalid users data, expected array:", apiUsers);
+
       return [];
     }
     
     // If the array is empty and we have filters applied, return an empty array
     // This will trigger the empty state UI
     if (apiUsers.length === 0) {
-      console.log("No users found matching the current filters");
+
       return [];
     }
 
@@ -208,7 +201,6 @@ function UserManagementInner({ initialUsers }: UserManagementProps) {
   // Update users when API data changes
   useEffect(() => {
     if (apiUsers) {
-      console.log("Raw API response:", apiUsers);
 
       // Based on the exact response structure you provided
       // We know that data is in apiUsers.data.data
@@ -225,24 +217,21 @@ function UserManagementInner({ initialUsers }: UserManagementProps) {
         // This is the expected structure: response.data.data[]
         usersList = apiUsers.data.data;
         hasData = usersList.length > 0;
-        console.log(`Found ${usersList.length} users in response.data.data array`);
         
         if (usersList.length === 0 && Object.keys(activeFilters).length > 0) {
-          console.log("No users found matching the current filters");
+
         }
       } else if (apiUsers.data && Array.isArray(apiUsers.data)) {
         // Fallback for direct data array
         usersList = apiUsers.data;
         hasData = usersList.length > 0;
-        console.log(`Found ${usersList.length} users in response.data array`);
+
       } else if (Array.isArray(apiUsers)) {
         // Fallback for direct array response
         usersList = apiUsers as unknown as ApiUser[];
         hasData = usersList.length > 0;
-        console.log(`Found ${usersList.length} users in direct response array`);
-      } else {
-        console.warn("Unexpected response structure:", apiUsers);
-      }
+
+      } 
 
       // Map users to our format only if we have data
       const mappedUsers = hasData ? mapToUsers(usersList) : [];
@@ -253,7 +242,6 @@ function UserManagementInner({ initialUsers }: UserManagementProps) {
       setHasErrorOccurred(false);
 
       if (hasData) {
-        console.log(`✅ Successfully loaded ${mappedUsers.length} users from API`);
         
         // Only show success toast if we actually have data
         addToast({
@@ -270,7 +258,6 @@ function UserManagementInner({ initialUsers }: UserManagementProps) {
   // Handle errors
   useEffect(() => {
     if (error) {
-      console.error("Error fetching users:", error);
       setHasErrorOccurred(true);
 
       // Check for authentication error (401)
@@ -286,26 +273,10 @@ function UserManagementInner({ initialUsers }: UserManagementProps) {
         icon: <FaExclamationTriangle />,
         timeout: 5000,
       });
-
-      // Log detailed error information for debugging
-      if (apiError.response) {
-        console.error("API Error Response:", {
-          status: apiError.response.status,
-          statusText: apiError.response.statusText,
-          data: apiError.response.data,
-          headers: apiError.response.headers,
-        });
-      }
     }
   }, [error]);
 
-  // Check if we have users from API response based on the exact structure
-  // We know the response is: { data: { data: [] } }
-  const hasApiUsers = apiUsers && 
-    apiUsers.data && 
-    apiUsers.data.data && 
-    Array.isArray(apiUsers.data.data) && 
-    apiUsers.data.data.length > 0;
+
   
   // If filters are applied and API returned empty results in data.data array
   const hasActiveFilters = Object.keys(activeFilters).length > 0;

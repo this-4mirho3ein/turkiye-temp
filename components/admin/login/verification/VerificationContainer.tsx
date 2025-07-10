@@ -39,8 +39,7 @@ const VerificationContainer = () => {
     }
     setDisplayPhone(displayNumber);
 
-    console.log("Retrieved phone number from session:", storedPhone);
-    console.log("Display phone number:", displayNumber);
+
   }, [router]);
 
   // Handle verification code submission
@@ -49,12 +48,12 @@ const VerificationContainer = () => {
 
     setIsLoading(true);
     try {
-      console.log(`Submitting code ${code} for phone ${phoneNumber}`);
+
 
       // Call API to login with the code
       const response = await adminAuthService.login(phoneNumber, code);
 
-      console.log("Login API response:", response);
+
 
       if (response.success && response.data && response.data.accessToken) {
         // Extract token and user data from response
@@ -64,7 +63,7 @@ const VerificationContainer = () => {
         // Check if user has admin role
         if (!roles || !Array.isArray(roles) || !roles.includes("admin")) {
           // User doesn't have admin role - deny access
-          console.log("Access denied - user does not have admin role:", roles);
+
 
           showToast({
             message: "شما مجوز دسترسی به پنل مدیریت را ندارید",
@@ -85,7 +84,7 @@ const VerificationContainer = () => {
           return;
         }
 
-        console.log("Access granted - user has admin role:", roles);
+
 
         // Set authenticating state to true to show loading screen
         setIsAuthenticating(true);
@@ -125,7 +124,7 @@ const VerificationContainer = () => {
         if (!loginResult) {
           // Login failed due to role validation - this should not happen since we already checked
           // but adding as a safety measure
-          console.log("AuthContext login failed - role validation failed");
+
 
           showToast({
             message: "شما مجوز دسترسی به پنل مدیریت را ندارید",
@@ -199,12 +198,12 @@ const VerificationContainer = () => {
     if (!phoneNumber) return;
 
     try {
-      console.log("Resending code to phone:", phoneNumber);
+
 
       // Call the API to resend the code
       const response = await adminAuthService.sendLoginCode(phoneNumber);
 
-      console.log("Resend code API response:", response);
+
 
       if (response.success) {
         // Show success toast
@@ -224,7 +223,7 @@ const VerificationContainer = () => {
         });
       }
     } catch (error) {
-      console.error("Resend code error:", error);
+
 
       // Show error toast
       showToast({

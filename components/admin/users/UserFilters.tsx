@@ -104,16 +104,6 @@ const UserFilters: React.FC<UserFiltersProps> = ({
 
     filters.showDeleted = showDeleted;
 
-    // Log the filters being applied
-    console.log("Applying filters to API request:", {
-      roles: filters.roles ? filters.roles.join(",") : undefined,
-      isActive: filters.isActive,
-      isBanned: filters.isBanned,
-      isProfileComplete: filters.isProfileComplete,
-      searchTerm: filters.searchTerm,
-      showDeleted: filters.showDeleted,
-    });
-
     // Close the filter panel when applying filters
     setIsOpen(false);
 

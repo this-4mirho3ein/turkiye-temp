@@ -138,23 +138,6 @@ export default function RegionsList({
     }
   }, [selectedRegion]);
 
-  // Debug parent filter
-  useEffect(() => {
-    if (selectedParentId) {
-      console.log("Selected parent ID:", selectedParentId);
-      console.log("Region type:", type);
-      console.log("Total regions:", regions.length);
-
-      // Log the structure of a sample region to debug
-      if (regions.length > 0) {
-        console.log(
-          "Sample region structure:",
-          JSON.stringify(regions[0], null, 2)
-        );
-      }
-    }
-  }, [selectedParentId, regions, type]);
-
   // Client-side filtering based on search input and parent filter
   const filteredRegions = regions.filter((region) => {
     // Apply search filter
@@ -207,12 +190,7 @@ export default function RegionsList({
     return true;
   });
 
-  // Log filtered results for debugging
-  useEffect(() => {
-    if (selectedParentId) {
-      console.log(`Filtered ${type} count:`, filteredRegions.length);
-    }
-  }, [filteredRegions, selectedParentId, type]);
+
 
   // Log if we have any deleted items for debugging
   const deletedCount = regions.filter(
@@ -222,16 +200,7 @@ export default function RegionsList({
     (region) => region.isDeleted === true
   ).length;
 
-  // Only log in non-production
-  if (typeof window !== "undefined" && deletedCount > 0) {
-    console.log(
-      `📋 Region List for ${type}: Found ${deletedCount} deleted items out of ${regions.length} total`
-    );
-    console.log(
-      `📋 Filtered List: ${filteredDeletedCount} deleted items out of ${filteredRegions.length} after search filtering`
-    );
-    console.log(`📋 showDeletedItems is set to: ${showDeletedItems}`);
-  }
+
 
   // Generate a random code for countries (numeric)
   const generateRandomCode = (): string => {
@@ -270,9 +239,7 @@ export default function RegionsList({
       // Auto-generate slug from English name for all types
       if (name === "enName" && value) {
         newFormData.slug = generateSlugFromEnglishName(value);
-        console.log(
-          `Auto-generated slug from English name: ${newFormData.slug}`
-        );
+
       }
 
       return newFormData;
@@ -288,9 +255,7 @@ export default function RegionsList({
         const regionId =
           regionToDelete.originalId || regionToDelete.id.toString();
 
-        console.log(`Deleting ${type} with ID:`, regionId);
         const response = await deleteAction(regionId);
-        console.log("Delete response:", response);
 
         if (response && response.success) {
           // Invalidate cache to refresh data
@@ -319,7 +284,6 @@ export default function RegionsList({
           });
         }
       } catch (error) {
-        console.error("Delete error:", error);
         let errorMessage = "حذف منطقه با مشکل مواجه شد";
 
         if (error && typeof error === "object" && "message" in error) {
@@ -406,20 +370,11 @@ export default function RegionsList({
             countryData.code = selectedRegion.code;
           }
 
-          console.log(
-            `Updating country with ID:`,
-            regionId,
-            "Data:",
-            countryData
-          );
           response = await updateAction(regionId, countryData);
-          console.log("Update country response:", response);
         } else {
           // Create country - always generate a random code for new countries
           const createAction = apiActions.countries.create;
-          console.log("Creating country with data:", countryData);
           response = await createAction(countryData);
-          console.log("Create country response:", response);
         }
       } else {
         // For provinces, cities, and areas
@@ -463,20 +418,11 @@ export default function RegionsList({
             regionData.code = selectedRegion.code;
           }
 
-          console.log(
-            `Updating ${type} with ID:`,
-            regionId,
-            "Data:",
-            regionData
-          );
           response = await updateAction(regionId, regionData);
-          console.log(`Update ${type} response:`, response);
         } else {
           // Create
           const createAction = apiActions[type].create;
-          console.log(`Creating ${type} with data:`, regionData);
           response = await createAction(regionData);
-          console.log(`Create ${type} response:`, response);
         }
       }
 
@@ -630,7 +576,6 @@ export default function RegionsList({
 
         if (response) {
           errorMessage = response.message || errorMessage;
-          console.error("API error response:", response);
         }
 
         addToast({
@@ -641,7 +586,6 @@ export default function RegionsList({
         });
       }
     } catch (error) {
-      console.error("Save error:", error);
 
       let errorMessage = "ذخیره اطلاعات با مشکل مواجه شد";
 
@@ -823,7 +767,7 @@ export default function RegionsList({
   // For cache invalidation after operations
   const invalidateCache = async () => {
     try {
-      console.log(`Invalidating cache for ${type}...`);
+
       // Only invalidate the appropriate React Query cache, don't force immediate refetch
       switch (type) {
         case "countries":
@@ -844,9 +788,6 @@ export default function RegionsList({
           break;
       }
 
-      console.log(
-        `Cache invalidated for ${type} - data will be fresh on next fetch`
-      );
     } catch (error) {
       console.error("Failed to invalidate cache:", error);
     }

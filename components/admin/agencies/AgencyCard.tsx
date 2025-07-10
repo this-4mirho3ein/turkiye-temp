@@ -151,7 +151,7 @@ const AgencyCard: React.FC<AgencyCardProps> = ({
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <HiUser className="w-4 h-4" />
               <span>
-                {agency.owner.firstName} {agency.owner.lastName}
+                {agency.owner?.firstName} {agency.owner?.lastName}
               </span>
             </div>
 

@@ -111,9 +111,7 @@ const AdDetailsPageClient: React.FC<AdDetailsPageClientProps> = ({ id }) => {
       setLoading(true);
       setError(null);
 
-      console.log(`Fetching ad details for ID: ${id}`);
       const response = await getAdminAdById(id);
-      console.log("Full response from getAdminAdById:", response);
 
       if (response.success) {
         // Check if the response data is already the ad details or has a nested structure
@@ -122,16 +120,12 @@ const AdDetailsPageClient: React.FC<AdDetailsPageClientProps> = ({ id }) => {
         // Handle nested data structure (response.data.data)
         if (response.data && response.data.data) {
           adData = response.data.data;
-          console.log("Found nested data structure, using response.data.data");
         }
 
         // Normalize property type data structure if it's incomplete
         if (adData.propertyType) {
           // Ensure property type has either type or name field
           if (!adData.propertyType.type && !adData.propertyType.name) {
-            console.log(
-              "Property type missing type/name, fetching complete data..."
-            );
 
             // If only ID is available, we need to ensure UI has the necessary fields
             // This is a temporary workaround - ideally we'd fetch the complete property type data
@@ -170,7 +164,6 @@ const AdDetailsPageClient: React.FC<AdDetailsPageClientProps> = ({ id }) => {
           };
         }
 
-        console.log("Setting ad data:", adData);
         setAd(adData);
       } else {
         console.error("API call was not successful:", response.message);

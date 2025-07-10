@@ -50,6 +50,12 @@ const AgencyInfo: React.FC<AgencyInfoProps> = ({
             رد شده
           </Badge>
         );
+      case "request_more_info":
+        return (
+          <Badge color="warning" variant="solid">
+            درخواست اطلاعات بیشتر
+          </Badge>
+        );
       default:
         return (
           <Badge color="warning" variant="solid">

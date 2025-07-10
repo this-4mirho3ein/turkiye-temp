@@ -33,7 +33,6 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       // Only clear tokens and redirect if we're in a browser
       if (typeof window !== "undefined") {
-        console.log("Authentication failed, clearing tokens");
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("userId");

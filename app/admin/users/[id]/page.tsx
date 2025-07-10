@@ -127,12 +127,9 @@ export default function UserDetailsPage() {
           throw new Error("شناسه کاربر نامعتبر است");
         }
 
-        console.log(`📊 Fetching data for user ID: ${id}`);
         const response = await getAdminUserById(id);
-        console.log(`📊 API Response:`, response);
 
         if (response.success && response.data) {
-          console.log(`📊 User data received successfully:`, response.data);
           setUserData(response.data);
           showToast({
             type: "success",

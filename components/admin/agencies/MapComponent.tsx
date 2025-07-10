@@ -52,7 +52,6 @@ const MapComponent: React.FC<MapComponentProps> = ({
 
   const handleCoordinatesChange = useCallback(
     (newCoordinates: [number, number]) => {
-      console.log("🗺️ Coordinates changed to:", newCoordinates);
       setCoordinates(newCoordinates);
       onCoordinatesChange(newCoordinates);
     },

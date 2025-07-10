@@ -122,8 +122,7 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
       if (formData.address.country) {
         try {
           const data = await getAdminProvinces();
-          console.log("All provinces:", data);
-          console.log("Selected country:", formData.address.country);
+
 
           // Try different possible field names for country reference
           const filteredProvinces = data.filter(
@@ -133,7 +132,7 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
               province.country?._id === formData.address.country
           );
 
-          console.log("Filtered provinces:", filteredProvinces);
+
           setProvinces(filteredProvinces);
         } catch (error) {
           console.error("Error loading provinces:", error);
@@ -160,8 +159,7 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
       if (formData.address.province) {
         try {
           const data = await getAdminCities();
-          console.log("All cities:", data);
-          console.log("Selected province:", formData.address.province);
+
 
           // Try different possible field names for province reference
           const filteredCities = data.filter(
@@ -171,7 +169,7 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
               city.province?._id === formData.address.province
           );
 
-          console.log("Filtered cities:", filteredCities);
+
           setCities(filteredCities);
         } catch (error) {
           console.error("Error loading cities:", error);
@@ -197,23 +195,13 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
       if (formData.address.city) {
         try {
           const data = await getAdminAreas();
-          console.log("🏘️ All areas:", data);
-          console.log("🏘️ Selected city:", formData.address.city);
 
-          // Log first few areas to see structure
-          if (data.length > 0) {
-            console.log(
-              "🏘️ Sample area structure:",
-              JSON.stringify(data[0], null, 2)
-            );
-          }
+
+
 
           // Try different possible field names for city reference
           const filteredAreas = data.filter((area) => {
-            console.log(
-              `🏘️ Checking area: ${area.name}, city field:`,
-              area.city
-            );
+           
             return (
               area.city === formData.address.city ||
               area.cityId === formData.address.city ||
@@ -223,7 +211,7 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
             );
           });
 
-          console.log("🏘️ Filtered areas:", filteredAreas);
+
           setAreas(filteredAreas);
         } catch (error) {
           console.error("Error loading areas:", error);
@@ -383,7 +371,6 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
       // Clear any previous errors
       setErrors((prev) => ({ ...prev, logoFileName: "" }));
 
-      console.log("✅ Logo upload completed successfully:", fileName);
     } catch (error: any) {
       console.error("❌ Logo upload failed:", error);
       setErrors((prev) => ({
@@ -407,7 +394,7 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
   };
 
   const handleMapClick = (coordinates: [number, number]) => {
-    console.log("🗺️ Map click received in modal:", coordinates);
+
     setFormData((prev) => ({
       ...prev,
       address: {

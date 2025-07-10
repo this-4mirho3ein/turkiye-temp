@@ -288,7 +288,6 @@ export default function UsersList({
           const responseMessage = (userData as any)._responseMessage;
           const isSuccess = (userData as any)._responseStatus !== false;
           
-          console.log('Using response message for toast:', responseMessage);
           
           addToast({
             title: isSuccess ? "ویرایش موفقیت‌آمیز" : "خطا",

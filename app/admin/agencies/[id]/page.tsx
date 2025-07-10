@@ -74,19 +74,13 @@ export default function AgencyDetailsPage() {
     const fetchAgencyDetails = async () => {
       try {
         setLoading(true);
-        console.log(`🔍 Fetching agency details for ID: ${id}`);
 
         // Get agency details (which already includes consultants and areaAdmins)
         const agencyResponse = await getAgencyDetails(id as string);
-        console.log("Agency details API response:", agencyResponse);
 
         if (agencyResponse.success && agencyResponse.data) {
           // Extract the agency data from the response
           const agencyData = agencyResponse.data.data || agencyResponse.data;
-
-          console.log("Extracted agency data:", agencyData);
-          console.log("Consultants from agency data:", agencyData.consultants);
-          console.log("Area admins from agency data:", agencyData.areaAdmins);
 
           // The agency details response already includes consultants and areaAdmins
           const fullAgencyData: AgencyDetails = {
@@ -111,11 +105,6 @@ export default function AgencyDetailsPage() {
             isPhoneShow: agencyData.isPhoneShow,
             isAddressShow: agencyData.isAddressShow,
           };
-
-          console.log(
-            "Final agency data with consultants and area admins:",
-            fullAgencyData
-          );
           setAgency(fullAgencyData);
           setError(null);
         } else {
@@ -139,7 +128,6 @@ export default function AgencyDetailsPage() {
   const refreshAgencyDetails = async () => {
     try {
       setLoading(true);
-      console.log(`🔄 Refreshing agency details for ID: ${id}`);
 
       // Get updated agency details (which already includes consultants and areaAdmins)
       const agencyResponse = await getAgencyDetails(id as string);
@@ -147,9 +135,6 @@ export default function AgencyDetailsPage() {
       if (agencyResponse.success && agencyResponse.data) {
         const agencyData = agencyResponse.data.data || agencyResponse.data;
 
-        console.log("Refreshed agency data:", agencyData);
-        console.log("Refreshed consultants:", agencyData.consultants);
-        console.log("Refreshed area admins:", agencyData.areaAdmins);
 
         // The agency details response already includes consultants and areaAdmins
         const fullAgencyData: AgencyDetails = {

@@ -17,11 +17,10 @@ const AdminAuthGuard = ({ children }: AdminAuthGuardProps) => {
     // Check if user is authenticated
     const authCheck = async () => {
       const isAuth = adminAuthService.isAuthenticated();
-      console.log("Admin route auth check:", isAuth);
 
       if (!isAuth) {
         // Redirect to login page if not authenticated
-        console.log("Not authenticated, redirecting to login page");
+
         router.replace("/admin/login");
       } else {
         setIsAuthenticated(true);
