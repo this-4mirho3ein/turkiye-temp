@@ -27,6 +27,7 @@ const mainMenuItems: MenuItem[] = [
   { name: "کاربران", href: "/admin/users", icon: FaUsers },
   { name: "آژانس‌ها", href: "/admin/agencies", icon: FaUserTie },
   { name: "آگهی‌ها", href: "/admin/ads", icon: FaAd },
+  { name: "درخواست‌های پروفایل آژانس", href: "/admin/agency-updates", icon: FaCheckCircle },
   { name: "تأییدیه‌ها", href: "/admin/verifications", icon: FaCheckCircle },
   { name: "نوع کاربری", href: "/admin/fields_type", icon: FaTag },
   { name: "دسته‌بندی‌ها", href: "/admin/categories", icon: FaLayerGroup },

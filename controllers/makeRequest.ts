@@ -727,6 +727,105 @@ export const getAdminAgencies = async (
   }
 };
 
+// Pending Agency Profile Updates - List
+export const getPendingAgencyProfileUpdates = async (
+  params: { page?: number; limit?: number; forceRefresh?: boolean } = {}
+): Promise<ApiResponse> => {
+  const { page = 1, limit = 20, forceRefresh = false } = params;
+  const cacheParam = forceRefresh ? `&_t=${Date.now()}` : "";
+
+  try {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const response = await api.get(
+      `/admin/agency/pending-agency-profile-updates?page=${page}&limit=${limit}${cacheParam}`,
+      { headers }
+    );
+
+    return {
+      success: true,
+      data: response.data,
+      status: response.status,
+    };
+  } catch (err: any) {
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["x-access-token"] = token;
+
+      const directResponse = await axios.get(
+        `${mainConfig.apiServer}/admin/agency/pending-agency-profile-updates?page=${page}&limit=${limit}${cacheParam}`,
+        { headers, withCredentials: false }
+      );
+
+      return {
+        success: true,
+        data: directResponse.data,
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      return {
+        success: false,
+        message: err.message || "Failed to fetch pending agency profile updates",
+        status: err.response?.status || 500,
+      };
+    }
+  }
+};
+
+// Pending Agency Profile Update - Review (approve/reject)
+export const reviewAgencyProfileUpdate = async (
+  body: { agencyId: string; approve: boolean; adminMessage?: string }
+): Promise<ApiResponse> => {
+  try {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["x-access-token"] = token;
+
+    const response = await api.post(
+      `/admin/agency/review-agency-profile-update`,
+      body,
+      { headers }
+    );
+
+    return {
+      success: response.data?.success ?? true,
+      data: response.data,
+      message: response.data?.message,
+      status: response.status,
+    };
+  } catch (err: any) {
+    // Fallback to direct Axios call if the api instance fails
+    try {
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["x-access-token"] = token;
+
+      const directResponse = await axios.post(
+        `${mainConfig.apiServer}/admin/agency/review-agency-profile-update`,
+        body,
+        { headers, withCredentials: false }
+      );
+
+      return {
+        success: directResponse.data?.success ?? true,
+        data: directResponse.data,
+        message: directResponse.data?.message,
+        status: directResponse.status,
+      };
+    } catch (fallbackErr: any) {
+      return returnError(err);
+    }
+  }
+};
+
 // --- Province ---
 export const getAdminProvinces = async (
   params: { page?: number; limit?: number; forceRefresh?: boolean } = {}
