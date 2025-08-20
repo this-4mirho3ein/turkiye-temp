@@ -5,7 +5,7 @@ import { Region } from "@/components/admin/data/regions";
 
 type RegionsTableProps = {
   regions: Region[];
-  type: "countries" | "provinces" | "cities" | "areas";
+  type:  "provinces" | "cities" | "areas";
   isLoading: boolean;
   handleEdit: (region: Region) => void;
   handleDelete: (region: Region) => void;
@@ -33,9 +33,9 @@ const RegionsTable: React.FC<RegionsTableProps> = ({
             <th className="px-6 py-3.5 text-center font-semibold">#</th>
             <th className="px-6 py-3.5 font-semibold">نام</th>
             <th className="px-6 py-3.5 font-semibold">نام انگلیسی</th>
-            {type !== "countries" && (
+          
               <th className="px-6 py-3.5 font-semibold">والد</th>
-            )}
+           
             <th className="px-6 py-3.5 text-center w-48 font-semibold">
               عملیات
             </th>
@@ -45,7 +45,7 @@ const RegionsTable: React.FC<RegionsTableProps> = ({
           {isLoading ? (
             <tr className="bg-white border-b">
               <td
-                colSpan={type !== "countries" ? 5 : 4}
+                colSpan={ 5}
                 className="px-6 py-4 text-center text-gray-500"
               >
                 <div className="flex justify-center items-center py-4">
@@ -74,9 +74,9 @@ const RegionsTable: React.FC<RegionsTableProps> = ({
                   )}
                 </td>
                 <td className="px-6 py-4">{region.enName || "-"}</td>
-                {type !== "countries" && (
+               
                   <td className="px-6 py-4">{region.parent?.name || "-"}</td>
-                )}
+                
                 <td className="px-6 py-4 text-center">
                   <div className="flex justify-center items-center gap-3">
                     {!region.isDeleted ? (
@@ -124,7 +124,7 @@ const RegionsTable: React.FC<RegionsTableProps> = ({
           ) : (
             <tr className="bg-white border-b">
               <td
-                colSpan={type !== "countries" ? 5 : 4}
+                colSpan={ 5}
                 className="px-6 py-4 text-center text-gray-500"
               >
                 هیچ موردی یافت نشد

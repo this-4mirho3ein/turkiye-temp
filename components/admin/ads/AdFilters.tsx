@@ -26,7 +26,7 @@ interface ApiFilters {
   isActive?: boolean;
   page: number;
   limit: number;
-  sortField: "createdAt" | "updatedAt" | "title" | "price";
+  sortField: "updatedAt" | "price" | "mortgage" | "rent" | "viewCount";
   sortOrder: 1 | -1;
 }
 
@@ -65,11 +65,16 @@ const AdFilters: React.FC<AdFiltersProps> = ({
 
   // Sort options
   const sortOptions = [
-    { field: "createdAt", order: -1, label: "جدیدترین" },
-    { field: "createdAt", order: 1, label: "قدیمی‌ترین" },
+    { field: "updatedAt", order: -1, label: "جدیدترین" },
+    { field: "updatedAt", order: 1, label: "قدیمی‌ترین" },
     { field: "price", order: -1, label: "گران‌ترین" },
     { field: "price", order: 1, label: "ارزان‌ترین" },
-    { field: "title", order: 1, label: "عنوان (الفبا)" },
+    { field: "mortgage", order: -1, label: "مالیاتی ترین" },
+    { field: "mortgage", order: 1, label: "مالیاتی کمترین" },
+    { field: "rent", order: -1, label: "اجاره ترین" },
+    { field: "rent", order: 1, label: "اجاره کمترین" },
+    { field: "viewCount", order: -1, label: "بیشترین بازدید" },
+    { field: "viewCount", order: 1, label: "کمترین بازدید" },
   ];
 
   // Helper to get current sort option label
@@ -101,7 +106,7 @@ const AdFilters: React.FC<AdFiltersProps> = ({
               const [field, order] = e.target.value.split("_");
               onFilterChange(
                 "sortField",
-                field as "createdAt" | "updatedAt" | "title" | "price"
+                field as "updatedAt" | "price" | "mortgage" | "rent" | "viewCount"
               );
               onFilterChange("sortOrder", parseInt(order) as 1 | -1);
             }}
@@ -144,7 +149,7 @@ const AdFilters: React.FC<AdFiltersProps> = ({
                     const [field, order] = e.target.value.split("_");
                     onFilterChange(
                       "sortField",
-                      field as "createdAt" | "updatedAt" | "title" | "price"
+                      field as "updatedAt" | "price" | "mortgage" | "rent" | "viewCount"
                     );
                     onFilterChange("sortOrder", parseInt(order) as 1 | -1);
                   }}

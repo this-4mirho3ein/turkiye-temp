@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { HiX, HiSave, HiLocationMarker } from "react-icons/hi";
+import { HiX, HiSave } from "react-icons/hi";
 import {
-  getAdminCountries,
   getAdminProvinces,
   getAdminCities,
   getAdminAreas,
@@ -41,10 +40,6 @@ interface EditAdModalProps {
       name: string;
     };
     address: {
-      country: {
-        _id: string;
-        name: string;
-      };
       province: {
         _id: string;
         name: string;
@@ -87,7 +82,6 @@ const EditAdModal: React.FC<EditAdModalProps> = ({
     propertyType: ad.propertyType?._id || "",
     category: ad.category?._id || "",
     saleOrRent: ad.saleOrRent || "sale",
-    country: ad.address?.country?._id || "",
     province: ad.address?.province?._id || "",
     city: ad.address?.city?._id || "",
     area: ad.address?.area?._id || "",
@@ -100,7 +94,6 @@ const EditAdModal: React.FC<EditAdModalProps> = ({
   });
 
   // Options for dropdowns
-  const [countries, setCountries] = useState<SelectOption[]>([]);
   const [provinces, setProvinces] = useState<SelectOption[]>([]);
   const [cities, setCities] = useState<SelectOption[]>([]);
   const [areas, setAreas] = useState<SelectOption[]>([]);
@@ -111,24 +104,16 @@ const EditAdModal: React.FC<EditAdModalProps> = ({
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const [countriesData, categoriesData, propertyTypesData] =
+        const [provincesData, categoriesData, propertyTypesData] =
           await Promise.all([
-            getAdminCountries({ limit: 100 }),
+            getAdminProvinces({ limit: 100 }),
             getAdminCategories({ limit: 100 }),
             getAdminPropertyTypes({ limit: 100 }),
           ]);
 
-        setCountries(countriesData);
+        setProvinces(provincesData);
         setCategories(categoriesData);
         setPropertyTypes(propertyTypesData);
-
-        // Load provinces for the selected country
-        if (formData.country) {
-          const provincesData = await getAdminProvinces({ limit: 100 });
-          setProvinces(
-            provincesData.filter((p: any) => p.country === formData.country)
-          );
-        }
 
         // Load cities for the selected province
         if (formData.province) {
@@ -151,27 +136,8 @@ const EditAdModal: React.FC<EditAdModalProps> = ({
     if (isOpen) {
       loadInitialData();
     }
-  }, [isOpen, formData.country, formData.province, formData.city]);
+  }, [isOpen, formData.province, formData.city]);
 
-  // Handle country change
-  const handleCountryChange = async (countryId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      country: countryId,
-      province: "",
-      city: "",
-      area: "",
-    }));
-
-    if (countryId) {
-      const provincesData = await getAdminProvinces({ limit: 100 });
-      setProvinces(provincesData.filter((p: any) => p.country === countryId));
-    } else {
-      setProvinces([]);
-    }
-    setCities([]);
-    setAreas([]);
-  };
 
   // Handle province change
   const handleProvinceChange = async (provinceId: string) => {
@@ -238,7 +204,6 @@ const EditAdModal: React.FC<EditAdModalProps> = ({
         category: formData.category,
         saleOrRent: formData.saleOrRent,
         address: {
-          country: formData.country,
           province: formData.province,
           city: formData.city,
           area: formData.area,
@@ -422,24 +387,6 @@ const EditAdModal: React.FC<EditAdModalProps> = ({
 
             {/* Location */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  کشور
-                </label>
-                <select
-                  value={formData.country}
-                  onChange={(e) => handleCountryChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">انتخاب کنید</option>
-                  {countries.map((country) => (
-                    <option key={country._id} value={country._id}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -450,7 +397,6 @@ const EditAdModal: React.FC<EditAdModalProps> = ({
                   onChange={(e) => handleProvinceChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
-                  disabled={!formData.country}
                 >
                   <option value="">انتخاب کنید</option>
                   {provinces.map((province) => (

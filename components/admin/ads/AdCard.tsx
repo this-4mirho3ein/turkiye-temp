@@ -64,10 +64,6 @@ interface Ad {
   price?: number;
   saleOrRent?: "sale" | "rent";
   address?: {
-    country?: {
-      _id: string;
-      name: string;
-    };
     province?: {
       _id: string;
       name: string;
@@ -149,10 +145,6 @@ const AdCard: React.FC<AdCardProps> = ({ ad, viewMode, onAdUpdated }) => {
         name: ad.category?.name || "",
       },
       address: {
-        country: {
-          _id: ad.address?.country?._id || "",
-          name: ad.address?.country?.name || "",
-        },
         province: {
           _id: ad.address?.province?._id || "",
           name: ad.address?.province?.name || "",

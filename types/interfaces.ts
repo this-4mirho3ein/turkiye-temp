@@ -80,6 +80,7 @@ export interface AdminFilter {
   isDeleted?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  multiSelectable?: boolean;
 }
 
 // Filter option interface for key-value pairs
@@ -99,6 +100,7 @@ export interface CreateFilterData {
   isMain?: boolean;
   row?: number;
   categories?: string[];
+  multiSelectable?: boolean;
 }
 
 export interface UpdateFilterData extends Partial<CreateFilterData> {}
@@ -138,7 +140,6 @@ export interface FilterState {
   transactionType: { title: string; slug: string };
   propertyType: { title: string; slug: string };
   category: { title: string; slug: string };
-  country: { title: string; slug: string };
   province: { title: string; slug: string };
   city: { title: string; slug: string };
   area: { title: string; slug: string };
@@ -256,7 +257,6 @@ export type SearchAdvertisement = {
   transactionType: string;
   propertyType: string;
   category: string;
-  country: string;
   province: string;
   city: PropDetail;
   area: PropDetail;
@@ -273,7 +273,6 @@ export type Property = {
   adv_type: PropDetail; //{ slug: string;title: string;}
   property_type: PropDetail;
   category: PropDetail;
-  country: LocationDetail;
   province?: LocationDetail;
   city: LocationDetail;
   neighborhood?: LocationDetail;

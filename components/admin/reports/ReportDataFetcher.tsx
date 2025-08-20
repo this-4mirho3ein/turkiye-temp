@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useApi } from "@/hooks/useApi";
+import { useEffect } from "react";
 import {
   getAdminUsers,
   getAdminCategories,
-  getAdminCountries,
   getAdminProvinces,
   getAdminCities,
   getAdminAreas,
@@ -52,7 +50,6 @@ export default function ReportDataFetcher({
   const fetchers = {
     "admin-users": getAdminUsers,
     "admin-categories": getAdminCategories,
-    "admin-countries": getAdminCountries,
     "admin-provinces": getAdminProvinces,
     "admin-cities": getAdminCities,
     "admin-areas": getAdminAreas,
@@ -92,14 +89,7 @@ export default function ReportDataFetcher({
     ...commonQueryOptions,
   });
 
-  const { data: countries = [], isLoading: countriesLoading } = useQuery<
-    any[] | ApiResponseData
-  >({
-    queryKey: ["admin-countries"],
-    queryFn: () =>
-      fetchers["admin-countries"]({ page: 1, limit: 100, forceRefresh }),
-    ...commonQueryOptions,
-  });
+
 
   const { data: provinces = [], isLoading: provincesLoading } = useQuery<
     any[] | ApiResponseData
@@ -140,7 +130,6 @@ export default function ReportDataFetcher({
   const isLoading =
     usersLoading ||
     categoriesLoading ||
-    countriesLoading ||
     provincesLoading ||
     citiesLoading ||
     areasLoading ||
@@ -177,7 +166,6 @@ export default function ReportDataFetcher({
     // Extract arrays using the helper function
     const usersArray = extractArray(users);
     const categoriesArray = extractArray(categories);
-    const countriesArray = extractArray(countries);
     const provincesArray = extractArray(provinces);
     const citiesArray = extractArray(cities);
     const areasArray = extractArray(areas);
@@ -201,9 +189,8 @@ export default function ReportDataFetcher({
       (cat: any) => cat.isDeleted
     ).length;
 
-    // Process regions data (combine countries, provinces, cities, areas)
+    // Process regions data (combine provinces, cities, areas)
     const allRegions = [
-      ...countriesArray,
       ...provincesArray,
       ...citiesArray,
       ...areasArray,
@@ -254,7 +241,6 @@ export default function ReportDataFetcher({
   }, [
     users,
     categories,
-    countries,
     provinces,
     cities,
     areas,
@@ -269,7 +255,6 @@ export default function ReportDataFetcher({
       // Invalidate all queries to trigger refetch
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-countries"] });
       queryClient.invalidateQueries({ queryKey: ["admin-provinces"] });
       queryClient.invalidateQueries({ queryKey: ["admin-cities"] });
       queryClient.invalidateQueries({ queryKey: ["admin-areas"] });

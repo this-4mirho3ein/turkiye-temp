@@ -3,7 +3,7 @@ import { Region } from "@/components/admin/data/regions";
 import { FaFilter, FaGlobe, FaMapMarkedAlt, FaCity } from "react-icons/fa";
 
 interface RegionParentFilterProps {
-  type: "countries" | "provinces" | "cities" | "areas";
+  type: "provinces" | "cities" | "areas";
   parentRegions: Region[];
   selectedParentId: string;
   onParentChange: (parentId: string) => void;
@@ -15,16 +15,10 @@ const RegionParentFilter: React.FC<RegionParentFilterProps> = ({
   selectedParentId,
   onParentChange,
 }) => {
-  // Skip for countries as they don't have parents
-  if (type === "countries" || parentRegions.length === 0) {
-    return null;
-  }
 
   // Get the appropriate label based on region type
   const getParentLabel = () => {
     switch (type) {
-      case "provinces":
-        return "کشور";
       case "cities":
         return "استان";
       case "areas":
@@ -37,8 +31,6 @@ const RegionParentFilter: React.FC<RegionParentFilterProps> = ({
   // Get the appropriate icon based on region type
   const getParentIcon = () => {
     switch (type) {
-      case "provinces":
-        return <FaGlobe className="text-blue-500" />;
       case "cities":
         return <FaMapMarkedAlt className="text-green-500" />;
       case "areas":

@@ -3,13 +3,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { z } from "zod";
 import {
-  getAdminCountries,
   getAdminProvinces,
   getAdminCities,
   getAdminAreas,
   updateAgency,
 } from "@/controllers/makeRequest";
-import mainConfig from "@/configs/mainConfig";
 import dynamic from "next/dynamic";
 
 // Dynamically import the map component to avoid SSR issues
@@ -28,7 +26,6 @@ const editAgencySchema = z.object({
   phone: z.string().min(10, "شماره تلفن باید حداقل ۱۰ رقم باشد"),
   description: z.string().min(1, "توضیحات الزامی است"),
   address: z.object({
-    country: z.string().min(1, "انتخاب کشور الزامی است"),
     province: z.string().min(1, "انتخاب استان الزامی است"),
     city: z.string().min(1, "انتخاب شهر الزامی است"),
     area: z.string().min(1, "انتخاب منطقه الزامی است"),
@@ -52,7 +49,6 @@ interface Agency {
   phone: string;
   description: string;
   address?: {
-    country?: string;
     province?: string;
     city?: string;
     area?: string;
@@ -81,7 +77,6 @@ const EditAgencyModal: React.FC<EditAgencyModalProps> = ({
     phone: "",
     description: "",
     address: {
-      country: "",
       province: "",
       city: "",
       area: "",
@@ -94,7 +89,6 @@ const EditAgencyModal: React.FC<EditAgencyModalProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [countries, setCountries] = useState<any[]>([]);
   const [provinces, setProvinces] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [areas, setAreas] = useState<any[]>([]);
@@ -115,7 +109,6 @@ const EditAgencyModal: React.FC<EditAgencyModalProps> = ({
         phone: agency.phone || "",
         description: agency.description || "",
         address: {
-          country: agency.address?.country || "",
           province: agency.address?.province || "",
           city: agency.address?.city || "",
           area: agency.address?.area || "",
@@ -130,57 +123,20 @@ const EditAgencyModal: React.FC<EditAgencyModalProps> = ({
     }
   }, [isOpen, agency]);
 
-  // Load countries on mount
-  useEffect(() => {
-    const loadCountries = async () => {
-      try {
-        const data = await getAdminCountries();
-        setCountries(data);
-      } catch (error) {
-        console.error("Error loading countries:", error);
-      }
-    };
-    if (isOpen) {
-      loadCountries();
-    }
-  }, [isOpen]);
 
-  // Load provinces when country changes
+
   useEffect(() => {
     const loadProvinces = async () => {
-      if (formData.address.country) {
         try {
           const data = await getAdminProvinces();
-
-
-          // Try different possible field names for country reference
-          const filteredProvinces = data.filter(
-            (province) =>
-              province.country === formData.address.country ||
-              province.countryId === formData.address.country ||
-              province.country?._id === formData.address.country
-          );
-
-
-          setProvinces(filteredProvinces);
+          setProvinces(data);
         } catch (error) {
           console.error("Error loading provinces:", error);
         }
-      } else {
-        setProvinces([]);
-        setFormData((prev) => ({
-          ...prev,
-          address: {
-            ...prev.address,
-            province: "",
-            city: "",
-            area: "",
-          },
-        }));
-      }
+    
     };
     loadProvinces();
-  }, [formData.address.country]);
+  }, []);
 
   // Load cities when province changes
   useEffect(() => {
@@ -421,30 +377,6 @@ const EditAgencyModal: React.FC<EditAgencyModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    کشور *
-                  </label>
-                  <select
-                    name="address.country"
-                    value={formData.address.country}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">انتخاب کشور</option>
-                    {countries.map((country) => (
-                      <option key={country._id} value={country._id}>
-                        {country.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors["address.country"] && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors["address.country"]}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     استان *
                   </label>
                   <select
@@ -452,7 +384,7 @@ const EditAgencyModal: React.FC<EditAgencyModalProps> = ({
                     value={formData.address.province}
                     onChange={handleInputChange}
                     className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    disabled={!formData.address.country}
+                    disabled={!formData.address.province}
                   >
                     <option value="">انتخاب استان</option>
                     {provinces.map((province) => (
@@ -467,9 +399,8 @@ const EditAgencyModal: React.FC<EditAgencyModalProps> = ({
                     </p>
                   )}
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+             
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     شهر *

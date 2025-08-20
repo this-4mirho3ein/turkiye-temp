@@ -727,194 +727,6 @@ export const getAdminAgencies = async (
   }
 };
 
-// --- Country ---
-export const getAdminCountries = async (
-  params: {
-    page?: number;
-    limit?: number;
-    forceRefresh?: boolean;
-    includeDeleted?: boolean;
-  } = {}
-): Promise<any[]> => {
-  const {
-    page = 1,
-    limit = 100,
-    forceRefresh = false,
-    includeDeleted = true,
-  } = params;
-
-  // Add cache-busting parameter if forceRefresh is true
-  const cacheParam = forceRefresh ? `&_t=${Date.now()}` : "";
-
-  // Add parameter to include deleted items
-  const deletedParam = includeDeleted ? "&isDeleted=true" : "";
-
-  try {
-    // Don't add isDeleted param, we want all countries (deleted and non-deleted)
-    const apiUrl = `/admin/country/get-countries?page=${page}&limit=${limit}${cacheParam}`;
-
-    const response = await api.get(apiUrl);
-    
-    // Handle different possible response structures
-    let data = [];
-    if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
-      // Most likely structure
-      data = response.data.data.data;
-    } else if (response.data?.data && Array.isArray(response.data.data)) {
-      // Alternative structure
-      data = response.data.data;
-    } else if (Array.isArray(response.data)) {
-      // Direct array response
-      data = response.data;
-    }
-    return data || [];
-  } catch (err) {
-    // Fallback to direct Axios call if the api instance fails
-    try {
-      const directResponse = await axios.get(
-        `${mainConfig.apiServer}/admin/country/get-countries?page=${page}&limit=${limit}${cacheParam}`,
-        {
-          withCredentials: false,
-        }
-      );
-      // Handle different possible response structures
-      let directData = [];
-      if (
-        directResponse.data?.data?.data &&
-        Array.isArray(directResponse.data.data.data)
-      ) {
-        // Most likely structure
-        directData = directResponse.data.data.data;
-      } else if (
-        directResponse.data?.data &&
-        Array.isArray(directResponse.data.data)
-      ) {
-        // Alternative structure
-        directData = directResponse.data.data;
-      } else if (Array.isArray(directResponse.data)) {
-        // Direct array response
-        directData = directResponse.data;
-      }
-      return directData || [];
-    } catch (fallbackErr) {
-      return [];
-    }
-  }
-};
-
-export const createAdminCountry = async (data: {
-  name: string;
-  slug: string;
-  enName?: string;
-  code?: string;
-  phoneCode: string;
-}): Promise<ApiResponse> => {
-  try {
-    const response = await api.post(`/admin/country/create`, data);
-    return {
-      success: response.data.success,
-      message: response.data?.message || "کشور با موفقیت ایجاد شد",
-      data: response.data?.data,
-    };
-  } catch (err: any) {
-    // Fallback to direct Axios call if the api instance fails
-    try {
-      const directResponse = await axios.post(
-        `${mainConfig.apiServer}/admin/country/create`,
-        data,
-        {
-          withCredentials: false,
-        }
-      );
-
-      return {
-        success: directResponse.data.success,
-        message: directResponse.data?.message || "کشور با موفقیت ایجاد شد",
-        data: directResponse.data?.data,
-      };
-    } catch (fallbackErr: any) {
-      return {
-        success: false,
-        message: err.response?.data?.message || "ایجاد کشور با خطا مواجه شد",
-      };
-    }
-  }
-};
-
-export const updateAdminCountry = async (
-  id: string,
-  data: {
-    name: string;
-    slug: string;
-    enName?: string;
-    code?: string;
-    phoneCode: string;
-  }
-): Promise<ApiResponse> => {
-  try {
-    const response = await api.put(`/admin/country/update/${id}`, data);
-    return {
-      success: response.data.success,
-      message: response.data?.message || "کشور با موفقیت به‌روزرسانی شد",
-      data: response.data?.data,
-    };
-  } catch (err: any) {
-    // Fallback to direct Axios call if the api instance fails
-    try {
-      const directResponse = await axios.put(
-        `${mainConfig.apiServer}/admin/country/update/${id}`,
-        data,
-        {
-          withCredentials: false,
-        }
-      );
-
-      return {
-        success: directResponse.data.success,
-        message:
-          directResponse.data?.message || "کشور با موفقیت به‌روزرسانی شد",
-        data: directResponse.data?.data,
-      };
-    } catch (fallbackErr: any) {
-      return {
-        success: false,
-        message:
-          err.response?.data?.message || "به‌روزرسانی کشور با خطا مواجه شد",
-      };
-    }
-  }
-};
-
-export const deleteAdminCountry = async (id: string): Promise<ApiResponse> => {
-  try {
-    const response = await api.delete(`/admin/country/delete/${id}`);
-    return {
-      success: response.data.success,
-      message: response.data?.message || "کشور با موفقیت حذف شد",
-    };
-  } catch (err: any) {
-    // Fallback to direct Axios call if the api instance fails
-    try {
-      const directResponse = await axios.delete(
-        `${mainConfig.apiServer}/admin/country/delete/${id}`,
-        {
-          withCredentials: false,
-        }
-      );
-
-      return {
-        success: directResponse.data.success,
-        message: directResponse.data?.message || "کشور با موفقیت حذف شد",
-      };
-    } catch (fallbackErr: any) {
-      return {
-        success: false,
-        message: err.response?.data?.message || "حذف کشور با خطا مواجه شد",
-      };
-    }
-  }
-};
-
 // --- Province ---
 export const getAdminProvinces = async (
   params: { page?: number; limit?: number; forceRefresh?: boolean } = {}
@@ -2759,6 +2571,7 @@ export const createAdminFilter = async (
       isRequired: data.isRequired || false,
       isMain: data.isMain || false,
       row: data.row || 0,
+      multiSelectable: data.multiSelectable || false,
     };
 
     console.log(
@@ -2819,6 +2632,7 @@ export const createAdminFilter = async (
         options: data.options || [],
         isRequired: data.isRequired || false,
         isMain: data.isMain || false,
+        multiSelectable: data.multiSelectable || false,
         row: data.row || 0,
       };
 
@@ -2871,6 +2685,7 @@ export const updateAdminFilter = async (
       isRequired: data.isRequired || false,
       isMain: data.isMain || false,
       row: data.row || 0,
+      multiSelectable: data.multiSelectable || false,
     };
 
     console.log(
@@ -2936,6 +2751,7 @@ export const updateAdminFilter = async (
         isRequired: data.isRequired || false,
         isMain: data.isMain || false,
         row: data.row || 0,
+        multiSelectable: data.multiSelectable || false,
       };
 
       const directResponse = await axios.put(
@@ -3265,7 +3081,6 @@ export const createAgency = async (agencyData: {
   description: string;
   agencyOwnerId: string;
   address: {
-    country: string;
     province: string;
     city: string;
     area: string;
@@ -3463,7 +3278,6 @@ export const updateAgency = async (
     phone: string;
     description: string;
     address: {
-      country: string;
       province: string;
       city: string;
       area: string;
@@ -3898,7 +3712,6 @@ export const updateAdminAd = async (
     category?: string;
     saleOrRent: "sale" | "rent";
     address: {
-      country: string;
       province: string;
       city: string;
       area: string;

@@ -30,7 +30,7 @@ export default function PhoneInputComponent({
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
-  const [countryCode, setCountryCode] = useState("98"); // Default country code for Iran
+  const [countryCode] = useState("98"); // Default country code for Iran
 
   const validatePhone = (value: string) => {
     try {

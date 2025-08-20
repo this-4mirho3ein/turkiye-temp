@@ -15,7 +15,6 @@ import RegionsList from "./RegionsList";
 import { Region } from "@/components/admin/data/regions";
 import { useApi } from "@/hooks/useApi";
 import {
-  getAdminCountries,
   getAdminProvinces,
   getAdminCities,
   getAdminAreas,
@@ -44,15 +43,6 @@ interface ApiRegion {
   enName?: string;
   code?: string;
   phoneCode?: string;
-  country?:
-    | string
-    | {
-        _id: string;
-        name: string;
-        enName?: string;
-        code?: string;
-        [key: string]: any;
-      }; // Can be ID or full object
   province?:
     | string
     | {
@@ -74,7 +64,6 @@ interface ApiRegion {
 }
 
 const fetchers = {
-  "admin-countries": getAdminCountries,
   "admin-provinces": getAdminProvinces,
   "admin-cities": getAdminCities,
   "admin-areas": getAdminAreas,
@@ -100,23 +89,20 @@ const createNumericId = (stringId: string): number => {
 
 // Inner component that uses React Query hooks
 function RegionsPageClientInner() {
-  const [selectedTab, setSelectedTab] = useState("countries");
+  const [selectedTab, setSelectedTab] = useState("provinces");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const queryClient = useQueryClient();
   const [showDeletedItems, setShowDeletedItems] = useState(false);
 
   // Function to force refresh all data
   const refreshAllData = useCallback(async () => {
-
     // Invalidate all region caches
-    await queryClient.invalidateQueries({ queryKey: ["admin-countries"] });
     await queryClient.invalidateQueries({ queryKey: ["admin-provinces"] });
     await queryClient.invalidateQueries({ queryKey: ["admin-cities"] });
     await queryClient.invalidateQueries({ queryKey: ["admin-areas"] });
 
     // Also try direct API calls with force refresh
     try {
-      await getAdminCountries({ forceRefresh: true });
       await getAdminProvinces({ forceRefresh: true });
       await getAdminCities({ forceRefresh: true });
       await getAdminAreas({ forceRefresh: true });
@@ -126,21 +112,7 @@ function RegionsPageClientInner() {
 
     // Increment refresh trigger to cause re-render
     setRefreshTrigger((prev) => prev + 1);
-
   }, [queryClient]);
-
-  // Fetch and cache all data on first load with useApi hook
-  const {
-    data: countriesData = [],
-    isLoading: isCountriesLoading,
-    error: countriesError,
-    refetch: refetchCountries,
-  } = useApi<ApiRegion[]>(
-    "admin-countries",
-    fetchers,
-    { page: 1, limit: 100, forceRefresh: refreshTrigger > 0 },
-    true
-  );
 
   const {
     data: provincesData = [],
@@ -180,9 +152,6 @@ function RegionsPageClientInner() {
 
   // Log any errors or data issues
   useEffect(() => {
-    if (countriesError) {
-      console.error("Error fetching countries:", countriesError);
-    }
     if (provincesError) {
       console.error("Error fetching provinces:", provincesError);
     }
@@ -193,11 +162,9 @@ function RegionsPageClientInner() {
       console.error("Error fetching areas:", areasError);
     }
   }, [
-    countriesData,
     provincesData,
     citiesData,
     areasData,
-    countriesError,
     provincesError,
     citiesError,
     areasError,
@@ -206,11 +173,7 @@ function RegionsPageClientInner() {
 
   // Convert API response to match Region interface
   const mapToRegions = (items: ApiRegion[] = [], type?: string): Region[] => {
-
-
     return items.map((item) => {
-
-
       const result: Region = {
         id: createNumericId(item._id), // Create stable numeric ID
         name: item.name,
@@ -228,10 +191,7 @@ function RegionsPageClientInner() {
         try {
           let parentData: ApiRegion[] = [];
 
-          // Get the appropriate parent data based on current type
-          if (parentType === "countries") {
-            parentData = countriesData || [];
-          } else if (parentType === "provinces") {
+          if (parentType === "provinces") {
             parentData = provincesData || [];
           } else if (parentType === "cities") {
             parentData = citiesData || [];
@@ -246,31 +206,7 @@ function RegionsPageClientInner() {
         }
       };
 
-      // Handle parent info based on region type
-      if (type === "provinces") {
-        // For provinces, the parent is the country field
-        if (item.country) {
-          if (typeof item.country === "object" && item.country._id) {
-            // Country is a full object
-            result.parent = {
-              id: createNumericId(item.country._id.toString()),
-              name: item.country.name || "",
-              originalId: item.country._id.toString(),
-            };
-          } else if (typeof item.country === "string") {
-            // Country is just an ID, look it up
-            const parentName = getParentNameById(
-              item.country.toString(),
-              "countries"
-            );
-            result.parent = {
-              id: createNumericId(item.country.toString()),
-              name: parentName,
-              originalId: item.country.toString(),
-            };
-          }
-        }
-      } else if (type === "cities") {
+      if (type === "cities") {
         // For cities, the parent is the province object (full object included in response)
         if (item.province) {
           if (typeof item.province === "object" && item.province._id) {
@@ -314,43 +250,14 @@ function RegionsPageClientInner() {
         }
       }
 
-      // Add type-specific properties for countries
-      if (type === "countries" || !type) {
-        result.code = item.code || "";
-        result.phoneCode = item.phoneCode || "";
-      }
-
       return result;
     });
   };
 
-  // Calculate the final data to use
-  const mappedCountries = useMemo(() => {
-    if (countriesData && countriesData.length > 0) {
-
-
-      // Find any deleted items
-      const rawDeletedItems = countriesData.filter(
-        (item) => item.isDeleted === true
-      );
-
-
-      const mapped = mapToRegions(countriesData, "countries");
-
-      // Check if deleted items are preserved in mapped data
-      const mappedDeletedItems = mapped.filter(
-        (item) => item.isDeleted === true
-      );
-      
-
-      return mapped;
-    }
-    return [];
-  }, [countriesData]);
 
   const mappedProvinces = useMemo(
     () => mapToRegions(provincesData, "provinces"),
-    [provincesData, countriesData]
+    [provincesData]
   );
 
   const mappedCities = useMemo(
@@ -367,9 +274,6 @@ function RegionsPageClientInner() {
   useEffect(() => {
     const refetchCurrentTabData = async () => {
       switch (selectedTab) {
-        case "countries":
-          await refetchCountries();
-          break;
         case "provinces":
           await refetchProvinces();
           break;
@@ -383,22 +287,8 @@ function RegionsPageClientInner() {
     };
 
     refetchCurrentTabData();
-  }, [
-    selectedTab,
-    refetchCountries,
-    refetchProvinces,
-    refetchCities,
-    refetchAreas,
-  ]);
+  }, [selectedTab, refetchProvinces, refetchCities, refetchAreas]);
 
-  // For countries
-  const totalCountriesCount = countriesData.length;
-  const activeCountriesCount = countriesData.filter(
-    (item) => !item.isDeleted
-  ).length;
-  const deletedCountriesCount = countriesData.filter(
-    (item) => item.isDeleted
-  ).length;
 
   // For provinces
   const totalProvincesCount = provincesData.length;
@@ -422,12 +312,6 @@ function RegionsPageClientInner() {
   // Get the current tab stats
   const getCurrentTabStats = () => {
     switch (selectedTab) {
-      case "countries":
-        return {
-          total: totalCountriesCount,
-          active: activeCountriesCount,
-          deleted: deletedCountriesCount,
-        };
       case "provinces":
         return {
           total: totalProvincesCount,
@@ -495,33 +379,7 @@ function RegionsPageClientInner() {
           onSelectionChange={(key) => setSelectedTab(key as string)}
           className="bg-white rounded-lg shadow-sm p-4"
         >
-          <Tab
-            key="countries"
-            title={
-              <div className="flex items-center gap-2">
-                <FaGlobe />
-                <span>کشورها</span>
-                {deletedCountriesCount > 0 && showDeletedItems && (
-                  <span className="bg-red-100 text-red-800 text-xs px-1.5 py-0.5 rounded-full">
-                    {deletedCountriesCount}
-                  </span>
-                )}
-              </div>
-            }
-          >
-            <Card shadow="sm" className="mt-4">
-              <CardBody>
-                <RegionsList
-                  type="countries"
-                  initialRegions={mappedCountries}
-                  parentRegions={[]}
-                  isLoading={isCountriesLoading}
-                  onDataChange={refreshAllData}
-                  showDeletedItems={showDeletedItems}
-                />
-              </CardBody>
-            </Card>
-          </Tab>
+        
           <Tab
             key="provinces"
             title={
@@ -541,7 +399,7 @@ function RegionsPageClientInner() {
                 <RegionsList
                   type="provinces"
                   initialRegions={mappedProvinces}
-                  parentRegions={mappedCountries}
+                  parentRegions={[]}
                   isLoading={isProvincesLoading}
                   onDataChange={refreshAllData}
                   showDeletedItems={showDeletedItems}

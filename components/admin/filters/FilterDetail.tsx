@@ -215,6 +215,13 @@ const FilterDetail: React.FC<FilterDetailProps> = ({ filterId }) => {
                   </span>
                 )}
 
+                {filter.multiSelectable && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                    <List className="h-3 w-3 ml-1" />
+                    چندگزینه ای
+                  </span>
+                )}
+
                 {filter.isRequired && (
                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
                     اجباری

@@ -12,7 +12,6 @@ import {
   Select,
   SelectItem,
   Checkbox,
-  Chip,
   Divider,
 } from "@heroui/react";
 import { AdminFilter, FilterOption } from "@/types/interfaces";
@@ -46,6 +45,7 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
     isMain: false,
     row: 0,
     categories: [],
+    multiSelectable: false,
   });
 
   const [newOption, setNewOption] = useState({ label: "", value: "" });
@@ -86,6 +86,7 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
           isMain: filter.isMain || false,
           row: filter.row || 0,
           categories: filter.categories || [],
+          multiSelectable: filter.multiSelectable || false,
         });
       } else {
         setFormData({
@@ -99,6 +100,7 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
           isMain: false,
           row: 0,
           categories: [],
+          multiSelectable: false,
         });
       }
       setNewOption({ label: "", value: "" });
@@ -136,14 +138,6 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
         prev.options?.filter(
           (option) => option.value !== optionToRemove.value
         ) || [],
-    }));
-  };
-
-  const handleCategoryChange = (value: string) => {
-    const selectedKeys = new Set([value]);
-    setFormData((prev) => ({
-      ...prev,
-      categories: Array.from(selectedKeys),
     }));
   };
 
@@ -348,6 +342,16 @@ const FilterFormModal: React.FC<FilterFormModalProps> = ({
                       className="text-right"
                     >
                       <span className="text-sm font-medium">فیلتر اجباری</span>
+                    </Checkbox>
+                    <Checkbox
+                      isSelected={formData.multiSelectable || false}
+                      onValueChange={(checked) =>
+                        handleInputChange("multiSelectable", checked)
+                      }
+                      color="warning"
+                      className="text-right"
+                    >
+                      <span className="text-sm font-medium">فیلتر چندگزینه ای</span>
                     </Checkbox>
 
                     <Checkbox

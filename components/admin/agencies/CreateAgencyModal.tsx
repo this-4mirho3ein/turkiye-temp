@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import {
-  getAdminCountries,
   getAdminProvinces,
   getAdminCities,
   getAdminAreas,
@@ -31,7 +30,6 @@ const createAgencySchema = z.object({
   description: z.string().min(1, "توضیحات الزامی است"),
   agencyOwnerId: z.string().min(1, "شناسه مالک آژانس الزامی است"),
   address: z.object({
-    country: z.string().min(1, "انتخاب کشور الزامی است"),
     province: z.string().min(1, "انتخاب استان الزامی است"),
     city: z.string().min(1, "انتخاب شهر الزامی است"),
     area: z.string().min(1, "انتخاب منطقه الزامی است"),
@@ -69,7 +67,6 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
     description: "",
     agencyOwnerId: "",
     address: {
-      country: "",
       province: "",
       city: "",
       area: "",
@@ -85,7 +82,6 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [countries, setCountries] = useState<any[]>([]);
   const [provinces, setProvinces] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [areas, setAreas] = useState<any[]>([]);
@@ -101,57 +97,18 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
     isUploading: false,
   });
 
-  // Load countries on mount
-  useEffect(() => {
-    const loadCountries = async () => {
-      try {
-        const data = await getAdminCountries();
-        setCountries(data);
-      } catch (error) {
-        console.error("Error loading countries:", error);
-      }
-    };
-    if (isOpen) {
-      loadCountries();
-    }
-  }, [isOpen]);
-
-  // Load provinces when country changes
   useEffect(() => {
     const loadProvinces = async () => {
-      if (formData.address.country) {
-        try {
-          const data = await getAdminProvinces();
+      try {
+        const data = await getAdminProvinces();
 
-
-          // Try different possible field names for country reference
-          const filteredProvinces = data.filter(
-            (province) =>
-              province.country === formData.address.country ||
-              province.countryId === formData.address.country ||
-              province.country?._id === formData.address.country
-          );
-
-
-          setProvinces(filteredProvinces);
-        } catch (error) {
-          console.error("Error loading provinces:", error);
-        }
-      } else {
-        setProvinces([]);
-        setFormData((prev) => ({
-          ...prev,
-          address: {
-            ...prev.address,
-            province: "",
-            city: "",
-            area: "",
-          },
-        }));
+        setProvinces(data);
+      } catch (error) {
+        console.error("Error loading provinces:", error);
       }
     };
     loadProvinces();
-  }, [formData.address.country]);
+  }, []);
 
   // Load cities when province changes
   useEffect(() => {
@@ -160,7 +117,6 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
         try {
           const data = await getAdminCities();
 
-
           // Try different possible field names for province reference
           const filteredCities = data.filter(
             (city) =>
@@ -168,7 +124,6 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
               city.provinceId === formData.address.province ||
               city.province?._id === formData.address.province
           );
-
 
           setCities(filteredCities);
         } catch (error) {
@@ -196,12 +151,8 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
         try {
           const data = await getAdminAreas();
 
-
-
-
           // Try different possible field names for city reference
           const filteredAreas = data.filter((area) => {
-           
             return (
               area.city === formData.address.city ||
               area.cityId === formData.address.city ||
@@ -210,7 +161,6 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
                 area.city?._id === formData.address.city)
             );
           });
-
 
           setAreas(filteredAreas);
         } catch (error) {
@@ -370,7 +320,6 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
 
       // Clear any previous errors
       setErrors((prev) => ({ ...prev, logoFileName: "" }));
-
     } catch (error: any) {
       console.error("❌ Logo upload failed:", error);
       setErrors((prev) => ({
@@ -394,7 +343,6 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
   };
 
   const handleMapClick = (coordinates: [number, number]) => {
-
     setFormData((prev) => ({
       ...prev,
       address: {
@@ -458,7 +406,6 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
           description: "",
           agencyOwnerId: "",
           address: {
-            country: "",
             province: "",
             city: "",
             area: "",
@@ -587,29 +534,7 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
               <h3 className="text-lg font-semibold mb-4">اطلاعات مکانی</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    کشور *
-                  </label>
-                  <select
-                    name="address.country"
-                    value={formData.address.country}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">انتخاب کشور</option>
-                    {countries.map((country) => (
-                      <option key={country._id} value={country._id}>
-                        {country.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors["address.country"] && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors["address.country"]}
-                    </p>
-                  )}
-                </div>
+                
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -619,7 +544,6 @@ const CreateAgencyModal: React.FC<CreateAgencyModalProps> = ({
                     name="address.province"
                     value={formData.address.province}
                     onChange={handleInputChange}
-                    disabled={!formData.address.country}
                     className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
                   >
                     <option value="">انتخاب استان</option>

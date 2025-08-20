@@ -24,7 +24,6 @@ import { deleteAgency, confirmAgency } from "@/controllers/makeRequest";
 import mainConfig from "@/configs/mainConfig";
 
 interface AgencyAddress {
-  country?: string | { _id: string; name: string };
   province?: string | { _id: string; name: string };
   city?: string | { _id: string; name: string };
   area?: string | { _id: string; name: string };

@@ -57,10 +57,6 @@ interface Ad {
   price?: number;
   saleOrRent: "sale" | "rent";
   address: {
-    country: {
-      _id: string;
-      name: string;
-    };
     province: {
       _id: string;
       name: string;
@@ -89,7 +85,7 @@ interface ApiFilters {
   isActive?: boolean;
   page: number;
   limit: number;
-  sortField: "createdAt" | "updatedAt" | "title" | "price";
+  sortField: "updatedAt" | "price" | "mortgage" | "rent" | "viewCount";
   sortOrder: 1 | -1;
 }
 
@@ -106,7 +102,7 @@ const AdsPageClient: React.FC = () => {
   const [filters, setFilters] = useState<ApiFilters>({
     page: 1,
     limit: 12,
-    sortField: "createdAt",
+    sortField: "updatedAt",
     sortOrder: -1,
   });
 
@@ -233,7 +229,7 @@ const AdsPageClient: React.FC = () => {
     setFilters({
       page: 1,
       limit: 12,
-      sortField: "createdAt",
+      sortField: "updatedAt",
       sortOrder: -1,
     });
   };

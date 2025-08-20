@@ -44,7 +44,6 @@ interface Agency {
     fileName: string;
   };
   address?: {
-    country?: string;
     province?: string;
     city?: string;
     area?: string;

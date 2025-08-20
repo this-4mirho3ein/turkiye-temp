@@ -58,10 +58,6 @@ interface AdDetails {
     name?: string;
   };
   address?: {
-    country?: {
-      _id: string;
-      name: string;
-    };
     province?: {
       _id: string;
       name: string;
@@ -138,11 +134,6 @@ const AdDetailsPageClient: React.FC<AdDetailsPageClientProps> = ({ id }) => {
 
         // Ensure address fields are properly structured
         if (adData.address) {
-          // Make sure each location field has at least an empty object if missing
-          adData.address.country = adData.address.country || {
-            _id: "",
-            name: "",
-          };
           adData.address.province = adData.address.province || {
             _id: "",
             name: "",
@@ -156,7 +147,6 @@ const AdDetailsPageClient: React.FC<AdDetailsPageClientProps> = ({ id }) => {
         } else {
           // Create a default address structure if missing
           adData.address = {
-            country: { _id: "", name: "" },
             province: { _id: "", name: "" },
             city: { _id: "", name: "" },
             area: { _id: "", name: "" },
@@ -579,14 +569,6 @@ const AdDetailsPageClient: React.FC<AdDetailsPageClientProps> = ({ id }) => {
                     {ad.category?.name || "نامشخص"}
                   </span>
                 </div>
-                {ad.address?.country?.name && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-600">کشور:</span>
-                    <span className="font-medium">
-                      {ad.address.country.name}
-                    </span>
-                  </div>
-                )}
                 {ad.address?.province?.name && (
                   <div className="flex items-center gap-2">
                     <span className="text-gray-600">استان:</span>
@@ -827,10 +809,6 @@ const AdDetailsPageClient: React.FC<AdDetailsPageClientProps> = ({ id }) => {
             },
             saleOrRent: ad.saleOrRent || "sale",
             address: {
-              country: {
-                _id: ad.address?.country?._id || "",
-                name: ad.address?.country?.name || "",
-              },
               province: {
                 _id: ad.address?.province?._id || "",
                 name: ad.address?.province?.name || "",

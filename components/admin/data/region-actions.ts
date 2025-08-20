@@ -4,7 +4,7 @@ import sampleRegions, { Region } from "./regions";
 
 // Server action to get regions by type
 export async function getRegionsByType(
-  type: "countries" | "provinces" | "cities" | "areas"
+  type:  "provinces" | "cities" | "areas"
 ): Promise<Region[]> {
   // In a real app, this would fetch from a database
   return sampleRegions[type] || [];
@@ -12,7 +12,7 @@ export async function getRegionsByType(
 
 // Server action to filter regions by search term
 export async function filterRegions(
-  type: "countries" | "provinces" | "cities" | "areas",
+  type:  "provinces" | "cities" | "areas",
   searchTerm: string = ""
 ): Promise<Region[]> {
   const regions = sampleRegions[type] || [];
@@ -31,7 +31,7 @@ export async function filterRegions(
 
 // Mock add/update/delete functions for regions
 export async function addRegion(
-  type: "countries" | "provinces" | "cities" | "areas",
+  type:  "provinces" | "cities" | "areas",
   regionData: Omit<Region, "id">
 ): Promise<Region> {
   // In real app, this would be a database insert operation
@@ -49,7 +49,7 @@ export async function addRegion(
 }
 
 export async function updateRegion(
-  type: "countries" | "provinces" | "cities" | "areas",
+  type: "provinces" | "cities" | "areas",
   regionData: Region
 ): Promise<Region> {
   // In real app, this would be a database update operation
@@ -66,7 +66,7 @@ export async function updateRegion(
 }
 
 export async function deleteRegion(
-  type: "countries" | "provinces" | "cities" | "areas",
+  type:  "provinces" | "cities" | "areas",
   id: number
 ): Promise<boolean> {
   // In real app, this would be a database delete operation

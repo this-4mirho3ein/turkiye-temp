@@ -28,7 +28,7 @@ type RegionFormModalProps = {
   onInputChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => void;
-  type: "countries" | "provinces" | "cities" | "areas";
+  type: "provinces" | "cities" | "areas";
   typeTitle: string;
   parentRegions: Region[];
   selectedRegion: Region | null;
@@ -64,8 +64,6 @@ const itemVariants = {
 // Function to get the appropriate icon based on region type
 const getRegionTypeIcon = (type: string) => {
   switch (type) {
-    case "countries":
-      return FaGlobe;
     case "provinces":
       return FaMapMarkedAlt;
     case "cities":
@@ -162,9 +160,7 @@ const RegionFormModal: React.FC<RegionFormModalProps> = ({
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     نام انگلیسی به حروف لاتین (مانند:{" "}
-                    {type === "countries"
-                      ? "Iran"
-                      : type === "provinces"
+                    {type === "provinces"
                       ? "East Azerbaijan"
                       : type === "cities"
                       ? "Tehran"
@@ -173,32 +169,12 @@ const RegionFormModal: React.FC<RegionFormModalProps> = ({
                   </p>
                 </motion.div>
 
-                {type === "countries" && (
-                  <motion.div variants={itemVariants}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      کد تلفن (Phone Code) <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      name="phoneCode"
-                      placeholder="کد تلفن کشور را وارد کنید (مثال: 98)"
-                      value={formData.phoneCode}
-                      onChange={onInputChange}
-                      disabled={isLoading}
-                      required
-                      className="w-full"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      کد تلفن کشور بدون + وارد شود (مثال: برای ایران 98)
-                    </p>
-                  </motion.div>
-                )}
 
-                {type !== "countries" && (
+          
                   <motion.div variants={itemVariants}>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {type === "provinces"
-                        ? "کشور"
-                        : type === "cities"
+                      {
+                        type === "cities"
                         ? "استان"
                         : "شهر"}{" "}
                       <span className="text-red-500">*</span>
@@ -222,7 +198,7 @@ const RegionFormModal: React.FC<RegionFormModalProps> = ({
                       ))}
                     </select>
                   </motion.div>
-                )}
+                
 
                 <motion.div variants={itemVariants} className="col-span-1 md:col-span-2">
                   <div className="p-3 bg-gray-100 rounded-md border border-gray-200">

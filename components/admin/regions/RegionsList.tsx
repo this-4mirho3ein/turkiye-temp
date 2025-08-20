@@ -5,17 +5,10 @@ import {
   FaExclamationTriangle,
   FaCheck,
   FaTrash,
-  FaGlobe,
-  FaMapMarkedAlt,
-  FaCity,
-  FaMapPin,
 } from "react-icons/fa";
 import { Modal, useDisclosure, addToast } from "@heroui/react";
 import { Region } from "@/components/admin/data/regions";
 import {
-  createAdminCountry,
-  updateAdminCountry,
-  deleteAdminCountry,
   createAdminProvince,
   updateAdminProvince,
   deleteAdminProvince,
@@ -25,10 +18,6 @@ import {
   createAdminArea,
   updateAdminArea,
   deleteAdminArea,
-  getAdminCountries,
-  getAdminProvinces,
-  getAdminCities,
-  getAdminAreas,
 } from "@/controllers/makeRequest";
 import { useQueryClient } from "@tanstack/react-query";
 import RegionSearchBar from "./RegionSearchBar";
@@ -38,7 +27,7 @@ import DeleteRegionModal from "./DeleteRegionModal";
 import RegionParentFilter from "./RegionParentFilter";
 
 interface RegionsListProps {
-  type: "countries" | "provinces" | "cities" | "areas";
+  type: "provinces" | "cities" | "areas";
   initialRegions: Region[];
   parentRegions: Region[];
   isLoading?: boolean;
@@ -71,11 +60,6 @@ export default function RegionsList({
 
   // Set the API action based on region type
   const apiActions = {
-    countries: {
-      create: createAdminCountry,
-      update: updateAdminCountry,
-      delete: deleteAdminCountry,
-    },
     provinces: {
       create: createAdminProvince,
       update: updateAdminProvince,
@@ -152,15 +136,6 @@ export default function RegionsList({
     // Apply parent filter based on region type
     if (selectedParentId && selectedParentId !== "") {
       switch (type) {
-        case "provinces": {
-          // For provinces, filter by country ID
-          // The country field in the API response contains the country ID
-          const countryId = region.parent?.originalId;
-          if (!countryId || countryId !== selectedParentId) {
-            return false;
-          }
-          break;
-        }
         case "cities": {
           // For cities, filter by province ID
           // The province field in the API response contains the province ID
@@ -190,19 +165,6 @@ export default function RegionsList({
     return true;
   });
 
-
-
-  // Log if we have any deleted items for debugging
-  const deletedCount = regions.filter(
-    (region) => region.isDeleted === true
-  ).length;
-  const filteredDeletedCount = filteredRegions.filter(
-    (region) => region.isDeleted === true
-  ).length;
-
-
-
-  // Generate a random code for countries (numeric)
   const generateRandomCode = (): string => {
     // Generate a random number between 10 and 999
     return Math.floor(Math.random() * 990 + 10).toString();
@@ -239,7 +201,6 @@ export default function RegionsList({
       // Auto-generate slug from English name for all types
       if (name === "enName" && value) {
         newFormData.slug = generateSlugFromEnglishName(value);
-
       }
 
       return newFormData;
@@ -316,23 +277,12 @@ export default function RegionsList({
       return;
     }
 
-    // For countries, check if phoneCode is provided
-    if (type === "countries" && !formData.phoneCode) {
-      addToast({
-        title: "خطا",
-        description: "لطفاً کد تلفن کشور را نیز وارد کنید",
-        color: "danger",
-        icon: <FaExclamationTriangle />,
-      });
-      return;
-    }
-
     // For other region types, check if a parent is selected
-    if (type !== "countries" && !formData.parentId) {
+    if (type !== "provinces" && !formData.parentId) {
       addToast({
         title: "خطا",
         description: `لطفاً ${
-          type === "provinces" ? "کشور" : type === "cities" ? "استان" : "شهر"
+          type === "cities" ? "استان" : "شهر"
         } مربوطه را انتخاب کنید`,
         color: "danger",
         icon: <FaExclamationTriangle />,
@@ -345,36 +295,35 @@ export default function RegionsList({
     try {
       let response;
 
-      if (type === "countries") {
+      if (type === "provinces") {
         // Ensure slug is generated from English name
         const slug = generateSlugFromEnglishName(formData.enName);
 
-        // For countries, directly use the typed object for API
-        const countryData = {
+        // For provinces, directly use the typed object for API
+        const provinceData = {
           name: formData.name,
           slug: slug,
           enName: formData.enName || formData.name,
           code: generateRandomCode(), // Always generate random code
-          phoneCode: formData.phoneCode,
         };
 
         if (selectedRegion) {
-          // Update country
-          const updateAction = apiActions.countries.update;
+          // Update province
+          const updateAction = apiActions.provinces.update;
           // Use originalId if available, otherwise use numeric ID converted to string
           const regionId =
             selectedRegion.originalId || selectedRegion.id.toString();
 
           // For updates, use the existing code if available
           if (selectedRegion.code) {
-            countryData.code = selectedRegion.code;
+            provinceData.code = selectedRegion.code;
           }
 
-          response = await updateAction(regionId, countryData);
+          response = await updateAction(regionId, provinceData);
         } else {
-          // Create country - always generate a random code for new countries
-          const createAction = apiActions.countries.create;
-          response = await createAction(countryData);
+          // Create province - always generate a random code for new provinces
+          const createAction = apiActions.provinces.create;
+          response = await createAction(provinceData);
         }
       } else {
         // For provinces, cities, and areas
@@ -382,12 +331,7 @@ export default function RegionsList({
         const code = generateRandomCode();
 
         // Get the parent key name based on the type
-        const parentKey =
-          type === "provinces"
-            ? "country"
-            : type === "cities"
-            ? "province"
-            : "city";
+        const parentKey = type === "cities" ? "province" : "city";
 
         // Ensure slug is generated from English name
         const slug = generateSlugFromEnglishName(formData.enName);
@@ -432,8 +376,8 @@ export default function RegionsList({
         await invalidateCache();
 
         // Show a success toast with the API message if available
-        if (type === "countries" && !selectedRegion && response.data) {
-          // For newly created countries, show the auto-generated code
+        if (type === "provinces" && !selectedRegion && response.data) {
+          // For newly created provinces, show the auto-generated code
           addToast({
             title: "ایجاد موفقیت‌آمیز",
             description: `${formData.name} با موفقیت اضافه شد. (کد: ${response.data.code})`,
@@ -497,12 +441,12 @@ export default function RegionsList({
                         name: apiData.name || formData.name,
                         slug: apiData.slug || formData.slug,
                         originalId: apiData._id || region.originalId,
-                        ...(type === "countries" && {
+                        ...(type === "provinces" && {
                           enName: apiData.enName || formData.enName,
                           code: apiData.code || formData.code,
                           phoneCode: apiData.phoneCode || formData.phoneCode,
                         }),
-                        ...(formData.parentId && type !== "countries"
+                        ...(formData.parentId && type !== "provinces"
                           ? {
                               parent: {
                                 id: getParentId(formData.parentId),
@@ -530,13 +474,13 @@ export default function RegionsList({
                 isDeleted: apiData.isDeleted || false,
               };
 
-              if (type === "countries") {
+              if (type === "provinces") {
                 newRegion.enName = apiData.enName || formData.enName;
                 newRegion.code = apiData.code || formData.code;
                 newRegion.phoneCode = apiData.phoneCode || formData.phoneCode;
               }
 
-              if (formData.parentId && type !== "countries") {
+              if (formData.parentId && type !== "provinces") {
                 const parentId = getParentId(formData.parentId);
                 const parentName = getParentName(formData.parentId);
                 newRegion.parent = {
@@ -586,7 +530,6 @@ export default function RegionsList({
         });
       }
     } catch (error) {
-
       let errorMessage = "ذخیره اطلاعات با مشکل مواجه شد";
 
       if (error && typeof error === "object") {
@@ -656,15 +599,15 @@ export default function RegionsList({
               isDeleted: item.isDeleted || false, // Preserve isDeleted status
             };
 
-            // For countries, add additional fields
-            if (type === "countries") {
+            // For provinces, add additional fields
+            if (type === "provinces") {
               updatedRegion.enName = formData.enName;
               updatedRegion.code = formData.code;
               updatedRegion.phoneCode = formData.phoneCode;
             }
 
             // Update parent if it changed
-            if (formData.parentId && type !== "countries") {
+            if (formData.parentId && type !== "provinces") {
               const parentId = getParentId(formData.parentId);
               const parentName = getParentName(formData.parentId);
               updatedRegion.parent = {
@@ -699,15 +642,14 @@ export default function RegionsList({
         isDeleted: false, // New items are not deleted
       };
 
-      // For countries, add additional fields
-      if (type === "countries") {
+      if (type === "provinces") {
         newRegion.enName = formData.enName;
         newRegion.code = formData.code;
         newRegion.phoneCode = formData.phoneCode;
       }
 
       // Add parent if it exists
-      if (formData.parentId && type !== "countries") {
+      if (formData.parentId && type !== "provinces") {
         const parentId = getParentId(formData.parentId);
         const parentName = getParentName(formData.parentId);
         newRegion.parent = {
@@ -751,8 +693,6 @@ export default function RegionsList({
 
   const getTypeTitle = () => {
     switch (type) {
-      case "countries":
-        return "کشور";
       case "provinces":
         return "استان";
       case "cities":
@@ -767,14 +707,8 @@ export default function RegionsList({
   // For cache invalidation after operations
   const invalidateCache = async () => {
     try {
-
       // Only invalidate the appropriate React Query cache, don't force immediate refetch
       switch (type) {
-        case "countries":
-          await queryClient.invalidateQueries({
-            queryKey: ["admin-countries"],
-          });
-          break;
         case "provinces":
           await queryClient.invalidateQueries({
             queryKey: ["admin-provinces"],
@@ -787,51 +721,8 @@ export default function RegionsList({
           await queryClient.invalidateQueries({ queryKey: ["admin-areas"] });
           break;
       }
-
     } catch (error) {
       console.error("Failed to invalidate cache:", error);
-    }
-  };
-
-  // Get empty state message by type
-  const getEmptyStateMessage = () => {
-    switch (type) {
-      case "countries":
-        return {
-          icon: <FaGlobe className="mx-auto text-4xl text-blue-200" />,
-          title: "هیچ کشوری یافت نشد",
-          description:
-            "می‌توانید کشورهای جدید را با کلیک بر روی دکمه «افزودن کشور جدید» اضافه کنید",
-        };
-      case "provinces":
-        return {
-          icon: <FaMapMarkedAlt className="mx-auto text-4xl text-green-200" />,
-          title: "هیچ استانی یافت نشد",
-          description:
-            "ابتدا یک کشور انتخاب کرده و سپس استان‌های آن را اضافه کنید",
-        };
-      case "cities":
-        return {
-          icon: <FaCity className="mx-auto text-4xl text-purple-200" />,
-          title: "هیچ شهری یافت نشد",
-          description:
-            "ابتدا یک استان انتخاب کرده و سپس شهرهای آن را اضافه کنید",
-        };
-      case "areas":
-        return {
-          icon: <FaMapPin className="mx-auto text-4xl text-red-200" />,
-          title: "هیچ محله‌ای یافت نشد",
-          description:
-            "ابتدا یک شهر انتخاب کرده و سپس محله‌های آن را اضافه کنید",
-        };
-      default:
-        return {
-          icon: (
-            <FaExclamationTriangle className="mx-auto text-4xl text-yellow-200" />
-          ),
-          title: "اطلاعاتی یافت نشد",
-          description: "هیچ اطلاعاتی برای نمایش وجود ندارد",
-        };
     }
   };
 
@@ -845,7 +736,7 @@ export default function RegionsList({
       />
 
       {/* Parent Filter */}
-      {type !== "countries" && parentRegions.length > 0 && (
+      {type !== "provinces" && parentRegions.length > 0 && (
         <RegionParentFilter
           type={type}
           parentRegions={parentRegions}

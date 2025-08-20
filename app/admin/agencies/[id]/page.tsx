@@ -11,7 +11,6 @@ import AddConsultantModal from "@/components/admin/agencies/details/AddConsultan
 import EditAgencyModal from "@/components/admin/agencies/EditAgencyModal";
 
 interface AgencyAddress {
-  country?: string | { _id: string; name: string };
   province?: string | { _id: string; name: string };
   city?: string | { _id: string; name: string };
   area?: string | { _id: string; name: string };
@@ -191,7 +190,6 @@ export default function AgencyDetailsPage() {
     phone: string;
     description: string;
     address?: {
-      country?: string;
       province?: string;
       city?: string;
       area?: string;
@@ -218,7 +216,6 @@ export default function AgencyDetailsPage() {
       phone: agencyDetails.phone,
       description: agencyDetails.description,
       address: {
-        country: getStringValue(agencyDetails.address?.country),
         province: getStringValue(agencyDetails.address?.province),
         city: getStringValue(agencyDetails.address?.city),
         area: getStringValue(agencyDetails.address?.area),
